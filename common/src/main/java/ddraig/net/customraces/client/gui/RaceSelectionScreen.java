@@ -204,6 +204,7 @@ public class RaceSelectionScreen extends Screen {
             int actItemY = actY + 14;
             for (int slot = 1; slot <= 5; slot++) {
                 String actName = selectedRace.activeAbilities.getOrDefault(slot, "None");
+                if (actName == null || actName.isEmpty()) actName = "None";
                 guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §e" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xDDDDDD);
                 actItemY += 12;
             }

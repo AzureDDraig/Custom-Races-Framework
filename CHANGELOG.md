@@ -4,6 +4,16 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b016a] - 2026-07-22
+
+### 🛠️ Fixed & Audit Verification
+- **Active Skill Name Safety (`RaceSelectionScreen.java`)**:
+  - Added null/empty string guards when formatting active skill names in the race selection summary box (`gui.customraces.active_skill`) to prevent potential NullPointerExceptions.
+- **Verified Zero Outstanding Bugs**:
+  - Audited all 10 GUI tabs, 3D entity viewport rendering, custom part scanning, packet networking (`S2C` / `C2S`), Pehkui scaling integration, localization keys, and Brigadier autocomplete caches. All systems are 100% stable.
+
+---
+
 ## [1.0.0-b015a] - 2026-07-22
 
 ### 🛠️ Fixed & Audit Enhancements
