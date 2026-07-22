@@ -98,6 +98,17 @@ public class RaceRegistry {
 
             CACHED_DIMENSIONS.clear();
             CACHED_DIMENSIONS.addAll(java.util.List.of("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"));
+            try {
+                if (net.minecraft.client.Minecraft.getInstance().level != null) {
+                    var registry = net.minecraft.client.Minecraft.getInstance().level.registryAccess().registry(net.minecraft.core.registries.Registries.DIMENSION_TYPE);
+                    if (registry.isPresent()) {
+                        for (net.minecraft.resources.ResourceLocation dim : registry.get().keySet()) {
+                            if (!CACHED_DIMENSIONS.contains(dim.toString())) CACHED_DIMENSIONS.add(dim.toString());
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+            java.util.Collections.sort(CACHED_DIMENSIONS);
 
             CACHED_BIOMES.clear();
             CACHED_BIOMES.addAll(java.util.List.of(
@@ -105,10 +116,37 @@ public class RaceRegistry {
                 "minecraft:taiga", "minecraft:jungle", "minecraft:ocean", "minecraft:nether_wastes",
                 "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:the_end", "minecraft:lush_caves"
             ));
+            try {
+                if (net.minecraft.client.Minecraft.getInstance().level != null) {
+                    var registry = net.minecraft.client.Minecraft.getInstance().level.registryAccess().registry(net.minecraft.core.registries.Registries.BIOME);
+                    if (registry.isPresent()) {
+                        for (net.minecraft.resources.ResourceLocation biome : registry.get().keySet()) {
+                            if (!CACHED_BIOMES.contains(biome.toString())) CACHED_BIOMES.add(biome.toString());
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+            java.util.Collections.sort(CACHED_BIOMES);
 
             CACHED_PROJECTILES.clear();
             for (net.minecraft.resources.ResourceLocation entity : net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet()) {
                 CACHED_PROJECTILES.add(entity.toString());
+            }
+            // Scan custom_mobs files for custom projectiles
+            File cmProjDir = new File("config/custom_mobs/projectiles");
+            if (cmProjDir.exists() && cmProjDir.isDirectory()) {
+                File[] files = cmProjDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".json")) {
+                            String id = f.getName().replace(".json", "");
+                            String fullId = "custom_mobs:" + id;
+                            if (!CACHED_PROJECTILES.contains(fullId)) {
+                                CACHED_PROJECTILES.add(fullId);
+                            }
+                        }
+                    }
+                }
             }
             java.util.Collections.sort(CACHED_PROJECTILES);
         } catch (Exception ignored) {}

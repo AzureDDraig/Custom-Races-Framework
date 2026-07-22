@@ -4,6 +4,17 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b018a] - 2026-07-22
+
+### 🛠️ Fixed & Audit Enhancements
+- **Dynamic Dimension & Biome Registry Scanning (`RaceRegistry.java`)**:
+  - Dynamically queries `Minecraft.getInstance().level.registryAccess()` for `Registries.DIMENSION_TYPE` and `Registries.BIOME`.
+  - Automatically incorporates modded dimension IDs (e.g. `twilightforest:twilight_forest`, `aether:the_aether`) and modded biome IDs (e.g. `biomesoplenty:*`, `byg:*`) into auto-complete suggestions.
+- **Custom Mobs Framework Projectiles & Entities**:
+  - Automatically scans `config/custom_mobs/projectiles` to add `custom_mobs:<id>` custom projectiles and mobs into the auto-complete suggestion dropdown for minion skills and ranged attacks.
+
+---
+
 ## [1.0.0-b017a] - 2026-07-22
 
 ### 🛠️ Fixed & Improved
