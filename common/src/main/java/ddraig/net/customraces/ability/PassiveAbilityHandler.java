@@ -35,7 +35,7 @@ public class PassiveAbilityHandler {
         if (passives.isEmpty()) return;
 
         // 1. Aquatic & Marine
-        if (passives.contains("gills_of_the_deep")) {
+        if (passives.contains("gills_of_the_deep") || passives.contains("water_breathing")) {
             player.setAirSupply(player.getMaxAirSupply());
             if (player.isInWater()) {
                 player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
@@ -66,12 +66,13 @@ public class PassiveAbilityHandler {
         }
 
         // 2. Fire, Lava & Thermal
-        if (passives.contains("fireproof_scales")) {
+        if (passives.contains("fireproof_scales") || passives.contains("fire_resistance")) {
             player.clearFire();
             player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, true));
         }
-        if (passives.contains("lava_walker") && player.isInLava()) {
+        if ((passives.contains("lava_walker") || passives.contains("lava_swimming")) && player.isInLava()) {
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, true));
         }
         if (passives.contains("lava_heat_regeneration") && player.isInLava()) {
             player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 1, false, false, true));
@@ -84,7 +85,13 @@ public class PassiveAbilityHandler {
         }
 
         // 3. Movement & Physics
-        if (passives.contains("feather_light")) {
+        if (passives.contains("flight") || passives.contains("sky_soarer")) {
+            if (!player.getAbilities().mayfly) {
+                player.getAbilities().mayfly = true;
+                player.onUpdateAbilities();
+            }
+        }
+        if (passives.contains("feather_light") || passives.contains("slow_falling") || passives.contains("fall_damage_immunity")) {
             player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 40, 0, false, false, true));
             player.fallDistance = 0.0f;
         }
@@ -102,12 +109,12 @@ public class PassiveAbilityHandler {
         if (passives.contains("slime_cushion")) {
             player.fallDistance = 0.0f;
         }
-        if (passives.contains("spider_climb") && player.horizontalCollision) {
+        if ((passives.contains("spider_climb") || passives.contains("climbing")) && player.horizontalCollision) {
             player.setDeltaMovement(player.getDeltaMovement().x, 0.2, player.getDeltaMovement().z);
         }
 
         // 4. Vision & Stealth
-        if (passives.contains("night_eyes")) {
+        if (passives.contains("night_eyes") || passives.contains("night_vision")) {
             player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
         }
         if (passives.contains("shadow_camouflage")) {

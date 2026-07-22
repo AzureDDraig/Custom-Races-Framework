@@ -50,42 +50,76 @@ public class PehkuiIntegration {
         applyVanillaAttributes(player, race);
 
         if (isPehkuiLoaded() && race != null) {
+            boolean isTransformed = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+            float heightMult = isTransformed && race.enableWereRace ? race.wereHeightScale : race.heightScale;
+            float widthMult = isTransformed && race.enableWereRace ? race.wereWidthScale : race.widthScale;
+
+            float hScale = heightMult * race.baseScale;
+            float wScale = widthMult * race.baseScale;
+            float rScale = race.reachScale > 0 ? race.reachScale : 1.0f;
+            float sScale = race.stepHeightScale > 0 ? race.stepHeightScale : 1.0f;
+
             try {
-                // Pehkui reflection scale application
                 Class<?> scaleTypesClass = Class.forName("virtuoel.pehkui.api.ScaleTypes");
                 Class<?> scaleDataClass = Class.forName("virtuoel.pehkui.api.ScaleData");
                 Method setTargetScaleMethod = scaleDataClass.getMethod("setTargetScale", float.class);
-
-                Object heightType = scaleTypesClass.getField("HEIGHT").get(null);
-                Object widthType = scaleTypesClass.getField("WIDTH").get(null);
-                Object reachType = scaleTypesClass.getField("REACH").get(null);
-                Object stepHeightType = scaleTypesClass.getField("STEP_HEIGHT").get(null);
-                Object motionType = scaleTypesClass.getField("MOTION_AT_REST").get(null);
-
-                Method getScaleDataMethod = heightType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
-
-                float hScale = race.heightScale * race.baseScale;
-                float wScale = race.widthScale * race.baseScale;
-                float rScale = race.reachScale;
-                float sScale = race.stepHeightScale;
-                float mScale = race.speedScale;
-
-                Object hData = getScaleDataMethod.invoke(heightType, player);
-                Object wData = getScaleDataMethod.invoke(widthType, player);
-                Object rData = getScaleDataMethod.invoke(reachType, player);
-                Object sData = getScaleDataMethod.invoke(stepHeightType, player);
-                Object mData = getScaleDataMethod.invoke(motionType, player);
-
                 Method setScaleMethod = scaleDataClass.getMethod("setScale", float.class);
+                Method getScaleDataMethod = null;
 
-                if (hData != null) { setTargetScaleMethod.invoke(hData, hScale); setScaleMethod.invoke(hData, hScale); }
-                if (wData != null) { setTargetScaleMethod.invoke(wData, wScale); setScaleMethod.invoke(wData, wScale); }
-                if (rData != null) { setTargetScaleMethod.invoke(rData, rScale); setScaleMethod.invoke(rData, rScale); }
-                if (sData != null) { setTargetScaleMethod.invoke(sData, sScale); setScaleMethod.invoke(sData, sScale); }
-                if (mData != null) { setTargetScaleMethod.invoke(mData, mScale); setScaleMethod.invoke(mData, mScale); }
-            } catch (Exception e) {
-                // Silently fallback if reflection fails
-            }
+                // 1. BASE scale (scales overall entity model & hitbox)
+                try {
+                    Object baseType = scaleTypesClass.getField("BASE").get(null);
+                    getScaleDataMethod = baseType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
+                    Object bData = getScaleDataMethod.invoke(baseType, player);
+                    if (bData != null) {
+                        float avgScale = (hScale + wScale) / 2.0f;
+                        setTargetScaleMethod.invoke(bData, avgScale);
+                        setScaleMethod.invoke(bData, avgScale);
+                    }
+                } catch (Exception ignored) {}
+
+                // 2. HEIGHT scale
+                try {
+                    Object heightType = scaleTypesClass.getField("HEIGHT").get(null);
+                    if (getScaleDataMethod == null) getScaleDataMethod = heightType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
+                    Object hData = getScaleDataMethod.invoke(heightType, player);
+                    if (hData != null) {
+                        setTargetScaleMethod.invoke(hData, hScale);
+                        setScaleMethod.invoke(hData, hScale);
+                    }
+                } catch (Exception ignored) {}
+
+                // 3. WIDTH scale
+                try {
+                    Object widthType = scaleTypesClass.getField("WIDTH").get(null);
+                    if (getScaleDataMethod == null) getScaleDataMethod = widthType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
+                    Object wData = getScaleDataMethod.invoke(widthType, player);
+                    if (wData != null) {
+                        setTargetScaleMethod.invoke(wData, wScale);
+                        setScaleMethod.invoke(wData, wScale);
+                    }
+                } catch (Exception ignored) {}
+
+                // 4. REACH scale
+                try {
+                    Object reachType = scaleTypesClass.getField("REACH").get(null);
+                    Object rData = getScaleDataMethod.invoke(reachType, player);
+                    if (rData != null) {
+                        setTargetScaleMethod.invoke(rData, rScale);
+                        setScaleMethod.invoke(rData, rScale);
+                    }
+                } catch (Exception ignored) {}
+
+                // 5. STEP_HEIGHT scale
+                try {
+                    Object stepHeightType = scaleTypesClass.getField("STEP_HEIGHT").get(null);
+                    Object sData = getScaleDataMethod.invoke(stepHeightType, player);
+                    if (sData != null) {
+                        setTargetScaleMethod.invoke(sData, sScale);
+                        setScaleMethod.invoke(sData, sScale);
+                    }
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
         }
     }
 

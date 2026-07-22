@@ -21,6 +21,7 @@ import net.minecraft.sounds.SoundSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +72,10 @@ public class RaceCreatorScreen extends Screen {
     private EditBox wereAmbientSoundBox;
     private EditBox wereHurtSoundBox;
     private EditBox wereDeathSoundBox;
+    private EditBox wereDamageBox;
+
+    // Form Mode Toggle (Base Form vs Were-Form)
+    private boolean editingWereForm = false;
 
     // Minion Ability Controls
     private EditBox minionMobTypeBox;
@@ -135,6 +140,16 @@ public class RaceCreatorScreen extends Screen {
         }
 
         // Save & Delete Header Buttons
+        if (workingRace.enableWereRace) {
+            Button modeToggleBtn = Button.builder(Component.literal(editingWereForm ? "🐺 WERE FORM" : "👤 BASE FORM"), b -> {
+                readFormInputs();
+                editingWereForm = !editingWereForm;
+                this.init();
+            }).bounds(this.width - 290, 4, 120, 20).build();
+            modeToggleBtn.setTooltip(Tooltip.create(Component.literal("Click to switch editor mode between Base Form and Were-Form parameters.")));
+            this.addRenderableWidget(modeToggleBtn);
+        }
+
         Button saveBtn = Button.builder(Component.translatable("gui.customraces.button.save_race"), b -> {
             readFormInputs();
             ModPackets.sendSaveRace(workingRace);
@@ -220,43 +235,75 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(this.hideBootsBox);
 
         } else if (activeTab == 1) { // Model & Animations
-            Button modelTypeBtn = Button.builder(Component.literal("Type: " + workingRace.modelType), b -> {
-                workingRace.modelType = "Default".equals(workingRace.modelType) ? "Custom" : "Default";
-                this.init();
-            }).bounds(contentLeft, contentTop, 140, 20).build();
-            modelTypeBtn.setTooltip(Tooltip.create(Component.literal("Toggle Model Type between Default (Steve/Alex) and Custom parts model.")));
-            this.addRenderableWidget(modelTypeBtn);
+            if (editingWereForm && workingRace.enableWereRace) {
+                this.heightScaleBox = new EditBox(this.font, contentLeft + 110, contentTop + 30, 60, 18, Component.literal("Were Height Scale"));
+                this.heightScaleBox.setMaxLength(2048);
+                this.heightScaleBox.setValue(String.valueOf(workingRace.wereHeightScale));
+                this.heightScaleBox.setTooltip(Tooltip.create(Component.literal("Height scale multiplier while in Were-form.")));
+                this.addRenderableWidget(this.heightScaleBox);
 
-            this.heightScaleBox = new EditBox(this.font, contentLeft + 100, contentTop + 30, 60, 18, Component.literal("Height Scale"));
-            this.heightScaleBox.setMaxLength(2048);
-            this.heightScaleBox.setValue(String.valueOf(workingRace.heightScale));
-            this.heightScaleBox.setTooltip(Tooltip.create(Component.literal("Height scale multiplier. Player model scaling Requires Pehkui.")));
-            this.addRenderableWidget(this.heightScaleBox);
+                this.widthScaleBox = new EditBox(this.font, contentLeft + 110, contentTop + 55, 60, 18, Component.literal("Were Width Scale"));
+                this.widthScaleBox.setMaxLength(2048);
+                this.widthScaleBox.setValue(String.valueOf(workingRace.wereWidthScale));
+                this.widthScaleBox.setTooltip(Tooltip.create(Component.literal("Width scale multiplier while in Were-form.")));
+                this.addRenderableWidget(this.widthScaleBox);
 
-            this.widthScaleBox = new EditBox(this.font, contentLeft + 100, contentTop + 55, 60, 18, Component.literal("Width Scale"));
-            this.widthScaleBox.setMaxLength(2048);
-            this.widthScaleBox.setValue(String.valueOf(workingRace.widthScale));
-            this.widthScaleBox.setTooltip(Tooltip.create(Component.literal("Width scale multiplier. Player model scaling Requires Pehkui.")));
-            this.addRenderableWidget(this.widthScaleBox);
+                this.healthBox = new EditBox(this.font, contentLeft + 110, contentTop + 80, 60, 18, Component.literal("Were Health Bonus"));
+                this.healthBox.setMaxLength(2048);
+                this.healthBox.setValue(String.valueOf(workingRace.wereHealthBonus));
+                this.healthBox.setTooltip(Tooltip.create(Component.literal("Bonus HP granted while in Were-form.")));
+                this.addRenderableWidget(this.healthBox);
 
-            this.healthBox = new EditBox(this.font, contentLeft + 100, contentTop + 80, 60, 18, Component.literal("Max Health"));
-            this.healthBox.setMaxLength(2048);
-            this.healthBox.setValue(String.valueOf(workingRace.maxHealth));
-            this.healthBox.setTooltip(Tooltip.create(Component.literal("Base Max Health value (Vanilla default is 20.0).")));
-            this.addRenderableWidget(this.healthBox);
+                this.speedBox = new EditBox(this.font, contentLeft + 110, contentTop + 105, 60, 18, Component.literal("Were Speed Bonus"));
+                this.speedBox.setMaxLength(2048);
+                this.speedBox.setValue(String.valueOf(workingRace.wereSpeedBonus));
+                this.speedBox.setTooltip(Tooltip.create(Component.literal("Bonus movement speed granted while in Were-form.")));
+                this.addRenderableWidget(this.speedBox);
 
-            this.speedBox = new EditBox(this.font, contentLeft + 100, contentTop + 105, 60, 18, Component.literal("Movement Speed"));
-            this.speedBox.setMaxLength(2048);
-            this.speedBox.setValue(String.valueOf(workingRace.movementSpeed));
-            this.speedBox.setTooltip(Tooltip.create(Component.literal("Base Movement Speed multiplier (Vanilla default is 0.1).")));
-            this.addRenderableWidget(this.speedBox);
+                this.wereDamageBox = new EditBox(this.font, contentLeft + 110, contentTop + 130, 60, 18, Component.literal("Were Damage Bonus"));
+                this.wereDamageBox.setMaxLength(2048);
+                this.wereDamageBox.setValue(String.valueOf(workingRace.wereDamageBonus));
+                this.wereDamageBox.setTooltip(Tooltip.create(Component.literal("Bonus attack damage granted while in Were-form.")));
+                this.addRenderableWidget(this.wereDamageBox);
+            } else {
+                Button modelTypeBtn = Button.builder(Component.literal("Type: " + workingRace.modelType), b -> {
+                    workingRace.modelType = "Default".equals(workingRace.modelType) ? "Custom" : "Default";
+                    this.init();
+                }).bounds(contentLeft, contentTop, 140, 20).build();
+                modelTypeBtn.setTooltip(Tooltip.create(Component.literal("Toggle Model Type between Default (Steve/Alex) and Custom parts model.")));
+                this.addRenderableWidget(modelTypeBtn);
 
-            // Open Body Parts & Color Picker Overlay
-            Button partsBtn = Button.builder(Component.literal("§ePreset Body Parts & Colors"), b -> {
-                Minecraft.getInstance().setScreen(new BodyPartOverlay(this, workingRace));
-            }).bounds(contentLeft, contentTop + 135, 200, 22).build();
-            partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
-            this.addRenderableWidget(partsBtn);
+                this.heightScaleBox = new EditBox(this.font, contentLeft + 100, contentTop + 30, 60, 18, Component.literal("Height Scale"));
+                this.heightScaleBox.setMaxLength(2048);
+                this.heightScaleBox.setValue(String.valueOf(workingRace.heightScale));
+                this.heightScaleBox.setTooltip(Tooltip.create(Component.literal("Height scale multiplier. Player model scaling Requires Pehkui.")));
+                this.addRenderableWidget(this.heightScaleBox);
+
+                this.widthScaleBox = new EditBox(this.font, contentLeft + 100, contentTop + 55, 60, 18, Component.literal("Width Scale"));
+                this.widthScaleBox.setMaxLength(2048);
+                this.widthScaleBox.setValue(String.valueOf(workingRace.widthScale));
+                this.widthScaleBox.setTooltip(Tooltip.create(Component.literal("Width scale multiplier. Player model scaling Requires Pehkui.")));
+                this.addRenderableWidget(this.widthScaleBox);
+
+                this.healthBox = new EditBox(this.font, contentLeft + 100, contentTop + 80, 60, 18, Component.literal("Max Health"));
+                this.healthBox.setMaxLength(2048);
+                this.healthBox.setValue(String.valueOf(workingRace.maxHealth));
+                this.healthBox.setTooltip(Tooltip.create(Component.literal("Base Max Health value (Vanilla default is 20.0).")));
+                this.addRenderableWidget(this.healthBox);
+
+                this.speedBox = new EditBox(this.font, contentLeft + 100, contentTop + 105, 60, 18, Component.literal("Movement Speed"));
+                this.speedBox.setMaxLength(2048);
+                this.speedBox.setValue(String.valueOf(workingRace.movementSpeed));
+                this.speedBox.setTooltip(Tooltip.create(Component.literal("Base Movement Speed multiplier (Vanilla default is 0.1).")));
+                this.addRenderableWidget(this.speedBox);
+
+                // Open Body Parts & Color Picker Overlay
+                Button partsBtn = Button.builder(Component.literal("§ePreset Body Parts & Colors"), b -> {
+                    Minecraft.getInstance().setScreen(new BodyPartOverlay(this, workingRace));
+                }).bounds(contentLeft, contentTop + 135, 200, 22).build();
+                partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
+                this.addRenderableWidget(partsBtn);
+            }
 
         } else if (activeTab == 2) { // Positions / Part Transforms
             int py = contentTop;
@@ -292,16 +339,18 @@ public class RaceCreatorScreen extends Screen {
                 "regeneration", "wither_immunity", "fall_damage_immunity", "lava_swimming", "climbing"
             };
 
+            List<String> targetList = (editingWereForm && workingRace.enableWereRace) ? workingRace.werePassiveAbilities : workingRace.passiveAbilities;
+
             for (String passive : allPassives) {
-                boolean active = workingRace.passiveAbilities.contains(passive);
+                boolean active = targetList.contains(passive);
                 Checkbox pBox = new Checkbox(contentLeft, py, 180, 20, Component.literal(passive.replace("_", " ").toUpperCase()), active) {
                     @Override
                     public void onPress() {
                         super.onPress();
                         if (this.selected()) {
-                            if (!workingRace.passiveAbilities.contains(passive)) workingRace.passiveAbilities.add(passive);
+                            if (!targetList.contains(passive)) targetList.add(passive);
                         } else {
-                            workingRace.passiveAbilities.remove(passive);
+                            targetList.remove(passive);
                         }
                     }
                 };
@@ -312,15 +361,17 @@ public class RaceCreatorScreen extends Screen {
 
         } else if (activeTab == 4) { // Actives
             int py = contentTop;
+            Map<Integer, String> targetMap = (editingWereForm && workingRace.enableWereRace) ? workingRace.wereActiveAbilities : workingRace.activeAbilities;
+
             for (int slot = 1; slot <= 5; slot++) {
                 final int currentSlot = slot;
-                String currentSkill = workingRace.activeAbilities.getOrDefault(slot, "none");
+                String currentSkill = targetMap.getOrDefault(slot, "none");
 
                 EditBox slotBox = new EditBox(this.font, contentLeft + 60, py, 200, 18, Component.literal("Slot " + slot));
                 slotBox.setMaxLength(2048);
                 slotBox.setValue(currentSkill);
-                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID (e.g. flame_breath, teleport_dash, transform_were, summon_minions).")));
-                slotBox.setResponder(val -> workingRace.activeAbilities.put(currentSlot, val));
+                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + " (e.g. flame_breath, teleport_dash, transform_were, summon_minions).")));
+                slotBox.setResponder(val -> targetMap.put(currentSlot, val));
                 this.addRenderableWidget(slotBox);
 
                 py += 24;
@@ -436,6 +487,15 @@ public class RaceCreatorScreen extends Screen {
             this.enableWereBox.setTooltip(Tooltip.create(Component.literal("Toggle Were-form transformation capabilities for this race.")));
             this.addRenderableWidget(this.enableWereBox);
 
+            Button editWerePassivesBtn = Button.builder(Component.literal("🐺 Were Passives & Skills"), b -> {
+                readFormInputs();
+                editingWereForm = true;
+                activeTab = 3;
+                this.init();
+            }).bounds(contentLeft + 200, contentTop, 160, 20).build();
+            editWerePassivesBtn.setTooltip(Tooltip.create(Component.literal("Switch to Passives/Actives tab in Were-Form editing mode.")));
+            this.addRenderableWidget(editWerePassivesBtn);
+
             this.wereConditionBox = new EditBox(this.font, contentLeft + 120, contentTop + 24, 120, 18, Component.literal("Trigger Condition"));
             this.wereConditionBox.setMaxLength(2048);
             this.wereConditionBox.setValue(workingRace.wereTriggerCondition);
@@ -546,18 +606,37 @@ public class RaceCreatorScreen extends Screen {
         if (hideLeggingsBox != null) workingRace.hideLeggings = hideLeggingsBox.selected();
         if (hideBootsBox != null) workingRace.hideBoots = hideBootsBox.selected();
 
-        if (heightScaleBox != null) {
-            try { workingRace.heightScale = Float.parseFloat(heightScaleBox.getValue()); } catch (Exception ignored) {}
+        if (editingWereForm && workingRace.enableWereRace) {
+            if (heightScaleBox != null) {
+                try { workingRace.wereHeightScale = Float.parseFloat(heightScaleBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (widthScaleBox != null) {
+                try { workingRace.wereWidthScale = Float.parseFloat(widthScaleBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (healthBox != null) {
+                try { workingRace.wereHealthBonus = Float.parseFloat(healthBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (speedBox != null) {
+                try { workingRace.wereSpeedBonus = Float.parseFloat(speedBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (wereDamageBox != null) {
+                try { workingRace.wereDamageBonus = Float.parseFloat(wereDamageBox.getValue()); } catch (Exception ignored) {}
+            }
+        } else {
+            if (heightScaleBox != null) {
+                try { workingRace.heightScale = Float.parseFloat(heightScaleBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (widthScaleBox != null) {
+                try { workingRace.widthScale = Float.parseFloat(widthScaleBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (healthBox != null) {
+                try { workingRace.maxHealth = Float.parseFloat(healthBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (speedBox != null) {
+                try { workingRace.movementSpeed = Float.parseFloat(speedBox.getValue()); } catch (Exception ignored) {}
+            }
         }
-        if (widthScaleBox != null) {
-            try { workingRace.widthScale = Float.parseFloat(widthScaleBox.getValue()); } catch (Exception ignored) {}
-        }
-        if (healthBox != null) {
-            try { workingRace.maxHealth = Float.parseFloat(healthBox.getValue()); } catch (Exception ignored) {}
-        }
-        if (speedBox != null) {
-            try { workingRace.movementSpeed = Float.parseFloat(speedBox.getValue()); } catch (Exception ignored) {}
-        }
+
         if (ambientSoundBox != null) workingRace.ambientSound = ambientSoundBox.getValue();
         if (hurtSoundBox != null) workingRace.hurtSound = hurtSoundBox.getValue();
         if (deathSoundBox != null) workingRace.deathSound = deathSoundBox.getValue();
