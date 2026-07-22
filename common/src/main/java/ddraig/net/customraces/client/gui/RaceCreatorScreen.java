@@ -31,6 +31,7 @@ public class RaceCreatorScreen extends Screen {
 
     private int activeTab = 0; // 0: Basics, 1: Model, 2: Positions, 3: Passives, 4: Actives, 5: Sounds, 6: Advanced, 7: Alliances
     private RaceData workingRace;
+    private int sidebarScrollOffset = 0;
 
     // GUI Edit Controls
     private EditBox nameBox;
@@ -133,28 +134,35 @@ public class RaceCreatorScreen extends Screen {
         // 2. Left Sidebar: Scrollable Race Buttons List (Custom RPG Flat Buttons)
         int listTop = panelY + 36;
         int listBottom = panelY + panelHeight - 48;
-        int btnY = listTop;
 
         String currentFilter = this.raceSearchBox.getValue().toLowerCase().trim();
         List<RaceData> matchingRaces = RaceRegistry.loadedRaces.values().stream()
             .filter(r -> currentFilter.isEmpty() || r.name.toLowerCase().contains(currentFilter) || r.id.toLowerCase().contains(currentFilter))
             .collect(Collectors.toList());
 
+        int totalHeight = matchingRaces.size() * 20;
+        int maxScroll = Math.max(0, totalHeight - (listBottom - listTop));
+        if (sidebarScrollOffset > maxScroll) sidebarScrollOffset = maxScroll;
+        if (sidebarScrollOffset < 0) sidebarScrollOffset = 0;
+
+        int btnY = listTop - sidebarScrollOffset;
+
         for (RaceData r : matchingRaces) {
-            if (btnY + 18 > listBottom) break;
-            boolean selected = r.id.equalsIgnoreCase(workingRace.id);
-            String label = (selected ? "▶ " : "") + r.name;
+            if (btnY + 18 >= listTop && btnY <= listBottom - 18) {
+                boolean selected = r.id.equalsIgnoreCase(workingRace.id);
+                String label = (selected ? "▶ " : "") + r.name;
 
-            FlatButton raceBtn = new FlatButton(panelX + 5, btnY, 130, 18, Component.literal(label), b -> {
-                readFormInputs();
-                resetFormFields();
-                this.workingRace = r;
-                this.init();
-            }, selected ? 0xFFFF3838 : 0xFF00CEC9, 0xFF7B61FF);
+                FlatButton raceBtn = new FlatButton(panelX + 5, btnY, 130, 18, Component.literal(label), b -> {
+                    readFormInputs();
+                    resetFormFields();
+                    this.workingRace = r;
+                    this.init();
+                }, selected ? 0xFFFF3838 : 0xFF00CEC9, 0xFF7B61FF);
 
-            raceBtn.setTooltip(Tooltip.create(Component.literal("ID: " + r.id + "\nClick to edit race properties.")));
-            if (selected) raceBtn.active = false;
-            this.addRenderableWidget(raceBtn);
+                raceBtn.setTooltip(Tooltip.create(Component.literal("ID: " + r.id + "\nClick to edit race properties.")));
+                if (selected) raceBtn.active = false;
+                this.addRenderableWidget(raceBtn);
+            }
             btnY += 20;
         }
 
@@ -1147,6 +1155,22 @@ public class RaceCreatorScreen extends Screen {
                 return true;
             }
         }
+
+        // Left Sidebar Mouse Wheel Scroll
+        int panelX = 8;
+        int panelY = 8;
+        int panelWidth = 140;
+        int panelHeight = this.height - 16;
+        if (mouseX >= panelX && mouseX <= panelX + panelWidth && mouseY >= panelY + 36 && mouseY <= panelY + panelHeight - 48) {
+            if (delta < 0) {
+                sidebarScrollOffset += 15;
+            } else if (delta > 0) {
+                sidebarScrollOffset = Math.max(0, sidebarScrollOffset - 15);
+            }
+            this.init();
+            return true;
+        }
+
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
