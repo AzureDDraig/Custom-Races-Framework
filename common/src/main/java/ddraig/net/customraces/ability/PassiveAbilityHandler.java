@@ -27,12 +27,24 @@ public class PassiveAbilityHandler {
 
         List<String> passives = new java.util.ArrayList<>();
         if (race.passiveAbilities != null) passives.addAll(race.passiveAbilities);
-        if (ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID()) && race.werePassiveAbilities != null) {
-            for (String wp : race.werePassiveAbilities) {
-                if (!passives.contains(wp)) passives.add(wp);
+        if (race.drawbacks != null) passives.addAll(race.drawbacks);
+
+        if (ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID())) {
+            if (race.werePassiveAbilities != null) {
+                for (String wp : race.werePassiveAbilities) {
+                    if (!passives.contains(wp)) passives.add(wp);
+                }
+            }
+            if (race.wereDrawbacks != null) {
+                for (String wd : race.wereDrawbacks) {
+                    if (!passives.contains(wd)) passives.add(wd);
+                }
             }
         }
         if (passives.isEmpty()) return;
+
+        // Execute Event-Driven and Tick Drawbacks
+        DrawbackEventHandler.tickDrawbacks(player, passives);
 
         // 1. Aquatic & Marine
         if (passives.contains("gills_of_the_deep") || passives.contains("water_breathing")) {
