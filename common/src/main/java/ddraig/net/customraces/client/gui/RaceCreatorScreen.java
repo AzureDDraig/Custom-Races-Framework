@@ -92,6 +92,7 @@ public class RaceCreatorScreen extends Screen {
 
     @Override
     protected void init() {
+        readFormInputs();
         super.init();
         this.clearWidgets();
         RaceRegistry.rebuildSuggestionsCache();
@@ -438,8 +439,22 @@ public class RaceCreatorScreen extends Screen {
             this.wereConditionBox = new EditBox(this.font, contentLeft + 120, contentTop + 24, 120, 18, Component.literal("Trigger Condition"));
             this.wereConditionBox.setMaxLength(2048);
             this.wereConditionBox.setValue(workingRace.wereTriggerCondition);
-            this.wereConditionBox.setTooltip(Tooltip.create(Component.literal("FULL_MOON, NEW_MOON, NIGHT, or MANUAL.")));
+            this.wereConditionBox.setTooltip(Tooltip.create(Component.literal("FULL_MOON, NEW_MOON, NIGHT, DAY, WATER, RAGE, KEY.")));
             this.addRenderableWidget(this.wereConditionBox);
+
+            String[] triggers = {"FULL_MOON", "NEW_MOON", "NIGHT", "DAY", "WATER", "RAGE", "KEY"};
+            Button trigBtn = Button.builder(Component.literal("▶ " + workingRace.wereTriggerCondition), b -> {
+                String cur = workingRace.wereTriggerCondition != null ? workingRace.wereTriggerCondition.toUpperCase() : "FULL_MOON";
+                int idx = 0;
+                for (int i = 0; i < triggers.length; i++) {
+                    if (triggers[i].equals(cur)) { idx = (i + 1) % triggers.length; break; }
+                }
+                workingRace.wereTriggerCondition = triggers[idx];
+                if (this.wereConditionBox != null) this.wereConditionBox.setValue(triggers[idx]);
+                b.setMessage(Component.literal("▶ " + triggers[idx]));
+            }).bounds(contentLeft + 245, contentTop + 24, 115, 18).build();
+            trigBtn.setTooltip(Tooltip.create(Component.literal("Cycle trigger condition (FULL_MOON, NEW_MOON, NIGHT, DAY, WATER, RAGE, KEY).")));
+            this.addRenderableWidget(trigBtn);
 
             this.wereModelBox = new EditBox(this.font, contentLeft + 120, contentTop + 46, 240, 18, Component.literal("Were Model Geo JSON"));
             this.wereModelBox.setMaxLength(2048);
@@ -727,6 +742,12 @@ public class RaceCreatorScreen extends Screen {
                     source = RaceRegistry.CACHED_BIOMES;
                 } else if (box == minionMobTypeBox || box == minionProjectileBox) {
                     source = RaceRegistry.CACHED_PROJECTILES;
+                } else if (box == wereModelBox) {
+                    source = RaceRegistry.CACHED_WERE_MODELS;
+                } else if (box == wereTextureBox) {
+                    source = RaceRegistry.CACHED_WERE_TEXTURES;
+                } else if (box == wereAnimFileBox) {
+                    source = RaceRegistry.CACHED_WERE_ANIMS;
                 }
 
                 if (source != null && !source.isEmpty()) {

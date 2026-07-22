@@ -60,27 +60,20 @@ public class WereRaceTransformHandler {
         String condition = race.wereTriggerCondition != null ? race.wereTriggerCondition.toUpperCase() : "FULL_MOON";
 
         switch (condition) {
-            case "FULL_MOON":
-                conditionMet = isNight && moonPhase == 0;
-                break;
-            case "NEW_MOON":
-                conditionMet = isNight && moonPhase == 4;
-                break;
-            case "NIGHT":
-                conditionMet = isNight;
-                break;
-            case "MANUAL":
-                conditionMet = isTransformed(player.getUUID());
-                break;
-            default:
-                conditionMet = isNight && moonPhase == 0;
-                break;
+            case "FULL_MOON" -> conditionMet = isNight && moonPhase == 0;
+            case "NEW_MOON" -> conditionMet = isNight && moonPhase == 4;
+            case "NIGHT" -> conditionMet = isNight;
+            case "DAY" -> conditionMet = !isNight;
+            case "WATER", "SUBMERGED" -> conditionMet = player.isInWaterOrBubble() || player.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
+            case "RAGE", "LOW_HEALTH" -> conditionMet = player.getHealth() <= (player.getMaxHealth() * 0.30f);
+            case "KEY", "MANUAL" -> conditionMet = isTransformed(player.getUUID());
+            default -> conditionMet = isNight && moonPhase == 0;
         }
 
         boolean currentlyTransformed = isTransformed(player.getUUID());
         if (conditionMet && !currentlyTransformed) {
             transformIntoWereForm(player, race);
-        } else if (!conditionMet && currentlyTransformed && !"MANUAL".equalsIgnoreCase(condition)) {
+        } else if (!conditionMet && currentlyTransformed && !"MANUAL".equalsIgnoreCase(condition) && !"KEY".equalsIgnoreCase(condition)) {
             revertWereForm(player, race);
         }
     }

@@ -30,6 +30,9 @@ public class RaceRegistry {
     public static final List<String> CACHED_BIOMES = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_DIMENSIONS = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_PROJECTILES = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_WERE_MODELS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_WERE_TEXTURES = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_WERE_ANIMS = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     private static File getRacesFile() {
         File dir = new File("config/custom_races");
@@ -149,6 +152,51 @@ public class RaceRegistry {
                 }
             }
             java.util.Collections.sort(CACHED_PROJECTILES);
+
+            // Scan Were Models
+            CACHED_WERE_MODELS.clear();
+            File wmDir = new File("config/custom_races/models/were");
+            if (wmDir.exists() && wmDir.isDirectory()) {
+                File[] files = wmDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".json")) {
+                            CACHED_WERE_MODELS.add("customraces:models/were/" + f.getName());
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(CACHED_WERE_MODELS);
+
+            // Scan Were Textures
+            CACHED_WERE_TEXTURES.clear();
+            File wtDir = new File("config/custom_races/textures/were");
+            if (wtDir.exists() && wtDir.isDirectory()) {
+                File[] files = wtDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".png")) {
+                            CACHED_WERE_TEXTURES.add("customraces:textures/were/" + f.getName());
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(CACHED_WERE_TEXTURES);
+
+            // Scan Were Animations
+            CACHED_WERE_ANIMS.clear();
+            File waDir = new File("config/custom_races/animations/were");
+            if (waDir.exists() && waDir.isDirectory()) {
+                File[] files = waDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".json")) {
+                            CACHED_WERE_ANIMS.add("customraces:animations/were/" + f.getName());
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(CACHED_WERE_ANIMS);
         } catch (Exception ignored) {}
     }
 

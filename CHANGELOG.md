@@ -4,6 +4,30 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b019a] - 2026-07-22
+
+### 🐺 Added & Fixed (Playtester Feedback Implementation)
+- **Tab Form Persistence Fix (`RaceCreatorScreen.java`)**:
+  - Added `readFormInputs()` to the very beginning of `init()` prior to `clearWidgets()`.
+  - Fixes form fields reverting back to defaults when switching tabs, checking checkboxes (e.g. `Enable Were-Form`), or clicking toggle buttons.
+- **Were Model/Texture/Animation Directory Auto-Complete Dropdowns**:
+  - `RaceRegistry.rebuildSuggestionsCache()` now scans `config/custom_races/models/were/` (`.geo.json`), `config/custom_races/textures/were/` (`.png`), and `config/custom_races/animations/were/` (`.animation.json`).
+  - Typing in `wereModelBox`, `wereTextureBox`, and `wereAnimFileBox` displays live floating auto-complete suggestion overlays.
+- **Expanded Were Transformation Triggers (`WereRaceTransformHandler.java`)**:
+  - Added support for 7 transformation trigger conditions:
+    - 🌕 `FULL_MOON` (Full moon night)
+    - 🌑 `NEW_MOON` (New moon night)
+    - 🌙 `NIGHT` (Night creatures / vampires)
+    - ☀️ `DAY` (Sun creatures / solar beings)
+    - 🌊 `WATER` / `SUBMERGED` (Siren / aquatic creatures when submerged in water)
+    - 😡 `RAGE` / `LOW_HEALTH` (Rage transformation when player health drops below 30%)
+    - 🔑 `KEY` / `MANUAL` (Active hotbar skill `transform_were` or keybind)
+  - Added live cycle button `▶ <TRIGGER>` in Tab 8 ("Were Model & Anims").
+- **Were-Form Granted Passives & Actives**:
+  - Added `werePassiveAbilities` and `wereActiveAbilities` to `RaceData.java` for configuring custom abilities granted specifically while transformed.
+
+---
+
 ## [1.0.0-b018a] - 2026-07-22
 
 ### 🛠️ Fixed & Audit Enhancements

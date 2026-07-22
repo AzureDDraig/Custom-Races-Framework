@@ -101,7 +101,12 @@ public class RaceData {
     public String wereHowlSound = "minecraft:entity.wolf.howl";
     public String wereAmbientSound = "minecraft:entity.wolf.growl";
     public String wereHurtSound = "minecraft:entity.wolf.hurt";
+    public String CustomDeathSound = "";
     public String wereDeathSound = "minecraft:entity.wolf.death";
+
+    // Were-Form Specific Granted Abilities
+    public List<String> werePassiveAbilities = new ArrayList<>();
+    public Map<Integer, String> wereActiveAbilities = new HashMap<>();
 
     // Minion Summon Ability Settings
     public String minionMobType = "minecraft:zombie";
