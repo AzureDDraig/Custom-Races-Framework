@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "customraces",
+  "version": "${version}",
+  "name": "Custom Races Framework",
+  "description": "Comprehensive Architectury custom races framework for Minecraft 1.20.1.",
+  "authors": [
+    "AzureDDraig"
+  ],
+  "contact": {
+    "sources": "https://github.com/AzureDDraig/Custom-Races-Framework"
+  },
+  "license": "MIT",
+  "icon": "assets/customraces/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "ddraig.net.customraces.fabric.CustomRacesFabric"
+    ],
+    "client": [
+      "ddraig.net.customraces.fabric.CustomRacesFabric"
+    ]
+  },
+  "mixins": [
+    "customraces.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "architectury": ">=9.2.14",
+    "fabric-api": "*"
+  }
+}
