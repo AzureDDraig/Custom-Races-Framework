@@ -94,6 +94,7 @@ public class RaceCreatorScreen extends Screen {
     protected void init() {
         super.init();
         this.clearWidgets();
+        RaceRegistry.rebuildSuggestionsCache();
 
         int topY = 32;
         int tabX = 10;
@@ -575,8 +576,18 @@ public class RaceCreatorScreen extends Screen {
     }
 
     private void playPreviewSound(String soundId) {
-        if (soundId == null || soundId.isEmpty() || Minecraft.getInstance().player == null) return;
-        Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 1.0f);
+        if (soundId == null || soundId.trim().isEmpty() || Minecraft.getInstance().player == null) return;
+        try {
+            net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(soundId.trim());
+            net.minecraft.sounds.SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(loc);
+            if (sound != null) {
+                Minecraft.getInstance().player.playSound(sound, 1.0f, 1.0f);
+            } else {
+                Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 1.0f);
+            }
+        } catch (Exception e) {
+            Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 1.0f);
+        }
     }
 
     @Override

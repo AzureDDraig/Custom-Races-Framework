@@ -4,6 +4,20 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b017a] - 2026-07-22
+
+### 🛠️ Fixed & Improved
+- **Dynamic Multi-Mod Sound Event Auto-Complete**:
+  - `RaceRegistry.rebuildSuggestionsCache()` is now invoked on GUI open in `RaceCreatorScreen.init()`.
+  - Automatically queries all registered `SoundEvent` IDs from every installed mod in `BuiltInRegistries.SOUND_EVENT` (e.g. `alexsmobs:*`, `iceandfire:*`, `custom_mobs:*`, etc.).
+  - Shows auto-complete suggestion dropdown for ambient, hurt, death, and were transformation sounds.
+- **Exact Mod Sound Preview Playback**:
+  - Updated `playPreviewSound()` in `RaceCreatorScreen.java` to look up the exact `SoundEvent` `ResourceLocation` from `BuiltInRegistries.SOUND_EVENT` and play that exact mod sound in-game.
+- **2048 Character Limit Verification**:
+  - Re-verified `.setMaxLength(2048)` across all sound edit boxes (`ambientSoundBox`, `hurtSoundBox`, `deathSoundBox`, `wereTransformSoundBox`, `wereHowlSoundBox`, `wereAmbientSoundBox`, `wereHurtSoundBox`, `wereDeathSoundBox`).
+
+---
+
 ## [1.0.0-b016a] - 2026-07-22
 
 ### 🛠️ Fixed & Audit Verification
