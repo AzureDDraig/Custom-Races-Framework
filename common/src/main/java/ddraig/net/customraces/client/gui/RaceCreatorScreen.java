@@ -78,6 +78,21 @@ public class RaceCreatorScreen extends Screen {
     // Form Mode Toggle (Base Form vs Were-Form)
     private boolean editingWereForm = false;
 
+    public static final List<String> ALL_DRAWBACKS = java.util.List.of(
+        "water_vulnerability", "sunlight_burn", "sunlight_slowness", "cold_vulnerability", "fire_vulnerability",
+        "hydrophobia", "claustrophobia", "agoraphobia", "nether_vulnerability", "end_vulnerability",
+        "carnivore_diet", "vegetarian_diet", "hyper_metabolism", "sluggish_metabolism", "hematophagy",
+        "photosynthetic_dependency", "golden_allergy", "potion_intolerance", "soul_hunger", "heavy_eater",
+        "fragile_bone", "no_heavy_armor", "no_shield_use", "melee_weakness", "ranged_inaccuracy",
+        "silver_vulnerability", "smite_vulnerability", "knockback_vulnerability", "slow_attack_cooldown", "shield_shatter_vulnerability",
+        "slowness_curse", "no_sprinting", "reduced_step_height", "slippery_feet", "gravity_bound",
+        "jump_penalty", "stamina_exhaustion", "cobweb_entanglement", "clumsy_swimmer", "steep_fall_paralysis",
+        "oversized_hitbox", "undersized_reach", "low_max_health", "glass_cannon", "no_helmet_slot",
+        "no_chestplate_slot", "no_boots_slot", "translucent_fragility", "heavy_weight", "drowning_in_shallow_water",
+        "villager_fear", "iron_golem_hostility", "curse_of_shadows", "mana_drain", "totem_nullification",
+        "wither_vulnerability", "poison_vulnerability", "insomnia_curse", "lightning_attraction", "blindness_in_nether"
+    );
+
     // Minion Ability Controls
     private EditBox minionMobTypeBox;
     private EditBox minionCountBox;
@@ -236,7 +251,7 @@ public class RaceCreatorScreen extends Screen {
             "gui.customraces.tab.basics", "gui.customraces.tab.model", "gui.customraces.tab.positions",
             "gui.customraces.tab.passives", "gui.customraces.tab.actives", "gui.customraces.tab.sounds",
             "gui.customraces.tab.advanced", "gui.customraces.tab.alliances", "gui.customraces.tab.were_model",
-            "gui.customraces.tab.were_sounds"
+            "gui.customraces.tab.were_sounds", "gui.customraces.tab.drawbacks"
         };
 
         for (int i = 0; i < tabKeys.length; i++) {
@@ -708,6 +723,45 @@ public class RaceCreatorScreen extends Screen {
 
             Button pDt = Button.builder(Component.literal("▶ Play"), b -> playPreviewSound(this.wereDeathSoundBox.getValue())).bounds(contentLeft + 325, contentTop + 100, 50, 18).build();
             this.addRenderableWidget(pDt);
+        } else if (activeTab == 10) { // Drawbacks
+            List<String> activeList = editingWereForm ? workingRace.wereDrawbacks : workingRace.drawbacks;
+            if (activeList == null) {
+                activeList = new java.util.ArrayList<>();
+                if (editingWereForm) workingRace.wereDrawbacks = activeList;
+                else workingRace.drawbacks = activeList;
+            }
+
+            int gridX = contentLeft;
+            int gridY = contentTop;
+            int colWidth = 120;
+            int rowHeight = 20;
+            int cols = 3;
+
+            for (int i = 0; i < ALL_DRAWBACKS.size(); i++) {
+                String drawbackId = ALL_DRAWBACKS.get(i);
+                int c = i % cols;
+                int r = i / cols;
+                int cbX = gridX + (c * colWidth);
+                int cbY = gridY + (r * rowHeight);
+
+                boolean selected = activeList.contains(drawbackId);
+                final List<String> targetList = activeList;
+
+                Checkbox cb = new Checkbox(cbX, cbY, colWidth - 5, 18, Component.literal("⚠️ " + drawbackId.replace("_", " ")), selected) {
+                    @Override
+                    public void onPress() {
+                        super.onPress();
+                        if (this.selected()) {
+                            if (!targetList.contains(drawbackId)) targetList.add(drawbackId);
+                        } else {
+                            targetList.remove(drawbackId);
+                        }
+                        autoSaveWorkingRace();
+                    }
+                };
+                cb.setTooltip(Tooltip.create(Component.literal("Race Drawback / Weakness: " + drawbackId)));
+                this.addRenderableWidget(cb);
+            }
         }
     }
 

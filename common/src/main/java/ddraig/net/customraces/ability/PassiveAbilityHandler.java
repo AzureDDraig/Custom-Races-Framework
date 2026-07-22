@@ -174,12 +174,99 @@ public class PassiveAbilityHandler {
                 }
             }
         }
-        if (passives.contains("willpower") && player.getHealth() < (player.getMaxHealth() * 0.25f)) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 1, false, false, true));
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 1, false, false, true));
+
+        // 8. Dedicated 60 Drawbacks & Weaknesses Handling
+        // Environmental & Elemental
+        if (passives.contains("sunlight_burn") && player.level().isDay() && player.level().canSeeSky(player.blockPosition()) && !player.isInWaterOrRain()) {
+            if (player.tickCount % 20 == 0) player.setSecondsOnFire(3);
         }
-        if (passives.contains("wither_immunity")) {
-            player.removeEffect(MobEffects.WITHER);
+        if (passives.contains("sunlight_slowness") && player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("cold_vulnerability") && (player.isInPowderSnow || player.getTicksFrozen() > 0)) {
+            player.setTicksFrozen(Math.min(player.getTicksRequiredToFreeze() + 20, player.getTicksFrozen() + 4));
+        }
+        if (passives.contains("hydrophobia") && player.isInWater()) {
+            player.setDeltaMovement(player.getDeltaMovement().x, -0.3, player.getDeltaMovement().z);
+        }
+        if (passives.contains("claustrophobia") && player.getY() < 50) {
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 40, 0, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("agoraphobia") && player.level().canSeeSky(player.blockPosition()) && player.level().isDay()) {
+            player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 100, 0, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("nether_vulnerability") && player.level().dimension().location().getPath().contains("nether")) {
+            if (player.tickCount % 40 == 0) player.hurt(player.damageSources().magic(), 1.0f);
+        }
+        if (passives.contains("end_vulnerability") && player.level().dimension().location().getPath().contains("end")) {
+            if (player.tickCount % 40 == 0) player.hurt(player.damageSources().magic(), 1.0f);
+        }
+
+        // Diet & Metabolism
+        if (passives.contains("hyper_metabolism")) {
+            if (player.isSprinting() && player.tickCount % 10 == 0) player.causeFoodExhaustion(0.2f);
+        }
+        if (passives.contains("photosynthetic_dependency")) {
+            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
+                if (player.tickCount % 40 == 0) player.getFoodData().eat(1, 0.2f);
+            }
+        }
+        if (passives.contains("soul_hunger") && player.tickCount % 100 == 0) {
+            player.causeFoodExhaustion(0.5f);
+        }
+        if (passives.contains("heavy_eater") && player.isSprinting() && player.tickCount % 10 == 0) {
+            player.causeFoodExhaustion(0.4f);
+        }
+
+        // Combat & Restrictions
+        if (passives.contains("no_shield_use") && player.getOffhandItem().getItem() instanceof net.minecraft.world.item.ShieldItem) {
+            player.drop(player.getOffhandItem().copy(), false);
+            player.getOffhandItem().setCount(0);
+        }
+        if (passives.contains("melee_weakness")) {
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+
+        // Movement & Physics
+        if (passives.contains("slowness_curse")) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0, false, false, true));
+        }
+        if (passives.contains("no_sprinting") && player.isSprinting()) {
+            player.setSprinting(false);
+        }
+        if (passives.contains("reduced_step_height")) {
+            player.setMaxUpStep(0.5f);
+        }
+        if (passives.contains("slippery_feet")) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
+        }
+        if (passives.contains("gravity_bound")) {
+            if (player.isFallFlying()) player.stopFallFlying();
+            if (player.hasEffect(MobEffects.LEVITATION)) player.removeEffect(MobEffects.LEVITATION);
+        }
+        if (passives.contains("clumsy_swimmer") && player.isInWater()) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1, false, false, true));
+        }
+
+        // Hitbox & Health Limits
+        if (passives.contains("low_max_health")) {
+            net.minecraft.world.entity.ai.attributes.AttributeInstance hpAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            if (hpAttr != null && hpAttr.getBaseValue() > 10.0) hpAttr.setBaseValue(10.0);
+        }
+        if (passives.contains("glass_cannon")) {
+            net.minecraft.world.entity.ai.attributes.AttributeInstance hpAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            if (hpAttr != null && hpAttr.getBaseValue() > 6.0) hpAttr.setBaseValue(6.0);
+        }
+
+        // Faction & Curse
+        if (passives.contains("curse_of_shadows") && player.level().getMaxLocalRawBrightness(player.blockPosition()) > 10) {
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0, false, false, true));
+        }
+        if (passives.contains("blindness_in_nether") && player.level().dimension().location().getPath().contains("nether")) {
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0, false, false, true));
         }
     }
 }

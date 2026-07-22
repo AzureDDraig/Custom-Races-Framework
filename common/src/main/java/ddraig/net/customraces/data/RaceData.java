@@ -80,6 +80,7 @@ public class RaceData {
     // Abilities
     public List<String> passiveAbilities = new ArrayList<>();
     public Map<Integer, String> activeAbilities = new HashMap<>(); // Keybind Slot (1 to 5) -> Ability ID
+    public List<String> drawbacks = new ArrayList<>();
 
     // Were-Race Transformation System
     public boolean enableWereRace = false;
@@ -104,9 +105,10 @@ public class RaceData {
     public String CustomDeathSound = "";
     public String wereDeathSound = "minecraft:entity.wolf.death";
 
-    // Were-Form Specific Granted Abilities
+    // Were-Form Specific Granted Abilities & Drawbacks
     public List<String> werePassiveAbilities = new ArrayList<>();
     public Map<Integer, String> wereActiveAbilities = new HashMap<>();
+    public List<String> wereDrawbacks = new ArrayList<>();
 
     // Minion Summon Ability Settings
     public String minionMobType = "minecraft:zombie";

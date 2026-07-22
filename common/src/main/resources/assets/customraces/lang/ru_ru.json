@@ -83,6 +83,7 @@
   "gui.customraces.tab.alliances": "Alliances",
   "gui.customraces.tab.were_model": "Were Model",
   "gui.customraces.tab.were_sounds": "Were Sounds",
+  "gui.customraces.tab.drawbacks": "Drawbacks",
   "message.customraces.were_transform": "[!] You have transformed into your Were-form!",
   "message.customraces.were_revert": "[!] You have reverted from your Were-form.",
   "message.customraces.race_changed": "Your race was updated to: %s",
