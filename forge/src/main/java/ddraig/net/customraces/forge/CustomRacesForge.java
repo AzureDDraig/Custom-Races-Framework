@@ -2,8 +2,12 @@ package ddraig.net.customraces.forge;
 
 import ddraig.net.customraces.CustomRaces;
 import ddraig.net.customraces.client.CustomRacesClient;
+import ddraig.net.customraces.client.render.PlayerRaceLayer;
 import dev.architectury.platform.forge.EventBuses;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -11,8 +15,20 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 @Mod(CustomRaces.MOD_ID)
 public class CustomRacesForge {
     public CustomRacesForge() {
-        EventBuses.registerModEventBus(CustomRaces.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        EventBuses.registerModEventBus(CustomRaces.MOD_ID, modEventBus);
         CustomRaces.init();
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> CustomRacesClient::init);
+
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            CustomRacesClient.init();
+            modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {
+                for (String skinName : event.getSkins()) {
+                    PlayerRenderer renderer = event.getSkin(skinName);
+                    if (renderer != null) {
+                        renderer.addLayer(new PlayerRaceLayer(renderer));
+                    }
+                }
+            });
+        });
     }
 }
