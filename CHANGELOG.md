@@ -4,6 +4,21 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b026a] - 2026-07-22
+
+### 🐺 Fixed Playtester Reported Issues (GeckoLib Autocomplete, Sound Preview & Preset Parts 3D Render)
+- **Recursive GeckoLib Model & File Autocomplete (`RaceRegistry.java`)**:
+  - Implemented `scanFilesRecursively` helper method to scan `config/custom_races/models`, `config/custom_races/textures`, and `config/custom_races/animations` recursively.
+  - Automatically indexes files in subdirectories (e.g. `config/custom_races/models/were/`, `config/custom_races/models/`, etc.) matching both `.geo.json` and `.json` extensions so all GeckoLib model files appear in autocomplete dropdowns.
+- **Client GUI Sound Preview Playback Fix (`RaceCreatorScreen.java`)**:
+  - Replaced player sound dispatch with `SimpleSoundInstance` (`Attenuation.NONE`) played directly via `Minecraft.getInstance().getSoundManager().play()`.
+  - Ensures modded sound event IDs (e.g. `armourers_workshop:page-turn`, `alexsmobs:*`, `custom_mobs:*`) play loud and clear in the client GUI when clicking the `► Play` preview button.
+- **Real-Time Preset Body Parts 3D GUI Rendering (`RaceCreatorScreen.java`)**:
+  - Temporarily registers `workingRace` in `RaceRegistry` for the client player UUID during 3D showcase viewport rendering.
+  - Forces `PlayerRaceLayer` to render selected preset body parts (Ears, Horns, Wings, Tail, Halo, Custom parts), RGB colors, offsets, and scales live on the 3D GUI player preview model in real-time as you edit them.
+
+---
+
 ## [1.0.0-b025a] - 2026-07-22
 
 ### 💡 Global Autocomplete Support Across ALL Textboxes Everywhere

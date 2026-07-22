@@ -591,17 +591,27 @@ public class RaceCreatorScreen extends Screen {
     }
 
     private void playPreviewSound(String soundId) {
-        if (soundId == null || soundId.trim().isEmpty() || Minecraft.getInstance().player == null) return;
+        if (soundId == null || soundId.trim().isEmpty() || Minecraft.getInstance() == null) return;
         try {
             net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(soundId.trim());
-            net.minecraft.sounds.SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(loc);
-            if (sound != null) {
-                Minecraft.getInstance().player.playSound(sound, 1.0f, 1.0f);
-            } else {
-                Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 1.0f);
-            }
+            net.minecraft.client.resources.sounds.SimpleSoundInstance soundInstance =
+                new net.minecraft.client.resources.sounds.SimpleSoundInstance(
+                    loc,
+                    net.minecraft.sounds.SoundSource.MASTER,
+                    1.0f, 1.0f,
+                    net.minecraft.util.RandomSource.create(),
+                    false, 0,
+                    net.minecraft.client.resources.sounds.SoundInstance.Attenuation.NONE,
+                    0.0D, 0.0D, 0.0D,
+                    true
+                );
+            Minecraft.getInstance().getSoundManager().play(soundInstance);
         } catch (Exception e) {
-            Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 1.0f);
+            try {
+                Minecraft.getInstance().getSoundManager().play(
+                    net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f)
+                );
+            } catch (Exception ignored) {}
         }
     }
 
@@ -694,27 +704,50 @@ public class RaceCreatorScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, "§b❖ 3D SHOWCASE ❖", rightLeft + 70, rightTop + 6, 0xFFFFFF);
 
         if (this.minecraft != null && this.minecraft.player != null) {
-            int previewX = rightLeft + 70;
-            int previewY = rightBottom - 18;
+            readFormInputs(); // Sync latest form inputs to workingRace
 
-            int viewH = rightBottom - (rightTop + 22);
-            float totalRaceScale = Math.max(0.2f, workingRace.heightScale * workingRace.baseScale);
-            int scale = (int) Math.min(viewH * 0.38f, 32 * totalRaceScale);
+            // Temporarily register workingRace so live preset body parts render on the GUI preview entity
+            String prevPlayerRace = RaceRegistry.playerRaces.get(this.minecraft.player.getUUID());
+            RaceData prevLoadedRace = RaceRegistry.loadedRaces.get(workingRace.id);
 
-            // Enable Scissor to prevent 3D entity from clipping through top title bar or panel edges
-            guiGraphics.enableScissor(rightLeft + 2, rightTop + 21, rightRight - 2, rightBottom - 2);
+            RaceRegistry.loadedRaces.put(workingRace.id, workingRace);
+            RaceRegistry.playerRaces.put(this.minecraft.player.getUUID(), workingRace.id);
 
-            // Render Holographic Pedestal Ring
-            guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, 0x3000CEC9);
-            guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, 0x606C5CE7);
+            try {
+                int previewX = rightLeft + 70;
+                int previewY = rightBottom - 18;
 
-            InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    guiGraphics, previewX, previewY, scale,
-                    (float)(previewX - mouseX), (float)(previewY - (int)(scale * 0.9f) - mouseY),
-                    this.minecraft.player
-            );
+                int viewH = rightBottom - (rightTop + 22);
+                float totalRaceScale = Math.max(0.2f, workingRace.heightScale * workingRace.baseScale);
+                int scale = (int) Math.min(viewH * 0.38f, 32 * totalRaceScale);
 
-            guiGraphics.disableScissor();
+                // Enable Scissor to prevent 3D entity from clipping through top title bar or panel edges
+                guiGraphics.enableScissor(rightLeft + 2, rightTop + 21, rightRight - 2, rightBottom - 2);
+
+                // Render Holographic Pedestal Ring
+                guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, 0x3000CEC9);
+                guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, 0x606C5CE7);
+
+                InventoryScreen.renderEntityInInventoryFollowsMouse(
+                        guiGraphics, previewX, previewY, scale,
+                        (float)(previewX - mouseX), (float)(previewY - (int)(scale * 0.9f) - mouseY),
+                        this.minecraft.player
+                );
+
+                guiGraphics.disableScissor();
+            } finally {
+                // Restore previous race state
+                if (prevPlayerRace != null) {
+                    RaceRegistry.playerRaces.put(this.minecraft.player.getUUID(), prevPlayerRace);
+                } else {
+                    RaceRegistry.playerRaces.remove(this.minecraft.player.getUUID());
+                }
+                if (prevLoadedRace != null) {
+                    RaceRegistry.loadedRaces.put(workingRace.id, prevLoadedRace);
+                } else {
+                    RaceRegistry.loadedRaces.remove(workingRace.id);
+                }
+            }
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);

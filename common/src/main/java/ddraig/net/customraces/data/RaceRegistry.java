@@ -161,49 +161,21 @@ public class RaceRegistry {
             }
             java.util.Collections.sort(CACHED_PROJECTILES);
 
-            // Scan Were Models
+            // Scan Were & Custom Models (recursively across config/custom_races/models)
             CACHED_WERE_MODELS.clear();
-            File wmDir = new File("config/custom_races/models/were");
-            if (wmDir.exists() && wmDir.isDirectory()) {
-                File[] files = wmDir.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        if (f.getName().endsWith(".json")) {
-                            CACHED_WERE_MODELS.add("customraces:models/were/" + f.getName());
-                        }
-                    }
-                }
-            }
+            scanFilesRecursively(new File("config/custom_races/models"), "customraces:models/", ".json", CACHED_WERE_MODELS);
+            scanFilesRecursively(new File("config/custom_races"), "customraces:", ".json", CACHED_WERE_MODELS);
             java.util.Collections.sort(CACHED_WERE_MODELS);
 
-            // Scan Were Textures
+            // Scan Were & Custom Textures
             CACHED_WERE_TEXTURES.clear();
-            File wtDir = new File("config/custom_races/textures/were");
-            if (wtDir.exists() && wtDir.isDirectory()) {
-                File[] files = wtDir.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        if (f.getName().endsWith(".png")) {
-                            CACHED_WERE_TEXTURES.add("customraces:textures/were/" + f.getName());
-                        }
-                    }
-                }
-            }
+            scanFilesRecursively(new File("config/custom_races/textures"), "customraces:textures/", ".png", CACHED_WERE_TEXTURES);
+            scanFilesRecursively(new File("config/custom_races"), "customraces:", ".png", CACHED_WERE_TEXTURES);
             java.util.Collections.sort(CACHED_WERE_TEXTURES);
 
-            // Scan Were Animations
+            // Scan Were & Custom Animations
             CACHED_WERE_ANIMS.clear();
-            File waDir = new File("config/custom_races/animations/were");
-            if (waDir.exists() && waDir.isDirectory()) {
-                File[] files = waDir.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        if (f.getName().endsWith(".json")) {
-                            CACHED_WERE_ANIMS.add("customraces:animations/were/" + f.getName());
-                        }
-                    }
-                }
-            }
+            scanFilesRecursively(new File("config/custom_races/animations"), "customraces:animations/", ".json", CACHED_WERE_ANIMS);
             java.util.Collections.sort(CACHED_WERE_ANIMS);
 
             // Race Names
@@ -484,5 +456,21 @@ public class RaceRegistry {
         golem.passiveAbilities.add("explosive_resistance");
         golem.activeAbilities.put(1, "shield_wall");
         loadedRaces.put(golem.id, golem);
+    }
+
+    private static void scanFilesRecursively(File dir, String prefix, String extension, List<String> targetList) {
+        if (dir == null || !dir.exists()) return;
+        File[] files = dir.listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (f.isDirectory()) {
+                scanFilesRecursively(f, prefix + f.getName() + "/", extension, targetList);
+            } else if (f.getName().toLowerCase().endsWith(extension.toLowerCase())) {
+                String fullPath = prefix + f.getName();
+                if (!targetList.contains(fullPath)) {
+                    targetList.add(fullPath);
+                }
+            }
+        }
     }
 }
