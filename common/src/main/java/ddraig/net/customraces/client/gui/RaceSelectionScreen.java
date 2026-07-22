@@ -261,24 +261,30 @@ public class RaceSelectionScreen extends Screen {
         if (this.minecraft != null && this.minecraft.player != null) {
             modelRotation += partialTick * 0.8f;
             int previewX = rightLeft + rightWidth / 2;
-            int previewY = bottomY - 30;
+            int previewY = bottomY - 18;
+
+            int viewH = bottomY - (topY + 22);
+            float totalRaceScale = 1.0f;
+            if (selectedRace != null) {
+                float hScale = (previewWereForm && selectedRace.enableWereRace) ? selectedRace.wereHeightScale : selectedRace.heightScale;
+                totalRaceScale = Math.max(0.2f, hScale * selectedRace.baseScale);
+            }
+            int scale = (int) Math.min(viewH * 0.38f, 32 * totalRaceScale);
+
+            // Enable Scissor to prevent 3D entity from clipping through top title bar or panel edges
+            guiGraphics.enableScissor(rightLeft + 2, topY + 21, rightRight - 2, bottomY - 2);
 
             // Render Holographic Pedestal Ring
             guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x40FF0000 : 0x3000CEC9);
             guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x80880000 : 0x606C5CE7);
 
-            int scale = 50;
-
-            if (selectedRace != null) {
-                float hScale = (previewWereForm && selectedRace.enableWereRace) ? selectedRace.wereHeightScale : selectedRace.heightScale;
-                scale = (int) (50 * hScale * selectedRace.baseScale);
-            }
-
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     guiGraphics, previewX, previewY, scale,
-                    (float)(previewX - mouseX), (float)(previewY - 50 - mouseY),
+                    (float)(previewX - mouseX), (float)(previewY - (int)(scale * 0.9f) - mouseY),
                     this.minecraft.player
             );
+
+            guiGraphics.disableScissor();
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);

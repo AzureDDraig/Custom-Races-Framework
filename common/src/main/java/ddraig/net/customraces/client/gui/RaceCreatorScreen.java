@@ -695,18 +695,26 @@ public class RaceCreatorScreen extends Screen {
 
         if (this.minecraft != null && this.minecraft.player != null) {
             int previewX = rightLeft + 70;
-            int previewY = rightBottom - 30;
+            int previewY = rightBottom - 18;
+
+            int viewH = rightBottom - (rightTop + 22);
+            float totalRaceScale = Math.max(0.2f, workingRace.heightScale * workingRace.baseScale);
+            int scale = (int) Math.min(viewH * 0.38f, 32 * totalRaceScale);
+
+            // Enable Scissor to prevent 3D entity from clipping through top title bar or panel edges
+            guiGraphics.enableScissor(rightLeft + 2, rightTop + 21, rightRight - 2, rightBottom - 2);
 
             // Render Holographic Pedestal Ring
             guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, 0x3000CEC9);
             guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, 0x606C5CE7);
 
-            int scale = (int) (45 * workingRace.heightScale * workingRace.baseScale);
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     guiGraphics, previewX, previewY, scale,
-                    (float)(previewX - mouseX), (float)(previewY - 45 - mouseY),
+                    (float)(previewX - mouseX), (float)(previewY - (int)(scale * 0.9f) - mouseY),
                     this.minecraft.player
             );
+
+            guiGraphics.disableScissor();
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);

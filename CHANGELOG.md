@@ -4,6 +4,20 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b024a] - 2026-07-22
+
+### 🖼️ 3D Showcase Viewport Head Clipping & Auto-Scale Fix
+- **Dynamic Viewport Capping (`RaceCreatorScreen.java` & `RaceSelectionScreen.java`)**:
+  - Replaced static scale formula with dynamic height capping (`Math.min(viewH * 0.38f, 32 * totalRaceScale)`).
+  - Automatically adjusts scale to ensure tall entities, large height multipliers, or Were-form transformations fit with generous headroom.
+- **Lowered Pedestal Base Position**:
+  - Adjusted `previewY = rightBottom - 18` so entity feet sit squarely on top of the 3D Holographic Showcase Pedestal ring near the bottom of the box.
+- **Scissor Region Isolation**:
+  - Enclosed entity rendering inside `guiGraphics.enableScissor(rightLeft + 2, topY + 21, rightRight - 2, bottomY - 2)`.
+  - Guarantees that rotated 3D models or entity limbs stay 100% inside the viewport frame without clipping through top title bars or leaking into black screen margins.
+
+---
+
 ## [1.0.0-b023a] - 2026-07-22
 
 ### 🔗 Deep Transitive & Multi-Tier Relation Fixes
