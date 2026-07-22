@@ -1,5 +1,6 @@
 package ddraig.net.customraces.client.gui;
 
+import ddraig.net.customraces.data.MobAllianceData;
 import ddraig.net.customraces.data.PartTransformData;
 import ddraig.net.customraces.data.ParticleAuraData;
 import ddraig.net.customraces.data.RaceData;
@@ -248,6 +249,97 @@ public class RaceCreatorScreen extends Screen {
             }).bounds(contentLeft, contentTop + 135, 200, 22).build();
             partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
             this.addRenderableWidget(partsBtn);
+
+        } else if (activeTab == 2) { // Positions / Part Transforms
+            int py = contentTop;
+            String[] partKeys = {"ears", "wings", "tail", "horns", "halo", "custom"};
+            for (String pKey : partKeys) {
+                PartTransformData pt = workingRace.partTransforms.computeIfAbsent(pKey, k -> new PartTransformData());
+
+                EditBox xBox = new EditBox(this.font, contentLeft + 110, py, 45, 18, Component.literal(pKey + " X"));
+                xBox.setMaxLength(2048);
+                xBox.setValue(String.valueOf(pt.posX));
+                xBox.setResponder(val -> { try { pt.posX = Float.parseFloat(val); } catch (Exception ignored) {} });
+                this.addRenderableWidget(xBox);
+
+                EditBox yBox = new EditBox(this.font, contentLeft + 160, py, 45, 18, Component.literal(pKey + " Y"));
+                yBox.setMaxLength(2048);
+                yBox.setValue(String.valueOf(pt.posY));
+                yBox.setResponder(val -> { try { pt.posY = Float.parseFloat(val); } catch (Exception ignored) {} });
+                this.addRenderableWidget(yBox);
+
+                EditBox zBox = new EditBox(this.font, contentLeft + 210, py, 45, 18, Component.literal(pKey + " Z"));
+                zBox.setMaxLength(2048);
+                zBox.setValue(String.valueOf(pt.posZ));
+                zBox.setResponder(val -> { try { pt.posZ = Float.parseFloat(val); } catch (Exception ignored) {} });
+                this.addRenderableWidget(zBox);
+
+                py += 24;
+            }
+
+        } else if (activeTab == 3) { // Passives
+            int py = contentTop;
+            String[] allPassives = {
+                "night_vision", "water_breathing", "fire_resistance", "flight", "slow_falling",
+                "regeneration", "wither_immunity", "fall_damage_immunity", "lava_swimming", "climbing"
+            };
+
+            for (String passive : allPassives) {
+                boolean active = workingRace.passiveAbilities.contains(passive);
+                Checkbox pBox = new Checkbox(contentLeft, py, 180, 20, Component.literal(passive.replace("_", " ").toUpperCase()), active) {
+                    @Override
+                    public void onPress() {
+                        super.onPress();
+                        if (this.selected()) {
+                            if (!workingRace.passiveAbilities.contains(passive)) workingRace.passiveAbilities.add(passive);
+                        } else {
+                            workingRace.passiveAbilities.remove(passive);
+                        }
+                    }
+                };
+                pBox.setTooltip(Tooltip.create(Component.literal("Toggle passive ability: " + passive)));
+                this.addRenderableWidget(pBox);
+                py += 21;
+            }
+
+        } else if (activeTab == 4) { // Actives
+            int py = contentTop;
+            for (int slot = 1; slot <= 5; slot++) {
+                final int currentSlot = slot;
+                String currentSkill = workingRace.activeAbilities.getOrDefault(slot, "none");
+
+                EditBox slotBox = new EditBox(this.font, contentLeft + 60, py, 200, 18, Component.literal("Slot " + slot));
+                slotBox.setMaxLength(2048);
+                slotBox.setValue(currentSkill);
+                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID (e.g. flame_breath, teleport_dash, transform_were, summon_minions).")));
+                slotBox.setResponder(val -> workingRace.activeAbilities.put(currentSlot, val));
+                this.addRenderableWidget(slotBox);
+
+                py += 24;
+            }
+
+        } else if (activeTab == 7) { // Alliances
+            int py = contentTop;
+            String[] factions = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper", "minecraft:enderman", "minecraft:piglin"};
+            for (String mobId : factions) {
+                boolean isNeutral = workingRace.alliances.stream().anyMatch(a -> mobId.equalsIgnoreCase(a.mobId));
+                Checkbox aBox = new Checkbox(contentLeft, py, 180, 20, Component.literal(mobId.substring(mobId.indexOf(':') + 1).toUpperCase() + " Neutrality"), isNeutral) {
+                    @Override
+                    public void onPress() {
+                        super.onPress();
+                        if (this.selected()) {
+                            if (workingRace.alliances.stream().noneMatch(a -> mobId.equalsIgnoreCase(a.mobId))) {
+                                workingRace.alliances.add(new MobAllianceData(mobId, "neutral"));
+                            }
+                        } else {
+                            workingRace.alliances.removeIf(a -> mobId.equalsIgnoreCase(a.mobId));
+                        }
+                    }
+                };
+                aBox.setTooltip(Tooltip.create(Component.literal("Toggle neutrality stance for " + mobId)));
+                this.addRenderableWidget(aBox);
+                py += 22;
+            }
 
         } else if (activeTab == 5) { // Sounds & FX
             this.ambientSoundBox = new EditBox(this.font, contentLeft + 110, contentTop, 200, 18, Component.literal("Ambient Sound"));
@@ -507,6 +599,25 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, "Width Scale:", contentLeft, contentTop + 59, 0xCCCCCC);
             guiGraphics.drawString(this.font, "Max Health:", contentLeft, contentTop + 84, 0xCCCCCC);
             guiGraphics.drawString(this.font, "Move Speed:", contentLeft, contentTop + 109, 0xCCCCCC);
+        } else if (activeTab == 2) {
+            guiGraphics.drawString(this.font, "§ePart Scale & Offset (X, Y, Z):", contentLeft, contentTop - 12, 0xFFFFFF);
+            String[] partKeys = {"Ears", "Wings", "Tail", "Horns", "Halo", "Custom"};
+            int py = contentTop;
+            for (String pKey : partKeys) {
+                guiGraphics.drawString(this.font, pKey + ":", contentLeft, py + 4, 0xCCCCCC);
+                py += 24;
+            }
+        } else if (activeTab == 3) {
+            guiGraphics.drawString(this.font, "§aToggle Passive Race Abilities:", contentLeft, contentTop - 12, 0xFFFFFF);
+        } else if (activeTab == 4) {
+            guiGraphics.drawString(this.font, "§cAssign Active Skills (Slots 1-5):", contentLeft, contentTop - 12, 0xFFFFFF);
+            int py = contentTop;
+            for (int slot = 1; slot <= 5; slot++) {
+                guiGraphics.drawString(this.font, "Slot " + slot + ":", contentLeft, py + 4, 0xCCCCCC);
+                py += 24;
+            }
+        } else if (activeTab == 7) {
+            guiGraphics.drawString(this.font, "§bMob Faction Neutrality Stances:", contentLeft, contentTop - 12, 0xFFFFFF);
         } else if (activeTab == 5) {
             guiGraphics.drawString(this.font, "Ambient Sound:", contentLeft, contentTop + 4, 0xCCCCCC);
             guiGraphics.drawString(this.font, "Hurt Sound:", contentLeft, contentTop + 34, 0xCCCCCC);

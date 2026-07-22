@@ -4,6 +4,18 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b014a] - 2026-07-22
+
+### 🛠️ Fixed & Restored
+- **Positions, Passives, Actives, and Alliances GUI Tabs (`RaceCreatorScreen.java`)**:
+  - Implemented missing GUI widget initializations in `init()` and rendering labels for **Positions** (`activeTab == 2`), **Passives** (`activeTab == 3`), **Actives** (`activeTab == 4`), and **Alliances** (`activeTab == 7`).
+  - **Positions Tab**: Interactive X/Y/Z coordinate transform input boxes for ears, wings, tail, horns, halo, and custom parts.
+  - **Passives Tab**: Interactive checkboxes for all 10 passive race abilities (`night_vision`, `water_breathing`, `fire_resistance`, `flight`, `slow_falling`, `regeneration`, `wither_immunity`, `fall_damage_immunity`, `lava_swimming`, `climbing`).
+  - **Actives Tab**: Hotbar Skill Assignment boxes for Slots 1 to 5 (`flame_breath`, `teleport_dash`, `transform_were`, `summon_minions`, `custom_mobs:<id>`).
+  - **Alliances Tab**: Faction neutrality stance checkboxes (`minecraft:zombie`, `minecraft:skeleton`, `minecraft:spider`, `minecraft:creeper`, `minecraft:enderman`, `minecraft:piglin`).
+
+---
+
 ## [1.0.0-b013a] - 2026-07-22
 
 ### 🛠️ Fixed & Improved
