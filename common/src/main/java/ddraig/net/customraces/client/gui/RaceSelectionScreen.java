@@ -187,26 +187,60 @@ public class RaceSelectionScreen extends Screen {
                 guiGraphics.drawWordWrap(this.font, Component.literal("§7" + selectedRace.lore), centerLeft + 15, loreY + 20, centerWidth - 30, 0xCCCCCC);
             }
 
-            // Passives Summary
-            int passY = loreY + 58;
-            guiGraphics.drawString(this.font, "§a§lPASSIVE ABILITIES (" + selectedRace.passiveAbilities.size() + "):", centerLeft + 12, passY, 0xFFFFFF);
-            int passItemY = passY + 14;
-            for (String passive : selectedRace.passiveAbilities) {
-                if (passItemY < passY + 70) {
-                    guiGraphics.drawString(this.font, " §8• §f" + passive.replace("_", " "), centerLeft + 18, passItemY, 0xDDDDDD);
-                    passItemY += 12;
+            if (previewWereForm && selectedRace.enableWereRace) {
+                // Passives Summary (Were Form)
+                int passY = loreY + 58;
+                int werePassCount = selectedRace.werePassiveAbilities != null ? selectedRace.werePassiveAbilities.size() : 0;
+                guiGraphics.drawString(this.font, "§c§l🌙 WERE-FORM PASSIVES (" + werePassCount + "):", centerLeft + 12, passY, 0xFFFFFF);
+                int passItemY = passY + 14;
+                if (selectedRace.werePassiveAbilities != null && !selectedRace.werePassiveAbilities.isEmpty()) {
+                    for (String passive : selectedRace.werePassiveAbilities) {
+                        if (passItemY < passY + 70) {
+                            guiGraphics.drawString(this.font, " §8• §c" + passive.replace("_", " "), centerLeft + 18, passItemY, 0xFFDDDD);
+                            passItemY += 12;
+                        }
+                    }
+                } else {
+                    guiGraphics.drawString(this.font, " §8• §7Retains Standard Race Passives", centerLeft + 18, passItemY, 0xAAAAAA);
                 }
-            }
 
-            // Actives Summary
-            int actY = passY + 78;
-            guiGraphics.drawString(this.font, "§c§lACTIVE SKILLS (Slots 1-5):", centerLeft + 12, actY, 0xFFFFFF);
-            int actItemY = actY + 14;
-            for (int slot = 1; slot <= 5; slot++) {
-                String actName = selectedRace.activeAbilities.getOrDefault(slot, "None");
-                if (actName == null || actName.isEmpty()) actName = "None";
-                guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §e" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xDDDDDD);
-                actItemY += 12;
+                // Actives Summary (Were Form)
+                int actY = passY + 78;
+                guiGraphics.drawString(this.font, "§c§l🌙 WERE-FORM ACTIVE SKILLS (Slots 1-5):", centerLeft + 12, actY, 0xFFFFFF);
+                int actItemY = actY + 14;
+                for (int slot = 1; slot <= 5; slot++) {
+                    String actName = selectedRace.wereActiveAbilities != null ? selectedRace.wereActiveAbilities.get(slot) : null;
+                    if (actName == null || actName.isEmpty() || "none".equalsIgnoreCase(actName)) {
+                        actName = selectedRace.activeAbilities.getOrDefault(slot, "None");
+                        if (actName == null || actName.isEmpty()) actName = "None";
+                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §7" + actName.replace("_", " ") + " §8(Base)", centerLeft + 18, actItemY, 0x888888);
+                    } else {
+                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §c" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xFFDDDD);
+                    }
+                    actItemY += 12;
+                }
+            } else {
+                // Passives Summary (Standard)
+                int passY = loreY + 58;
+                guiGraphics.drawString(this.font, "§a§lPASSIVE ABILITIES (" + selectedRace.passiveAbilities.size() + "):", centerLeft + 12, passY, 0xFFFFFF);
+                int passItemY = passY + 14;
+                for (String passive : selectedRace.passiveAbilities) {
+                    if (passItemY < passY + 70) {
+                        guiGraphics.drawString(this.font, " §8• §f" + passive.replace("_", " "), centerLeft + 18, passItemY, 0xDDDDDD);
+                        passItemY += 12;
+                    }
+                }
+
+                // Actives Summary (Standard)
+                int actY = passY + 78;
+                guiGraphics.drawString(this.font, "§c§lACTIVE SKILLS (Slots 1-5):", centerLeft + 12, actY, 0xFFFFFF);
+                int actItemY = actY + 14;
+                for (int slot = 1; slot <= 5; slot++) {
+                    String actName = selectedRace.activeAbilities.getOrDefault(slot, "None");
+                    if (actName == null || actName.isEmpty()) actName = "None";
+                    guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §e" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xDDDDDD);
+                    actItemY += 12;
+                }
             }
         }
 
