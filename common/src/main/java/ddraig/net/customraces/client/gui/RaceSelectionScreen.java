@@ -288,6 +288,39 @@ public class RaceSelectionScreen extends Screen {
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+
+        // Render Floating Auto-Complete Suggestion Overlay for Search Box
+        if (searchBox != null && searchBox.isFocused()) {
+            String query = searchBox.getValue().toLowerCase().trim();
+            List<String> suggestions = RaceRegistry.loadedRaces.values().stream()
+                    .map(r -> r.name)
+                    .filter(name -> query.isEmpty() || name.toLowerCase().contains(query))
+                    .limit(8)
+                    .collect(Collectors.toList());
+
+            if (!suggestions.isEmpty()) {
+                int dropX = searchBox.getX();
+                int dropY = searchBox.getY() + searchBox.getHeight() + 2;
+                int dropW = searchBox.getWidth();
+                int rowH = 14;
+                int dropH = suggestions.size() * rowH + 4;
+
+                guiGraphics.fill(dropX, dropY, dropX + dropW, dropY + dropH, 0xFE12151B);
+                guiGraphics.fill(dropX, dropY, dropX + dropW, dropY + 1, 0xFF4A80C0);
+                guiGraphics.fill(dropX, dropY + dropH - 1, dropX + dropW, dropY + dropH, 0xFF4A80C0);
+
+                for (int i = 0; i < suggestions.size(); i++) {
+                    String sugg = suggestions.get(i);
+                    int suggItemY = dropY + 2 + i * rowH;
+
+                    boolean isHover = mouseX >= dropX && mouseX <= dropX + dropW && mouseY >= suggItemY && mouseY <= suggItemY + rowH;
+                    if (isHover) {
+                        guiGraphics.fill(dropX + 2, suggItemY, dropX + dropW - 2, suggItemY + rowH, 0xFF2A364F);
+                    }
+                    guiGraphics.drawString(this.font, "§e" + sugg, dropX + 6, suggItemY + 3, 0xFFFFFF);
+                }
+            }
+        }
     }
 
     @Override
@@ -295,6 +328,31 @@ public class RaceSelectionScreen extends Screen {
         int leftWidth = 140;
         int topY = 30;
         int bottomY = this.height - 10;
+
+        // Check search box autocomplete clicks
+        if (searchBox != null && searchBox.isFocused()) {
+            String query = searchBox.getValue().toLowerCase().trim();
+            List<String> suggestions = RaceRegistry.loadedRaces.values().stream()
+                    .map(r -> r.name)
+                    .filter(name -> query.isEmpty() || name.toLowerCase().contains(query))
+                    .limit(8)
+                    .collect(Collectors.toList());
+
+            if (!suggestions.isEmpty()) {
+                int dropX = searchBox.getX();
+                int dropY = searchBox.getY() + searchBox.getHeight() + 2;
+                int dropW = searchBox.getWidth();
+                int rowH = 14;
+                for (int i = 0; i < suggestions.size(); i++) {
+                    int itemY = dropY + 2 + i * rowH;
+                    if (mouseX >= dropX && mouseX <= dropX + dropW && mouseY >= itemY && mouseY <= itemY + rowH) {
+                        searchBox.setValue(suggestions.get(i));
+                        updateFilteredRaces();
+                        return true;
+                    }
+                }
+            }
+        }
 
         if (mouseX >= 10 && mouseX <= leftWidth && mouseY >= topY + 46 && mouseY <= bottomY) {
             int itemY = topY + 46 - (int) scrollOffset;

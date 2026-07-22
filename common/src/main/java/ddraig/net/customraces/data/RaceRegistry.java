@@ -33,6 +33,14 @@ public class RaceRegistry {
     public static final List<String> CACHED_WERE_MODELS = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_WERE_TEXTURES = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_WERE_ANIMS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_TEXTURES = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_ACTIVE_SKILLS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_NAMES = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_COLORS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_NUMBERS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_OFFSETS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_TRIGGERS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_ANIMS = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     private static File getRacesFile() {
         File dir = new File("config/custom_races");
@@ -197,6 +205,61 @@ public class RaceRegistry {
                 }
             }
             java.util.Collections.sort(CACHED_WERE_ANIMS);
+
+            // Race Names
+            CACHED_NAMES.clear();
+            CACHED_NAMES.addAll(java.util.List.of("Elf", "Demon", "Angel", "Dragon", "Vampire", "Werewolf", "Dwarf", "Ork", "Fairy", "Merfolk", "Cyborg", "Titan", "Kitsune", "Naga", "Golem", "Human"));
+            java.util.Collections.sort(CACHED_NAMES);
+
+            // Name Colors
+            CACHED_COLORS.clear();
+            CACHED_COLORS.addAll(java.util.List.of("#FFAA00", "#FF5555", "#55FF55", "#55FFFF", "#5555FF", "#AA00AA", "#FFFF55", "#FFFFFF", "#888888", "#000000", "#FF8C00", "#9932CC", "#00CED1"));
+
+            // Active Skills
+            CACHED_ACTIVE_SKILLS.clear();
+            CACHED_ACTIVE_SKILLS.addAll(java.util.List.of("flame_breath", "teleport_dash", "transform_were", "summon_minions", "none"));
+            if (cmProjDir.exists() && cmProjDir.isDirectory()) {
+                File[] files = cmProjDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".json")) {
+                            CACHED_ACTIVE_SKILLS.add("custom_mobs:" + f.getName().replace(".json", ""));
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(CACHED_ACTIVE_SKILLS);
+
+            // Triggers
+            CACHED_TRIGGERS.clear();
+            CACHED_TRIGGERS.addAll(java.util.List.of("FULL_MOON", "NEW_MOON", "NIGHT", "DAY", "WATER", "RAGE", "KEY"));
+
+            // Numbers
+            CACHED_NUMBERS.clear();
+            CACHED_NUMBERS.addAll(java.util.List.of("0.5", "0.75", "1.0", "1.25", "1.5", "1.75", "2.0", "5.0", "10.0", "20.0", "40.0"));
+
+            // Offsets
+            CACHED_OFFSETS.clear();
+            CACHED_OFFSETS.addAll(java.util.List.of("-0.5", "-0.4", "-0.3", "-0.2", "-0.1", "0.0", "0.1", "0.2", "0.3", "0.4", "0.5"));
+
+            // Animations
+            CACHED_ANIMS.clear();
+            CACHED_ANIMS.addAll(java.util.List.of("animation.were.idle", "animation.were.walk", "animation.were.attack", "animation.were.howl", "animation.were.transform", "animation.were.run"));
+
+            // Scanned Standard Textures
+            CACHED_TEXTURES.clear();
+            File txtDir = new File("config/custom_races/textures");
+            if (txtDir.exists() && txtDir.isDirectory()) {
+                File[] files = txtDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".png")) {
+                            CACHED_TEXTURES.add("customraces:textures/" + f.getName());
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(CACHED_TEXTURES);
         } catch (Exception ignored) {}
     }
 

@@ -764,6 +764,12 @@ public class RaceCreatorScreen extends Screen {
                     source = RaceRegistry.CACHED_SOUNDS;
                 } else if (box == iconBox) {
                     source = RaceRegistry.CACHED_ITEMS;
+                } else if (box == customTextureBox) {
+                    source = RaceRegistry.CACHED_TEXTURES;
+                } else if (box == nameBox) {
+                    source = RaceRegistry.CACHED_NAMES;
+                } else if (box == nameColorBox) {
+                    source = RaceRegistry.CACHED_COLORS;
                 } else if (box == spawnDimensionBox) {
                     source = RaceRegistry.CACHED_DIMENSIONS;
                 } else if (box == spawnBiomeBox) {
@@ -776,6 +782,14 @@ public class RaceCreatorScreen extends Screen {
                     source = RaceRegistry.CACHED_WERE_TEXTURES;
                 } else if (box == wereAnimFileBox) {
                     source = RaceRegistry.CACHED_WERE_ANIMS;
+                } else if (box == wereConditionBox) {
+                    source = RaceRegistry.CACHED_TRIGGERS;
+                } else if (box == wereIdleAnimBox || box == wereWalkAnimBox || box == wereAttackAnimBox) {
+                    source = RaceRegistry.CACHED_ANIMS;
+                } else if (box == heightScaleBox || box == widthScaleBox || box == healthBox || box == speedBox || box == difficultyBox || box == minionCountBox || box == minionScaleBox) {
+                    source = RaceRegistry.CACHED_NUMBERS;
+                } else {
+                    source = RaceRegistry.CACHED_ACTIVE_SKILLS;
                 }
 
                 if (source != null && !source.isEmpty()) {

@@ -4,6 +4,26 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b025a] - 2026-07-22
+
+### 💡 Global Autocomplete Support Across ALL Textboxes Everywhere
+- **Universal Text Field Autocomplete (`RaceCreatorScreen.java` & `RaceSelectionScreen.java`)**:
+  - Connected **EVERY SINGLE EditBox** across all 10 GUI tabs and search bars to live floating autocomplete suggestion overlays.
+  - **Category Autocomplete Sources**:
+    - 🏷️ **Race Name Box**: Preset race templates (`Elf`, `Demon`, `Angel`, `Dragon`, `Vampire`, `Werewolf`, `Dwarf`, `Ork`, `Fairy`, `Merfolk`, `Cyborg`, `Titan`, `Kitsune`, `Naga`, `Golem`, `Human`).
+    - 🎨 **Name Color Box**: Preset hex color options (`#FFAA00`, `#FF5555`, `#55FF55`, `#55FFFF`, `#5555FF`, `#AA00AA`, `#FFFF55`, `#FFFFFF`, `#888888`, `#000000`, `#FF8C00`, `#9932CC`, `#00CED1`).
+    - 🖼️ **Custom Texture Box**: Scanned PNG textures from `config/custom_races/textures/`.
+    - 🔊 **Sound Event Boxes**: All registered sound event IDs across **all installed mods** (`BuiltInRegistries.SOUND_EVENT`).
+    - 🌍 **Dimension & Biome Boxes**: Modded dimension IDs (`twilightforest:*`, `aether:*`) and biome IDs (`biomesoplenty:*`, `byg:*`).
+    - ⚔️ **Active Ability Slots (1-5)**: Built-in skills (`flame_breath`, `teleport_dash`, `transform_were`, `summon_minions`) + custom mob skills (`custom_mobs:<id>`).
+    - 🌕 **Were Transformation Triggers**: `FULL_MOON`, `NEW_MOON`, `NIGHT`, `DAY`, `WATER`, `RAGE`, `KEY`.
+    - 🎬 **Were Model, Texture & Animation Files**: Scanned files from `config/custom_races/models/were/`, `config/custom_races/textures/were/`, and `config/custom_races/animations/were/`.
+    - 📏 **Numeric Multipliers & Scales**: Common float scale presets (`0.5`, `0.75`, `1.0`, `1.25`, `1.5`, `1.75`, `2.0`, `5.0`, `10.0`, `20.0`, `40.0`).
+    - 📐 **XYZ Position Offsets**: Preset float coordinate offsets (`-0.5`, `-0.4`, `-0.3`, `-0.2`, `-0.1`, `0.0`, `0.1`, `0.2`, `0.3`, `0.4`, `0.5`).
+    - 🔍 **Race Selection Search Box**: Real-time autocomplete suggestions matching all loaded race names.
+
+---
+
 ## [1.0.0-b024a] - 2026-07-22
 
 ### 🖼️ 3D Showcase Viewport Head Clipping & Auto-Scale Fix
