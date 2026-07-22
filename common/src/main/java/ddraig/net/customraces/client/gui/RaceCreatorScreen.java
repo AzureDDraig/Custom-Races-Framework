@@ -1122,7 +1122,8 @@ public class RaceCreatorScreen extends Screen {
                 } else if (box == wereConditionBox) {
                     source = RaceRegistry.CACHED_TRIGGERS;
                 } else if (box == wereIdleAnimBox || box == wereWalkAnimBox || box == wereAttackAnimBox) {
-                    source = RaceRegistry.CACHED_ANIMS;
+                    String animPath = (wereAnimFileBox != null && !wereAnimFileBox.getValue().trim().isEmpty()) ? wereAnimFileBox.getValue().trim() : workingRace.wereAnimationPath;
+                    source = RaceRegistry.parseAnimationKeysFromFile(animPath);
                 } else if (box == heightScaleBox || box == widthScaleBox || box == healthBox || box == speedBox || box == difficultyBox || box == minionCountBox || box == minionScaleBox) {
                     source = RaceRegistry.CACHED_NUMBERS;
                 } else {

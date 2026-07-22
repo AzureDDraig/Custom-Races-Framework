@@ -216,7 +216,6 @@ public class RaceRegistry {
 
             // Animations
             CACHED_ANIMS.clear();
-            CACHED_ANIMS.addAll(java.util.List.of("animation.were.idle", "animation.were.walk", "animation.were.attack", "animation.were.howl", "animation.were.transform", "animation.were.run"));
 
             // Scanned Standard Textures
             CACHED_TEXTURES.clear();
@@ -233,6 +232,66 @@ public class RaceRegistry {
             }
             java.util.Collections.sort(CACHED_TEXTURES);
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Dynamically reads and parses the actual animation keys from a GeckoLib animation JSON file.
+     */
+    public static List<String> parseAnimationKeysFromFile(String animPath) {
+        List<String> results = new java.util.ArrayList<>();
+        if (animPath == null || animPath.trim().isEmpty()) return results;
+
+        String cleanPath = animPath.trim();
+
+        // 1. Try reading directly from disk if file exists in config/ or custom_races directory
+        File file = new File(cleanPath);
+        if (!file.exists()) {
+            file = new File("config/custom_races/animations/" + cleanPath.replaceAll(".*/", ""));
+        }
+        if (!file.exists()) {
+            file = new File("config/custom_races/animations/were/" + cleanPath.replaceAll(".*/", ""));
+        }
+
+        if (file.exists() && file.isFile()) {
+            try (FileReader reader = new FileReader(file)) {
+                com.google.gson.JsonObject json = GSON.fromJson(reader, com.google.gson.JsonObject.class);
+                if (json != null && json.has("animations") && json.get("animations").isJsonObject()) {
+                    com.google.gson.JsonObject animsObj = json.getAsJsonObject("animations");
+                    for (String key : animsObj.keySet()) {
+                        results.add(key);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // 2. Try reading from Minecraft Client Resource Manager if on client
+        try {
+            if (net.minecraft.client.Minecraft.getInstance() != null) {
+                net.minecraft.resources.ResourceLocation rl = null;
+                if (cleanPath.contains(":")) {
+                    rl = new net.minecraft.resources.ResourceLocation(cleanPath);
+                } else {
+                    rl = new net.minecraft.resources.ResourceLocation("customraces", "animations/" + cleanPath);
+                }
+                var res = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(rl);
+                if (res.isPresent()) {
+                    try (java.io.InputStreamReader isr = new java.io.InputStreamReader(res.get().open(), java.nio.charset.StandardCharsets.UTF_8)) {
+                        com.google.gson.JsonObject json = GSON.fromJson(isr, com.google.gson.JsonObject.class);
+                        if (json != null && json.has("animations") && json.get("animations").isJsonObject()) {
+                            com.google.gson.JsonObject animsObj = json.getAsJsonObject("animations");
+                            for (String key : animsObj.keySet()) {
+                                if (!results.contains(key)) {
+                                    results.add(key);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        java.util.Collections.sort(results);
+        return results;
     }
 
     public static void loadRaces() {
