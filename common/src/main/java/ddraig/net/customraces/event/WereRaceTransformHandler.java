@@ -92,6 +92,7 @@ public class WereRaceTransformHandler {
 
     public static void transformIntoWereForm(ServerPlayer player, RaceData race) {
         TRANSFORMED_PLAYERS.put(player.getUUID(), true);
+        ddraig.net.customraces.network.ModPackets.syncWereStateToAll(player.getServer(), player.getUUID(), true);
 
         ServerLevel level = player.serverLevel();
         level.playSound(null, player.blockPosition(), SoundEvents.WOLF_HOWL, SoundSource.PLAYERS, 1.2f, 0.8f);
@@ -125,6 +126,7 @@ public class WereRaceTransformHandler {
 
     public static void revertWereForm(ServerPlayer player, RaceData race) {
         TRANSFORMED_PLAYERS.remove(player.getUUID());
+        ddraig.net.customraces.network.ModPackets.syncWereStateToAll(player.getServer(), player.getUUID(), false);
         clearWereModifiers(player);
 
         ServerLevel level = player.serverLevel();

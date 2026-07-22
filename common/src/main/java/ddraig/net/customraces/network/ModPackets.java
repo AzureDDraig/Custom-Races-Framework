@@ -33,8 +33,17 @@ public class ModPackets {
     public static final ResourceLocation TRIGGER_ABILITY_ID = new ResourceLocation("customraces", "trigger_ability");
     public static final ResourceLocation OPEN_SELECTION_ID = new ResourceLocation("customraces", "open_selection");
     public static final ResourceLocation OPEN_CREATOR_ID = new ResourceLocation("customraces", "open_creator");
+    public static final ResourceLocation SYNC_WERE_STATE_ID = new ResourceLocation("customraces", "sync_were_state");
 
     public static void register() {
+        // Register Client-Bound (S2C)
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C, SYNC_WERE_STATE_ID, (buf, context) -> {
+            UUID pUuid = buf.readUUID();
+            boolean isTransformed = buf.readBoolean();
+            context.queue(() -> {
+                ddraig.net.customraces.client.ClientWereState.setTransformed(pUuid, isTransformed);
+            });
+        });
         // Register Client-Bound (S2C)
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, SYNC_RACES_ID, (buf, context) -> {
             String racesJson = buf.readUtf(262144);
@@ -188,5 +197,15 @@ public class ModPackets {
     public static void openCreatorGui(ServerPlayer player) {
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         NetworkManager.sendToPlayer(player, OPEN_CREATOR_ID, buf);
+    }
+
+    public static void syncWereStateToAll(net.minecraft.server.MinecraftServer server, UUID playerUuid, boolean isTransformed) {
+        if (server == null || playerUuid == null) return;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+            buf.writeUUID(playerUuid);
+            buf.writeBoolean(isTransformed);
+            NetworkManager.sendToPlayer(p, SYNC_WERE_STATE_ID, buf);
+        }
     }
 }

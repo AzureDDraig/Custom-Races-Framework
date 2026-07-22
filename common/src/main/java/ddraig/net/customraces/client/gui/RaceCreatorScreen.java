@@ -99,6 +99,13 @@ public class RaceCreatorScreen extends Screen {
         this.workingRace = race != null ? race : new RaceData("new_race_" + System.currentTimeMillis() % 1000, "New Race");
     }
 
+    private void autoSaveWorkingRace() {
+        if (workingRace == null) return;
+        readFormInputs();
+        RaceRegistry.loadedRaces.put(workingRace.id, workingRace);
+        ModPackets.sendSaveRace(workingRace);
+    }
+
     private void resetFormFields() {
         nameBox = null; nameColorBox = null; difficultyBox = null; loreBox = null;
         iconBox = null; customTextureBox = null; heightScaleBox = null; widthScaleBox = null;
@@ -109,6 +116,12 @@ public class RaceCreatorScreen extends Screen {
         wereIdleAnimBox = null; wereWalkAnimBox = null; wereAttackAnimBox = null;
         wereTransformSoundBox = null; wereHowlSoundBox = null; wereAmbientSoundBox = null;
         wereHurtSoundBox = null; wereDeathSoundBox = null;
+    }
+
+    @Override
+    public void onClose() {
+        autoSaveWorkingRace();
+        super.onClose();
     }
 
     @Override
@@ -153,7 +166,7 @@ public class RaceCreatorScreen extends Screen {
                 String label = (selected ? "▶ " : "") + r.name;
 
                 FlatButton raceBtn = new FlatButton(panelX + 5, btnY, 130, 18, Component.literal(label), b -> {
-                    readFormInputs();
+                    autoSaveWorkingRace();
                     resetFormFields();
                     this.workingRace = r;
                     this.init();
@@ -242,7 +255,7 @@ public class RaceCreatorScreen extends Screen {
 
             int tabBorder = (editingWereForm && workingRace.enableWereRace) ? 0xFFFF3838 : 0xFF00CEC9;
             FlatButton tabBtn = new FlatButton(tabX, tabY, tabWidth, tabHeight, tabText, b -> {
-                readFormInputs();
+                autoSaveWorkingRace();
                 this.activeTab = index;
                 this.init();
             }, activeTab == i ? 0xFFFF9900 : tabBorder, 0xFF7B61FF);
