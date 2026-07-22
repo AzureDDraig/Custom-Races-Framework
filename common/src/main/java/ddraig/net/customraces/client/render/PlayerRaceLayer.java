@@ -71,22 +71,34 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             // Render Ears
             if (!"none".equalsIgnoreCase(race.earType)) {
                 float[] rgb = parseRGB(race.getColor("ears"));
+                PartTransformData pt = race.partTransforms.get("ears");
+                poseStack.pushPose();
+                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
                 // Left & Right Ear Cuboids
                 renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.65f, -0.05f, -0.22f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
                 renderColoredBox(poseStack, vc, packedLight, 0.22f, -0.65f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+                poseStack.popPose();
             }
 
             // Render Horns
             if (!"none".equalsIgnoreCase(race.hornType)) {
                 float[] rgb = parseRGB(race.getColor("horns"));
+                PartTransformData pt = race.partTransforms.get("horns");
+                poseStack.pushPose();
+                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
                 renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.70f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
                 renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.70f, -0.15f, 0.20f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+                poseStack.popPose();
             }
 
             // Render Halo
             if (!"none".equalsIgnoreCase(race.haloType)) {
                 float[] rgb = parseRGB(race.getColor("halo"));
+                PartTransformData pt = race.partTransforms.get("halo");
+                poseStack.pushPose();
+                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
                 renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
+                poseStack.popPose();
             }
 
             poseStack.popPose();
@@ -100,16 +112,24 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             // Render Wings
             if (!"none".equalsIgnoreCase(race.wingType)) {
                 float[] rgb = parseRGB(race.getColor("wings"));
+                PartTransformData pt = race.partTransforms.get("wings");
+                poseStack.pushPose();
+                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
                 // Left Wing Panel
                 renderColoredBox(poseStack, vc, packedLight, -0.85f, 0.0f, 0.15f, -0.15f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
                 // Right Wing Panel
                 renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.85f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                poseStack.popPose();
             }
 
             // Render Tail
             if (!"none".equalsIgnoreCase(race.tailType)) {
                 float[] rgb = parseRGB(race.getColor("tail"));
+                PartTransformData pt = race.partTransforms.get("tail");
+                poseStack.pushPose();
+                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
                 renderColoredBox(poseStack, vc, packedLight, -0.06f, 0.65f, 0.15f, 0.06f, 1.25f, 0.65f, rgb[0], rgb[1], rgb[2], 1.0f);
+                poseStack.popPose();
             }
 
             poseStack.popPose();

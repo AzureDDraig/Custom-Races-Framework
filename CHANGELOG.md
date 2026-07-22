@@ -4,6 +4,19 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b015a] - 2026-07-22
+
+### 🛠️ Fixed & Audit Enhancements
+- **Tab Switching Form Auto-Save (`RaceCreatorScreen.java`)**:
+  - Automatically invokes `readFormInputs()` prior to switching tabs in `RaceCreatorScreen` to prevent loss of typed input when clicking across tabs before hitting "Save Race".
+- **Dynamic 3D Model Part Offset Translations (`PlayerRaceLayer.java`)**:
+  - Connected `PartTransformData` (`posX`, `posY`, `posZ`) set in the **Positions** tab directly to `PoseStack` model matrix translations.
+  - Moving X/Y/Z coordinate offsets in the editor instantly transforms body part locations (Ears, Horns, Halo, Wings, Tail) on the 3D player entity renderer.
+- **Responsive Multi-Row Tab Header Wrapping (`RaceCreatorScreen.java`)**:
+  - Implemented automatic header button row wrapping so category tabs gracefully wrap onto a second row on narrower GUI scale settings without overflowing off-screen.
+
+---
+
 ## [1.0.0-b014a] - 2026-07-22
 
 ### 🛠️ Fixed & Restored

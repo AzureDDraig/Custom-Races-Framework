@@ -99,6 +99,7 @@ public class RaceCreatorScreen extends Screen {
         int tabX = 10;
         int tabWidth = 64;
         int tabHeight = 18;
+        int maxTabX = this.width - 150; // Align with right viewport bounds
 
         // 10 Category Tabs
         String[] tabKeys = {
@@ -107,7 +108,6 @@ public class RaceCreatorScreen extends Screen {
             "gui.customraces.tab.advanced", "gui.customraces.tab.alliances", "gui.customraces.tab.were_model",
             "gui.customraces.tab.were_sounds"
         };
-        String[] defaultTabLabels = {"Basics", "Model", "Positions", "Passives", "Actives", "Sounds", "Advanced", "Alliances", "Were Model", "Were Sounds"};
 
         for (int i = 0; i < tabKeys.length; i++) {
             final int index = i;
@@ -115,7 +115,13 @@ public class RaceCreatorScreen extends Screen {
             if (i == 7 && !workingRace.enableAlliances) continue; // Alliances hidden if disabled
             if ((i == 8 || i == 9) && !workingRace.enableWereRace) continue; // Were Model & Sounds hidden if disabled
 
+            if (tabX + tabWidth > maxTabX) {
+                tabX = 10;
+                topY += tabHeight + 2;
+            }
+
             Button tabBtn = Button.builder(Component.translatable(tabKeys[i]), b -> {
+                readFormInputs();
                 this.activeTab = index;
                 this.init();
             }).bounds(tabX, topY, tabWidth, tabHeight).build();
@@ -123,7 +129,7 @@ public class RaceCreatorScreen extends Screen {
             tabBtn.setTooltip(Tooltip.create(Component.translatable(tabKeys[i])));
             if (activeTab == i) tabBtn.active = false;
             this.addRenderableWidget(tabBtn);
-            tabX += tabWidth + 4;
+            tabX += tabWidth + 3;
         }
 
         // Save & Delete Header Buttons
