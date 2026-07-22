@@ -4,6 +4,18 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b020a] - 2026-07-22
+
+### 🔗 Transitive & Cross-System Relation Integration
+- **Were-Form Passive Ability Evaluation (`PassiveAbilityHandler.java`)**:
+  - Connected `werePassiveAbilities` to living player tick events.
+  - When transformed into Were-form, `PassiveAbilityHandler` evaluates both standard passives and Were-form granted passives (e.g. night vision, gills, flight, regeneration) dynamically on tick.
+- **Were-Form Active Ability Evaluation (`ActiveAbilityHandler.java`)**:
+  - Connected `wereActiveAbilities` to hotbar active skill keybind execution.
+  - Pressing hotbar skill slots 1-5 while transformed automatically checks and triggers Were-form specific active skills before falling back to standard skills.
+
+---
+
 ## [1.0.0-b019a] - 2026-07-22
 
 ### 🐺 Added & Fixed (Playtester Feedback Implementation)

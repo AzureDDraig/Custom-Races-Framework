@@ -34,9 +34,15 @@ public class ActiveAbilityHandler {
         if (player == null || slot < 1 || slot > 5) return;
 
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
-        if (race == null || race.activeAbilities == null) return;
+        if (race == null) return;
 
-        String abilityId = race.activeAbilities.get(slot);
+        String abilityId = race.activeAbilities != null ? race.activeAbilities.get(slot) : null;
+        if (ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID()) && race.wereActiveAbilities != null) {
+            String wAbility = race.wereActiveAbilities.get(slot);
+            if (wAbility != null && !wAbility.isEmpty() && !"none".equalsIgnoreCase(wAbility)) {
+                abilityId = wAbility;
+            }
+        }
         if (abilityId == null || abilityId.isEmpty() || abilityId.equals("none")) return;
 
         // Check Cooldown
