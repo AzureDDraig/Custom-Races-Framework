@@ -147,31 +147,37 @@ public class RaceCreatorScreen extends Screen {
 
         if (activeTab == 0) { // Basics
             this.nameBox = new EditBox(this.font, contentLeft + 90, contentTop, 160, 18, Component.literal("Name"));
+            this.nameBox.setMaxLength(2048);
             this.nameBox.setValue(workingRace.name);
             this.nameBox.setTooltip(Tooltip.create(Component.literal("Display name of the race.")));
             this.addRenderableWidget(this.nameBox);
 
             this.nameColorBox = new EditBox(this.font, contentLeft + 90, contentTop + 23, 70, 18, Component.literal("Name Color"));
+            this.nameColorBox.setMaxLength(2048);
             this.nameColorBox.setValue(workingRace.nameColor);
             this.nameColorBox.setTooltip(Tooltip.create(Component.literal("RGB Hex Color code for race title / nametag (e.g. #FFAA00).")));
             this.addRenderableWidget(this.nameColorBox);
 
             this.difficultyBox = new EditBox(this.font, contentLeft + 90, contentTop + 46, 60, 18, Component.literal("Difficulty"));
+            this.difficultyBox.setMaxLength(2048);
             this.difficultyBox.setValue(String.valueOf(workingRace.playstyleDifficulty));
             this.difficultyBox.setTooltip(Tooltip.create(Component.literal("Playstyle Difficulty rating meter from 1 (Easy) to 10 (Insane).")));
             this.addRenderableWidget(this.difficultyBox);
 
             this.loreBox = new EditBox(this.font, contentLeft + 90, contentTop + 69, 260, 18, Component.literal("Lore"));
+            this.loreBox.setMaxLength(2048);
             this.loreBox.setValue(workingRace.lore);
             this.loreBox.setTooltip(Tooltip.create(Component.literal("Lore and background story description.")));
             this.addRenderableWidget(this.loreBox);
 
             this.iconBox = new EditBox(this.font, contentLeft + 90, contentTop + 92, 160, 18, Component.literal("Icon Item"));
+            this.iconBox.setMaxLength(2048);
             this.iconBox.setValue(workingRace.iconItem);
             this.iconBox.setTooltip(Tooltip.create(Component.literal("ResourceLocation of icon item (e.g. minecraft:player_head).")));
             this.addRenderableWidget(this.iconBox);
 
             this.customTextureBox = new EditBox(this.font, contentLeft + 90, contentTop + 115, 260, 18, Component.literal("PNG Picture Path"));
+            this.customTextureBox.setMaxLength(2048);
             this.customTextureBox.setValue(workingRace.customTexture);
             this.customTextureBox.setTooltip(Tooltip.create(Component.literal("ResourceLocation path to PNG picture (e.g. customraces:textures/gui/races/elf.png).")));
             this.addRenderableWidget(this.customTextureBox);
@@ -213,21 +219,25 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(modelTypeBtn);
 
             this.heightScaleBox = new EditBox(this.font, contentLeft + 100, contentTop + 30, 60, 18, Component.literal("Height Scale"));
+            this.heightScaleBox.setMaxLength(2048);
             this.heightScaleBox.setValue(String.valueOf(workingRace.heightScale));
             this.heightScaleBox.setTooltip(Tooltip.create(Component.literal("Height scale multiplier. Player model scaling Requires Pehkui.")));
             this.addRenderableWidget(this.heightScaleBox);
 
             this.widthScaleBox = new EditBox(this.font, contentLeft + 100, contentTop + 55, 60, 18, Component.literal("Width Scale"));
+            this.widthScaleBox.setMaxLength(2048);
             this.widthScaleBox.setValue(String.valueOf(workingRace.widthScale));
             this.widthScaleBox.setTooltip(Tooltip.create(Component.literal("Width scale multiplier. Player model scaling Requires Pehkui.")));
             this.addRenderableWidget(this.widthScaleBox);
 
             this.healthBox = new EditBox(this.font, contentLeft + 100, contentTop + 80, 60, 18, Component.literal("Max Health"));
+            this.healthBox.setMaxLength(2048);
             this.healthBox.setValue(String.valueOf(workingRace.maxHealth));
             this.healthBox.setTooltip(Tooltip.create(Component.literal("Base Max Health value (Vanilla default is 20.0).")));
             this.addRenderableWidget(this.healthBox);
 
             this.speedBox = new EditBox(this.font, contentLeft + 100, contentTop + 105, 60, 18, Component.literal("Movement Speed"));
+            this.speedBox.setMaxLength(2048);
             this.speedBox.setValue(String.valueOf(workingRace.movementSpeed));
             this.speedBox.setTooltip(Tooltip.create(Component.literal("Base Movement Speed multiplier (Vanilla default is 0.1).")));
             this.addRenderableWidget(this.speedBox);
@@ -241,6 +251,7 @@ public class RaceCreatorScreen extends Screen {
 
         } else if (activeTab == 5) { // Sounds & FX
             this.ambientSoundBox = new EditBox(this.font, contentLeft + 110, contentTop, 200, 18, Component.literal("Ambient Sound"));
+            this.ambientSoundBox.setMaxLength(2048);
             this.ambientSoundBox.setValue(workingRace.ambientSound);
             this.ambientSoundBox.setTooltip(Tooltip.create(Component.literal("Sound event ID for ambient idle sounds.")));
             this.addRenderableWidget(this.ambientSoundBox);
@@ -252,6 +263,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(playAmbBtn);
 
             this.hurtSoundBox = new EditBox(this.font, contentLeft + 110, contentTop + 30, 200, 18, Component.literal("Hurt Sound"));
+            this.hurtSoundBox.setMaxLength(2048);
             this.hurtSoundBox.setValue(workingRace.hurtSound);
             this.hurtSoundBox.setTooltip(Tooltip.create(Component.literal("Sound event ID when receiving damage.")));
             this.addRenderableWidget(this.hurtSoundBox);
@@ -263,6 +275,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(playHurtBtn);
 
             this.deathSoundBox = new EditBox(this.font, contentLeft + 110, contentTop + 60, 200, 18, Component.literal("Death Sound"));
+            this.deathSoundBox.setMaxLength(2048);
             this.deathSoundBox.setValue(workingRace.deathSound);
             this.deathSoundBox.setTooltip(Tooltip.create(Component.literal("Sound event ID when dying.")));
             this.addRenderableWidget(this.deathSoundBox);
@@ -275,11 +288,13 @@ public class RaceCreatorScreen extends Screen {
 
         } else if (activeTab == 6) { // Advanced Features
             this.spawnDimensionBox = new EditBox(this.font, contentLeft + 120, contentTop, 180, 18, Component.literal("Spawn Dimension"));
+            this.spawnDimensionBox.setMaxLength(2048);
             this.spawnDimensionBox.setValue(workingRace.spawnDimension);
             this.spawnDimensionBox.setTooltip(Tooltip.create(Component.literal("Dimension ID for custom race spawn point (e.g. minecraft:the_nether).")));
             this.addRenderableWidget(this.spawnDimensionBox);
 
             this.spawnBiomeBox = new EditBox(this.font, contentLeft + 120, contentTop + 30, 180, 18, Component.literal("Spawn Biome"));
+            this.spawnBiomeBox.setMaxLength(2048);
             this.spawnBiomeBox.setValue(workingRace.spawnBiome);
             this.spawnBiomeBox.setTooltip(Tooltip.create(Component.literal("Biome ID for custom race spawn point (e.g. minecraft:ocean).")));
             this.addRenderableWidget(this.spawnBiomeBox);
@@ -290,16 +305,19 @@ public class RaceCreatorScreen extends Screen {
 
             // Minion Ability Settings
             this.minionMobTypeBox = new EditBox(this.font, contentLeft + 120, contentTop + 95, 200, 18, Component.literal("Minion Mob Type"));
+            this.minionMobTypeBox.setMaxLength(2048);
             this.minionMobTypeBox.setValue(workingRace.minionMobType);
             this.minionMobTypeBox.setTooltip(Tooltip.create(Component.literal("Mob Entity ID to summon (e.g. minecraft:zombie or custom_mobs:<id>).")));
             this.addRenderableWidget(this.minionMobTypeBox);
 
             this.minionCountBox = new EditBox(this.font, contentLeft + 120, contentTop + 118, 60, 18, Component.literal("Minion Count"));
+            this.minionCountBox.setMaxLength(2048);
             this.minionCountBox.setValue(String.valueOf(workingRace.minionCount));
             this.minionCountBox.setTooltip(Tooltip.create(Component.literal("Number of minions to summon (1 to 10).")));
             this.addRenderableWidget(this.minionCountBox);
 
             this.minionScaleBox = new EditBox(this.font, contentLeft + 260, contentTop + 118, 60, 18, Component.literal("Minion Scale"));
+            this.minionScaleBox.setMaxLength(2048);
             this.minionScaleBox.setValue(String.valueOf(workingRace.minionScale));
             this.minionScaleBox.setTooltip(Tooltip.create(Component.literal("Minion size scaling multiplier (0.5 to 5.0).")));
             this.addRenderableWidget(this.minionScaleBox);
@@ -309,6 +327,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(this.minionIsRangedBox);
 
             this.minionProjectileBox = new EditBox(this.font, contentLeft + 250, contentTop + 142, 160, 18, Component.literal("Minion Projectile"));
+            this.minionProjectileBox.setMaxLength(2048);
             this.minionProjectileBox.setValue(workingRace.minionProjectile);
             this.minionProjectileBox.setTooltip(Tooltip.create(Component.literal("Projectile Entity ID if minion is ranged (e.g. minecraft:arrow).")));
             this.addRenderableWidget(this.minionProjectileBox);
@@ -318,39 +337,47 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(this.enableWereBox);
 
             this.wereConditionBox = new EditBox(this.font, contentLeft + 120, contentTop + 24, 120, 18, Component.literal("Trigger Condition"));
+            this.wereConditionBox.setMaxLength(2048);
             this.wereConditionBox.setValue(workingRace.wereTriggerCondition);
             this.wereConditionBox.setTooltip(Tooltip.create(Component.literal("FULL_MOON, NEW_MOON, NIGHT, or MANUAL.")));
             this.addRenderableWidget(this.wereConditionBox);
 
             this.wereModelBox = new EditBox(this.font, contentLeft + 120, contentTop + 46, 240, 18, Component.literal("Were Model Geo JSON"));
+            this.wereModelBox.setMaxLength(2048);
             this.wereModelBox.setValue(workingRace.wereModelPath);
             this.wereModelBox.setTooltip(Tooltip.create(Component.literal("GeckoLib Were model file (e.g. customraces:models/were/werewolf.geo.json).")));
             this.addRenderableWidget(this.wereModelBox);
 
             this.wereTextureBox = new EditBox(this.font, contentLeft + 120, contentTop + 68, 240, 18, Component.literal("Were Texture PNG"));
+            this.wereTextureBox.setMaxLength(2048);
             this.wereTextureBox.setValue(workingRace.wereTexturePath);
             this.wereTextureBox.setTooltip(Tooltip.create(Component.literal("Were-form PNG texture (e.g. customraces:textures/were/werewolf.png).")));
             this.addRenderableWidget(this.wereTextureBox);
 
             this.wereAnimFileBox = new EditBox(this.font, contentLeft + 120, contentTop + 90, 240, 18, Component.literal("Were Animation JSON"));
+            this.wereAnimFileBox.setMaxLength(2048);
             this.wereAnimFileBox.setValue(workingRace.wereAnimationPath);
             this.wereAnimFileBox.setTooltip(Tooltip.create(Component.literal("GeckoLib Were animation file (e.g. customraces:animations/were/werewolf.animation.json).")));
             this.addRenderableWidget(this.wereAnimFileBox);
 
             this.wereIdleAnimBox = new EditBox(this.font, contentLeft + 120, contentTop + 112, 140, 18, Component.literal("Idle Animation"));
+            this.wereIdleAnimBox.setMaxLength(2048);
             this.wereIdleAnimBox.setValue(workingRace.wereIdleAnim);
             this.addRenderableWidget(this.wereIdleAnimBox);
 
             this.wereWalkAnimBox = new EditBox(this.font, contentLeft + 120, contentTop + 134, 140, 18, Component.literal("Walk Animation"));
+            this.wereWalkAnimBox.setMaxLength(2048);
             this.wereWalkAnimBox.setValue(workingRace.wereWalkAnim);
             this.addRenderableWidget(this.wereWalkAnimBox);
 
             this.wereAttackAnimBox = new EditBox(this.font, contentLeft + 120, contentTop + 156, 140, 18, Component.literal("Attack Animation"));
+            this.wereAttackAnimBox.setMaxLength(2048);
             this.wereAttackAnimBox.setValue(workingRace.wereAttackAnim);
             this.addRenderableWidget(this.wereAttackAnimBox);
 
         } else if (activeTab == 9) { // Were Sounds
             this.wereTransformSoundBox = new EditBox(this.font, contentLeft + 120, contentTop, 200, 18, Component.literal("Transform Sound"));
+            this.wereTransformSoundBox.setMaxLength(2048);
             this.wereTransformSoundBox.setValue(workingRace.wereTransformSound);
             this.addRenderableWidget(this.wereTransformSoundBox);
 
@@ -358,6 +385,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(pTr);
 
             this.wereHowlSoundBox = new EditBox(this.font, contentLeft + 120, contentTop + 25, 200, 18, Component.literal("Howl Sound"));
+            this.wereHowlSoundBox.setMaxLength(2048);
             this.wereHowlSoundBox.setValue(workingRace.wereHowlSound);
             this.addRenderableWidget(this.wereHowlSoundBox);
 
@@ -365,6 +393,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(pHw);
 
             this.wereAmbientSoundBox = new EditBox(this.font, contentLeft + 120, contentTop + 50, 200, 18, Component.literal("Ambient Sound"));
+            this.wereAmbientSoundBox.setMaxLength(2048);
             this.wereAmbientSoundBox.setValue(workingRace.wereAmbientSound);
             this.addRenderableWidget(this.wereAmbientSoundBox);
 
@@ -372,6 +401,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(pAm);
 
             this.wereHurtSoundBox = new EditBox(this.font, contentLeft + 120, contentTop + 75, 200, 18, Component.literal("Hurt Sound"));
+            this.wereHurtSoundBox.setMaxLength(2048);
             this.wereHurtSoundBox.setValue(workingRace.wereHurtSound);
             this.addRenderableWidget(this.wereHurtSoundBox);
 
@@ -379,6 +409,7 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(pHr);
 
             this.wereDeathSoundBox = new EditBox(this.font, contentLeft + 120, contentTop + 100, 200, 18, Component.literal("Death Sound"));
+            this.wereDeathSoundBox.setMaxLength(2048);
             this.wereDeathSoundBox.setValue(workingRace.wereDeathSound);
             this.addRenderableWidget(this.wereDeathSoundBox);
 

@@ -44,9 +44,36 @@ public class RaceRegistry {
     }
 
     public static void init() {
+        initDirectories();
         loadRaces();
         loadPlayerRaces();
         rebuildSuggestionsCache();
+    }
+
+    public static void initDirectories() {
+        File dir = new File("config/custom_races");
+        if (!dir.exists()) dir.mkdirs();
+
+        File iconsDir = new File("config/custom_races/icons");
+        if (!iconsDir.exists()) iconsDir.mkdirs();
+
+        File modelsDir = new File("config/custom_races/models");
+        if (!modelsDir.exists()) modelsDir.mkdirs();
+
+        File wereModelsDir = new File("config/custom_races/models/were");
+        if (!wereModelsDir.exists()) wereModelsDir.mkdirs();
+
+        File texturesDir = new File("config/custom_races/textures");
+        if (!texturesDir.exists()) texturesDir.mkdirs();
+
+        File wereTexturesDir = new File("config/custom_races/textures/were");
+        if (!wereTexturesDir.exists()) wereTexturesDir.mkdirs();
+
+        File animsDir = new File("config/custom_races/animations");
+        if (!animsDir.exists()) animsDir.mkdirs();
+
+        File wereAnimsDir = new File("config/custom_races/animations/were");
+        if (!wereAnimsDir.exists()) wereAnimsDir.mkdirs();
     }
 
     public static void rebuildSuggestionsCache() {

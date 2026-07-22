@@ -68,6 +68,7 @@ public class BodyPartOverlay extends Screen {
 
         // RGB Color Hex Input
         this.hexColorBox = new EditBox(this.font, optionX + 60, optionY + 35, 70, 18, Component.literal("Hex Color"));
+        this.hexColorBox.setMaxLength(2048);
         this.hexColorBox.setValue(workingRace.getColor(selectedPartKey));
         this.hexColorBox.setResponder(hex -> {
             if (hex.startsWith("#") && hex.length() == 7) {

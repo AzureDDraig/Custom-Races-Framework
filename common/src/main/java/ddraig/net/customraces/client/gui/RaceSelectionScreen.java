@@ -49,6 +49,7 @@ public class RaceSelectionScreen extends Screen {
 
         // Search Input Box
         this.searchBox = new EditBox(this.font, 14, searchY, leftWidth - 26, 18, Component.literal("Search..."));
+        this.searchBox.setMaxLength(2048);
         this.searchBox.setHint(Component.literal("Search..."));
         this.searchBox.setResponder(text -> updateFilteredRaces());
         this.searchBox.setTooltip(Tooltip.create(Component.literal("Filter available races by name or trait.")));

@@ -4,6 +4,17 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b012a] - 2026-07-22
+
+### 🖼️ Added & Improved
+- **Config Icons Directory (`config/custom_races/icons/`)**:
+  - Added automatic creation of `config/custom_races/icons/` folder on startup for pack makers to store PNG custom race icons.
+- **2048 Character Text Box Limit**:
+  - Updated **EVERY SINGLE EditBox** across all GUI screens (`RaceCreatorScreen`, `RaceSelectionScreen`, `BodyPartOverlay`) with `.setMaxLength(2048)`.
+  - Ensures long ResourceLocations, file paths, long lore stories, hex colors, and complex animation IDs are never truncated.
+
+---
+
 ## [1.0.0-b011a] - 2026-07-22
 
 ### 🔮 Added
