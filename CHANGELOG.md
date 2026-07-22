@@ -4,6 +4,18 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b023a] - 2026-07-22
+
+### 🔗 Deep Transitive & Multi-Tier Relation Fixes
+- **GeckoLib Were-Model Render Clipping Guard (`PlayerRaceLayer.java`)**:
+  - Updated `PlayerRaceLayer.java` to check `isWereTransformed` before rendering human-form preset attachments (ears, wings, tail, horns, halo).
+  - Prevents human-form preset parts from clipping through custom GeckoLib Werewolf/Were-form 3D models during transformation.
+- **Network Packet Buffer Capacity Expansion (`ModPackets.java`)**:
+  - Expanded `SAVE_RACE_ID` packet `buf.readUtf()` buffer capacity from `65536` to `262144` bytes (256 KB).
+  - Guarantees that saving large custom race configurations with 2048-character strings, sound events, and Were-form data never encounters buffer truncation or network disconnects.
+
+---
+
 ## [1.0.0-b022a] - 2026-07-22
 
 ### 🎨 Visual Theme Redesign (Custom Mobs & RPG Mounts Framework Aesthetic)

@@ -84,7 +84,7 @@ public class ModPackets {
 
         // Register Server-Bound (C2S)
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, SAVE_RACE_ID, (buf, context) -> {
-            String raceJson = buf.readUtf(65536);
+            String raceJson = buf.readUtf(262144);
             ServerPlayer player = (ServerPlayer) context.getPlayer();
             if (player.hasPermissions(2)) {
                 context.queue(() -> {

@@ -34,8 +34,11 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
 
         poseStack.pushPose();
 
-        // 1. Render Preset Body Parts (Ears, Wings, Tail, Horns, Halo, Legs)
-        renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
+        // 1. Render Preset Body Parts (Ears, Wings, Tail, Horns, Halo, Legs) - hide if transformed into custom Were model
+        boolean isWereTransformed = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+        if (!isWereTransformed || race.wereModelPath == null || race.wereModelPath.trim().isEmpty()) {
+            renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
+        }
 
         // 2. Render Particle Auras in Real-Time
         if (player.level().isClientSide && !race.particleAuras.isEmpty()) {
