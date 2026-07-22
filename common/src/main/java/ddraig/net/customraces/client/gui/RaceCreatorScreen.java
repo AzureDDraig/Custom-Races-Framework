@@ -608,79 +608,99 @@ public class RaceCreatorScreen extends Screen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
-        guiGraphics.fill(0, 0, this.width, this.height, 0xEE101216);
 
-        // Header Bar
-        guiGraphics.fill(0, 0, this.width, 28, 0xFF181B20);
-        guiGraphics.fill(0, 27, this.width, 28, 0xFF353A45);
-        guiGraphics.drawString(this.font, "§lRACE CREATOR ADMIN GUI", 12, 9, 0xFFFFFF);
+        // 1. Futuristic Translucent Obsidian Background Canvas
+        guiGraphics.fill(0, 0, this.width, this.height, 0xF50B0D12);
 
-        // Form Field Labels
+        // 2. High-Tech Header Banner
+        guiGraphics.fill(0, 0, this.width, 28, 0xFF121520);
+        guiGraphics.fill(0, 27, this.width, 29, 0xFF00CEC9); // Neon Cyan Accent Line
+        guiGraphics.drawString(this.font, "§9§l❖ §c§lRACE CREATOR ADMIN GUI §9§l❖", 12, 9, 0xFFFFFF);
+
+        // 3. Form Content Main Container Card
         int contentLeft = 15;
         int contentTop = 60;
+        int contentRight = this.width - 165;
+        int contentBottom = this.height - 12;
 
+        guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentBottom, 0xEE121622);
+        guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentTop - 24, 0xFF7B61FF); // Top Violet Border Line
+        guiGraphics.fill(contentLeft - 5, contentBottom - 1, contentRight, contentBottom, 0xFF7B61FF); // Bottom Violet Border Line
+
+        // Form Field Labels with Styled Bullet Points
         if (activeTab == 0) {
-            guiGraphics.drawString(this.font, "Race Name:", contentLeft, contentTop + 4, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Name Color:", contentLeft, contentTop + 27, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Difficulty (1-10):", contentLeft, contentTop + 50, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Lore Description:", contentLeft, contentTop + 73, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Icon Item ID:", contentLeft, contentTop + 96, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "PNG Picture Path:", contentLeft, contentTop + 119, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§b❖ Race Name:", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Name Color:", contentLeft, contentTop + 27, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Difficulty (1-10):", contentLeft, contentTop + 50, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Lore Description:", contentLeft, contentTop + 73, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Icon Item ID:", contentLeft, contentTop + 96, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ PNG Picture Path:", contentLeft, contentTop + 119, 0xFFFFFF);
         } else if (activeTab == 1) {
-            guiGraphics.drawString(this.font, "Height Scale:", contentLeft, contentTop + 34, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Width Scale:", contentLeft, contentTop + 59, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Max Health:", contentLeft, contentTop + 84, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Move Speed:", contentLeft, contentTop + 109, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§e❖ Height Scale:", contentLeft, contentTop + 34, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§e❖ Width Scale:", contentLeft, contentTop + 59, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§e❖ Max Health:", contentLeft, contentTop + 84, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§e❖ Move Speed:", contentLeft, contentTop + 109, 0xFFFFFF);
         } else if (activeTab == 2) {
-            guiGraphics.drawString(this.font, "§ePart Scale & Offset (X, Y, Z):", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§e❖ Part Scale & Offset (X, Y, Z):", contentLeft, contentTop - 12, 0xFFFFFF);
             String[] partKeys = {"Ears", "Wings", "Tail", "Horns", "Halo", "Custom"};
             int py = contentTop;
             for (String pKey : partKeys) {
-                guiGraphics.drawString(this.font, pKey + ":", contentLeft, py + 4, 0xCCCCCC);
+                guiGraphics.drawString(this.font, "§e❖ " + pKey + ":", contentLeft, py + 4, 0xCCCCCC);
                 py += 24;
             }
         } else if (activeTab == 3) {
-            guiGraphics.drawString(this.font, "§aToggle Passive Race Abilities:", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop - 12, 0xFFFFFF);
         } else if (activeTab == 4) {
-            guiGraphics.drawString(this.font, "§cAssign Active Skills (Slots 1-5):", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Assign Active Skills (Slots 1-5):", contentLeft, contentTop - 12, 0xFFFFFF);
             int py = contentTop;
             for (int slot = 1; slot <= 5; slot++) {
-                guiGraphics.drawString(this.font, "Slot " + slot + ":", contentLeft, py + 4, 0xCCCCCC);
+                guiGraphics.drawString(this.font, "§c❖ Slot " + slot + ":", contentLeft, py + 4, 0xCCCCCC);
                 py += 24;
             }
         } else if (activeTab == 7) {
-            guiGraphics.drawString(this.font, "§bMob Faction Neutrality Stances:", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Mob Faction Neutrality Stances:", contentLeft, contentTop - 12, 0xFFFFFF);
         } else if (activeTab == 5) {
-            guiGraphics.drawString(this.font, "Ambient Sound:", contentLeft, contentTop + 4, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Hurt Sound:", contentLeft, contentTop + 34, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Death Sound:", contentLeft, contentTop + 64, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§d❖ Ambient Sound:", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Hurt Sound:", contentLeft, contentTop + 34, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Death Sound:", contentLeft, contentTop + 64, 0xFFFFFF);
         } else if (activeTab == 6) {
-            guiGraphics.drawString(this.font, "Spawn Dimension:", contentLeft, contentTop + 4, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Spawn Biome:", contentLeft, contentTop + 34, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§9❖ Spawn Dimension:", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§9❖ Spawn Biome:", contentLeft, contentTop + 34, 0xFFFFFF);
         } else if (activeTab == 8) {
-            guiGraphics.drawString(this.font, "Trigger Moon Phase:", contentLeft, contentTop + 28, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Were Geo Model:", contentLeft, contentTop + 50, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Were Texture PNG:", contentLeft, contentTop + 72, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Were Anim JSON:", contentLeft, contentTop + 94, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Idle Animation:", contentLeft, contentTop + 116, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Walk Animation:", contentLeft, contentTop + 138, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Attack Animation:", contentLeft, contentTop + 160, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§c❖ Trigger Condition:", contentLeft, contentTop + 28, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Were Geo Model:", contentLeft, contentTop + 50, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Were Texture PNG:", contentLeft, contentTop + 72, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Were Anim JSON:", contentLeft, contentTop + 94, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Idle Animation:", contentLeft, contentTop + 116, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Walk Animation:", contentLeft, contentTop + 138, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Attack Animation:", contentLeft, contentTop + 160, 0xFFFFFF);
         } else if (activeTab == 9) {
-            guiGraphics.drawString(this.font, "Transform Sound:", contentLeft, contentTop + 4, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Howl Sound:", contentLeft, contentTop + 29, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Ambient Sound:", contentLeft, contentTop + 54, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Hurt Sound:", contentLeft, contentTop + 79, 0xCCCCCC);
-            guiGraphics.drawString(this.font, "Death Sound:", contentLeft, contentTop + 104, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§c❖ Transform Sound:", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Howl Sound:", contentLeft, contentTop + 29, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Ambient Sound:", contentLeft, contentTop + 54, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Hurt Sound:", contentLeft, contentTop + 79, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§c❖ Death Sound:", contentLeft, contentTop + 104, 0xFFFFFF);
         }
 
-        // Right Panel: 3D Live Entity Preview
+        // 4. Right Panel: 3D Holographic Showcase Viewport
         int rightLeft = this.width - 150;
-        guiGraphics.fill(rightLeft, 32, this.width - 10, this.height - 10, 0xFF14171C);
-        guiGraphics.drawCenteredString(this.font, "§7Preview Viewport", rightLeft + 70, 38, 0xFFFFFF);
+        int rightRight = this.width - 10;
+        int rightTop = 32;
+        int rightBottom = this.height - 10;
+
+        guiGraphics.fill(rightLeft, rightTop, rightRight, rightBottom, 0xEE101422);
+        guiGraphics.fill(rightLeft, rightTop, rightRight, rightTop + 20, 0xFF191F30);
+        guiGraphics.fill(rightLeft, rightTop + 19, rightRight, rightTop + 20, 0xFF00CEC9); // Glowing Cyan Line
+        guiGraphics.drawCenteredString(this.font, "§b❖ 3D SHOWCASE ❖", rightLeft + 70, rightTop + 6, 0xFFFFFF);
 
         if (this.minecraft != null && this.minecraft.player != null) {
             int previewX = rightLeft + 70;
-            int previewY = this.height - 40;
+            int previewY = rightBottom - 30;
+
+            // Render Holographic Pedestal Ring
+            guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, 0x3000CEC9);
+            guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, 0x606C5CE7);
+
             int scale = (int) (45 * workingRace.heightScale * workingRace.baseScale);
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     guiGraphics, previewX, previewY, scale,

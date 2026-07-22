@@ -4,6 +4,22 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b022a] - 2026-07-22
+
+### 🎨 Visual Theme Redesign (Custom Mobs & RPG Mounts Framework Aesthetic)
+- **Obsidian & Cyberpunk Dark Glass Theme (`RaceCreatorScreen.java` & `RaceSelectionScreen.java`)**:
+  - Replaced standard flat dark rectangles with translucent dark obsidian canvases (`0xF50B0D12`).
+  - Added high-tech obsidian header banners (`0xFF121520`) with glowing Neon Cyan (`0xFF00CEC9`) accent lines and emblem headers (`§9§l❖ §c§lRACE CREATOR ADMIN GUI §9§l❖`).
+  - Added glassmorphic main content container cards (`0xEE121622`) with glowing Violet (`0xFF7B61FF`) top & bottom border lines.
+  - Added bullet icons (`§b❖`, `§e❖`, `§c❖`, `§d❖`) to all form category labels across all 10 GUI tabs.
+- **3D Holographic Showcase Viewport**:
+  - Replaced standard right-side preview box with a **3D Holographic Showcase Viewport**:
+    - Dark glass box (`0xEE101422`) with Neon Cyan header bar (`§b❖ 3D SHOWCASE ❖`).
+    - Concentric 3D Holographic Pedestal Base Rings (`0x3000CEC9` / `0x606C5CE7`) beneath entity feet.
+    - Crimson pedestal rings when previewing Were-form transformations (`[ 🌙 WERE-FORM ]`).
+
+---
+
 ## [1.0.0-b021a] - 2026-07-22
 
 ### 🌙 Added Dedicated Were-Abilities Section on Race Selection Screen

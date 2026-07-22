@@ -99,13 +99,13 @@ public class RaceSelectionScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // 1. Opaque Dark Obsidian Background
+        // 1. Futuristic Translucent Obsidian Background Canvas
         this.renderBackground(guiGraphics);
-        guiGraphics.fill(0, 0, this.width, this.height, 0xEE101216);
+        guiGraphics.fill(0, 0, this.width, this.height, 0xF50B0D12);
 
-        // Header Bar
-        guiGraphics.fill(0, 0, this.width, 28, 0xFF181B20);
-        guiGraphics.fill(0, 27, this.width, 28, 0xFF353A45);
+        // Header Bar with Cyan Glow Accent
+        guiGraphics.fill(0, 0, this.width, 28, 0xFF121520);
+        guiGraphics.fill(0, 27, this.width, 29, 0xFF00CEC9);
         guiGraphics.drawCenteredString(this.font, Component.translatable("gui.customraces.title.choose_race"), this.width / 2, 8, 0xFFFFFF);
 
         int leftWidth = 140;
@@ -113,8 +113,9 @@ public class RaceSelectionScreen extends Screen {
         int bottomY = this.height - 10;
 
         // 2. Left Edge Scrollable List Box Container
-        guiGraphics.fill(10, topY, leftWidth, bottomY, 0xFF14171C);
-        guiGraphics.fill(10, topY, leftWidth, topY + 22, 0xFF1C2027);
+        guiGraphics.fill(10, topY, leftWidth, bottomY, 0xEE121622);
+        guiGraphics.fill(10, topY, leftWidth, topY + 22, 0xFF191F30);
+        guiGraphics.fill(10, topY + 21, leftWidth, topY + 22, 0xFF7B61FF); // Violet Accent Line
         guiGraphics.drawString(this.font, "§6§lRaces (" + filteredRaces.size() + ")", 15, topY + 6, 0xFFFFFF);
 
         // Render Scrollable Race List Box (Below Search Box at Y=76)
@@ -128,15 +129,15 @@ public class RaceSelectionScreen extends Screen {
                 boolean isSelected = race.id.equals(selectedRaceId);
                 boolean isHovered = mouseX >= 12 && mouseX <= leftWidth - 12 && mouseY >= itemY && mouseY <= itemY + itemHeight - 2;
 
-                int bgColor = isSelected ? 0xFF2B3A4E : (isHovered ? 0xFF222730 : 0xFF181C22);
-                int borderColor = isSelected ? 0xFF4A80C0 : (isHovered ? 0xFF3A4250 : 0xFF20252E);
+                int bgColor = isSelected ? 0xFF2D3850 : (isHovered ? 0xFF1F2636 : 0xFF161B26);
+                int borderColor = isSelected ? 0xFF6C5CE7 : (isHovered ? 0xFF3D4A66 : 0xFF222938);
 
                 guiGraphics.fill(12, itemY, leftWidth - 12, itemY + itemHeight - 2, bgColor);
                 guiGraphics.fill(12, itemY, leftWidth - 12, itemY + 1, borderColor);
                 guiGraphics.fill(12, itemY + itemHeight - 3, leftWidth - 12, itemY + itemHeight - 2, borderColor);
 
-                String displayName = isSelected ? "§e§l" + race.name : race.name;
-                guiGraphics.drawString(this.font, displayName, 18, itemY + 6, 0xFFFFFF);
+                String displayName = isSelected ? "§e§l❖ " + race.name : "§7• " + race.name;
+                guiGraphics.drawString(this.font, displayName, 16, itemY + 6, 0xFFFFFF);
             }
             itemY += itemHeight;
         }
@@ -145,7 +146,8 @@ public class RaceSelectionScreen extends Screen {
         // 3. Center Panel: Detailed Info, Difficulty Meter (1-10), Lore, Skills
         int centerLeft = leftWidth + 10;
         int centerWidth = this.width - leftWidth - 160;
-        guiGraphics.fill(centerLeft, topY, centerLeft + centerWidth, bottomY, 0xFF14171C);
+        guiGraphics.fill(centerLeft, topY, centerLeft + centerWidth, bottomY, 0xEE121622);
+        guiGraphics.fill(centerLeft, topY, centerLeft + centerWidth, topY + 1, 0xFF7B61FF); // Top Violet Border Line
 
         RaceData selectedRace = RaceRegistry.getRace(selectedRaceId);
         if (wereToggleBtn != null) {
@@ -244,18 +246,27 @@ public class RaceSelectionScreen extends Screen {
             }
         }
 
-        // 4. Right Side: 3D Rotating Steve Preview Entity
+        // 4. Right Side: 3D Holographic Showcase Viewport
         int rightLeft = centerLeft + centerWidth + 10;
-        int rightWidth = this.width - rightLeft - 10;
-        guiGraphics.fill(rightLeft, topY, rightLeft + rightWidth, bottomY, 0xFF14171C);
-        guiGraphics.fill(rightLeft, topY, rightLeft + rightWidth, topY + 24, 0xFF1E222A);
-        String previewHeader = (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? "§c§lWere Preview" : "§7Preview";
-        guiGraphics.drawCenteredString(this.font, previewHeader, rightLeft + rightWidth / 2, topY + 7, 0xFFFFFF);
+        int rightRight = this.width - 10;
+        int rightWidth = rightRight - rightLeft;
+
+        guiGraphics.fill(rightLeft, topY, rightRight, bottomY, 0xEE101422);
+        guiGraphics.fill(rightLeft, topY, rightRight, topY + 20, 0xFF191F30);
+        guiGraphics.fill(rightLeft, topY + 19, rightRight, topY + 20, 0xFF00CEC9); // Glowing Cyan Line
+
+        String previewHeader = (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? "§c§l❖ WERE PREVIEW ❖" : "§b❖ 3D SHOWCASE ❖";
+        guiGraphics.drawCenteredString(this.font, previewHeader, rightLeft + rightWidth / 2, topY + 6, 0xFFFFFF);
 
         if (this.minecraft != null && this.minecraft.player != null) {
             modelRotation += partialTick * 0.8f;
             int previewX = rightLeft + rightWidth / 2;
             int previewY = bottomY - 30;
+
+            // Render Holographic Pedestal Ring
+            guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x40FF0000 : 0x3000CEC9);
+            guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x80880000 : 0x606C5CE7);
+
             int scale = 50;
 
             if (selectedRace != null) {
