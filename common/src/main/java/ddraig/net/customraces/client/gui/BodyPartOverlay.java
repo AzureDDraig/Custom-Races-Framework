@@ -32,6 +32,7 @@ public class BodyPartOverlay extends Screen {
     @Override
     protected void init() {
         super.init();
+        this.clearWidgets();
 
         int popWidth = 420;
         int popHeight = 240;
@@ -62,7 +63,7 @@ public class BodyPartOverlay extends Screen {
         Button nextTypeBtn = Button.builder(Component.literal("Type: " + getPartType(selectedPartKey)), b -> {
             cyclePartType(selectedPartKey);
             this.init();
-        }).bounds(optionX, optionY, 120, 20).build();
+        }).bounds(optionX, optionY, 180, 20).build();
         nextTypeBtn.setTooltip(Tooltip.create(Component.literal("Cycle through available preset part models.")));
         this.addRenderableWidget(nextTypeBtn);
 
@@ -129,6 +130,12 @@ public class BodyPartOverlay extends Screen {
                 } else {
                     workingRace.legType = "human"; workingRace.legCount = 2;
                 }
+            }
+            default -> {
+                java.util.List<String> customList = new java.util.ArrayList<>(ddraig.net.customraces.data.CustomPartScanner.getDiscoveredCustomParts());
+                if (customList.isEmpty()) customList.add("none");
+                if (!customList.contains("none")) customList.add(0, "none");
+                workingRace.customPartId = cycle(workingRace.customPartId, customList.toArray(new String[0]));
             }
         }
     }

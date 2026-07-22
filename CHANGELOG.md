@@ -4,6 +4,20 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b013a] - 2026-07-22
+
+### 🛠️ Fixed & Improved
+- **Preset Body Parts Model Rendering (`PlayerRaceLayer.java`)**:
+  - Implemented 3D vertex cuboid rendering for preset body parts (**Ears**, **Horns**, **Halo**, **Wings**, **Tail**).
+  - Attached head attachments directly to head bone transforms and body attachments to player torso transforms.
+  - Added RGB Hex color tinting for all preset body parts.
+- **Body Part Selector GUI Overlap Fix (`BodyPartOverlay.java`)**:
+  - Added `this.clearWidgets();` in `BodyPartOverlay.init()` to prevent duplicate overlapping button widgets.
+  - Expanded model type button width to `180px` for clear, readable text.
+  - Integrated custom body parts cycling from `config/custom_races/models/parts/` via `CustomPartScanner`.
+
+---
+
 ## [1.0.0-b012a] - 2026-07-22
 
 ### 🖼️ Added & Improved

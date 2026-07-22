@@ -58,28 +58,114 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         poseStack.popPose();
     }
 
-    private void renderPresetParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
-        // Parse RGB color tinting
-        String earColor = race.getColor("ears");
-        String wingColor = race.getColor("wings");
-        String tailColor = race.getColor("tail");
-        String hornColor = race.getColor("horns");
-        String haloColor = race.getColor("halo");
+    private static final ResourceLocation WHITE_TEXTURE = new ResourceLocation("minecraft", "textures/misc/white.png");
 
-        // Attach to Head Bone for Ears, Horns, Halo
+    private void renderPresetParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
+        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE));
+
+        // 1. Head Attachments (Ears, Horns, Halo)
         if (!"none".equalsIgnoreCase(race.earType) || !"none".equalsIgnoreCase(race.hornType) || !"none".equalsIgnoreCase(race.haloType)) {
             poseStack.pushPose();
             this.getParentModel().getHead().translateAndRotate(poseStack);
-            // Render Head Attachments
+
+            // Render Ears
+            if (!"none".equalsIgnoreCase(race.earType)) {
+                float[] rgb = parseRGB(race.getColor("ears"));
+                // Left & Right Ear Cuboids
+                renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.65f, -0.05f, -0.22f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, 0.22f, -0.65f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            }
+
+            // Render Horns
+            if (!"none".equalsIgnoreCase(race.hornType)) {
+                float[] rgb = parseRGB(race.getColor("horns"));
+                renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.70f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.70f, -0.15f, 0.20f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            }
+
+            // Render Halo
+            if (!"none".equalsIgnoreCase(race.haloType)) {
+                float[] rgb = parseRGB(race.getColor("halo"));
+                renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
+            }
+
             poseStack.popPose();
         }
 
-        // Attach to Body Bone for Wings, Tail
+        // 2. Body Attachments (Wings, Tail)
         if (!"none".equalsIgnoreCase(race.wingType) || !"none".equalsIgnoreCase(race.tailType)) {
             poseStack.pushPose();
             this.getParentModel().body.translateAndRotate(poseStack);
-            // Render Body Attachments
+
+            // Render Wings
+            if (!"none".equalsIgnoreCase(race.wingType)) {
+                float[] rgb = parseRGB(race.getColor("wings"));
+                // Left Wing Panel
+                renderColoredBox(poseStack, vc, packedLight, -0.85f, 0.0f, 0.15f, -0.15f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                // Right Wing Panel
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.85f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+            }
+
+            // Render Tail
+            if (!"none".equalsIgnoreCase(race.tailType)) {
+                float[] rgb = parseRGB(race.getColor("tail"));
+                renderColoredBox(poseStack, vc, packedLight, -0.06f, 0.65f, 0.15f, 0.06f, 1.25f, 0.65f, rgb[0], rgb[1], rgb[2], 1.0f);
+            }
+
             poseStack.popPose();
         }
+    }
+
+    private float[] parseRGB(String hex) {
+        float[] rgb = new float[]{1.0f, 1.0f, 1.0f};
+        try {
+            if (hex != null && hex.startsWith("#") && hex.length() == 7) {
+                rgb[0] = Integer.parseInt(hex.substring(1, 3), 16) / 255.0f;
+                rgb[1] = Integer.parseInt(hex.substring(3, 5), 16) / 255.0f;
+                rgb[2] = Integer.parseInt(hex.substring(5, 7), 16) / 255.0f;
+            }
+        } catch (Exception ignored) {}
+        return rgb;
+    }
+
+    private void renderColoredBox(PoseStack poseStack, VertexConsumer builder, int packedLight, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float r, float g, float b, float a) {
+        org.joml.Matrix4f pose = poseStack.last().pose();
+        org.joml.Matrix3f normal = poseStack.last().normal();
+
+        // Top
+        builder.vertex(pose, minX, maxY, minZ).color(r, g, b, a).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 1, 0).endVertex();
+        builder.vertex(pose, minX, maxY, maxZ).color(r, g, b, a).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 1, 0).endVertex();
+        builder.vertex(pose, maxX, maxY, maxZ).color(r, g, b, a).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 1, 0).endVertex();
+        builder.vertex(pose, maxX, maxY, minZ).color(r, g, b, a).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 1, 0).endVertex();
+
+        // Bottom
+        builder.vertex(pose, minX, minY, maxZ).color(r, g, b, a).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, -1, 0).endVertex();
+        builder.vertex(pose, minX, minY, minZ).color(r, g, b, a).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, -1, 0).endVertex();
+        builder.vertex(pose, maxX, minY, minZ).color(r, g, b, a).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, -1, 0).endVertex();
+        builder.vertex(pose, maxX, minY, maxZ).color(r, g, b, a).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, -1, 0).endVertex();
+
+        // Front
+        builder.vertex(pose, minX, maxY, maxZ).color(r, g, b, a).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, 1).endVertex();
+        builder.vertex(pose, minX, minY, maxZ).color(r, g, b, a).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, 1).endVertex();
+        builder.vertex(pose, maxX, minY, maxZ).color(r, g, b, a).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, 1).endVertex();
+        builder.vertex(pose, maxX, maxY, maxZ).color(r, g, b, a).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, 1).endVertex();
+
+        // Back
+        builder.vertex(pose, maxX, maxY, minZ).color(r, g, b, a).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, -1).endVertex();
+        builder.vertex(pose, maxX, minY, minZ).color(r, g, b, a).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, -1).endVertex();
+        builder.vertex(pose, minX, minY, minZ).color(r, g, b, a).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, -1).endVertex();
+        builder.vertex(pose, minX, maxY, minZ).color(r, g, b, a).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 0, 0, -1).endVertex();
+
+        // Left
+        builder.vertex(pose, minX, maxY, minZ).color(r, g, b, a).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, -1, 0, 0).endVertex();
+        builder.vertex(pose, minX, minY, minZ).color(r, g, b, a).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, -1, 0, 0).endVertex();
+        builder.vertex(pose, minX, minY, maxZ).color(r, g, b, a).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, -1, 0, 0).endVertex();
+        builder.vertex(pose, minX, maxY, maxZ).color(r, g, b, a).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, -1, 0, 0).endVertex();
+
+        // Right
+        builder.vertex(pose, maxX, maxY, maxZ).color(r, g, b, a).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 1, 0, 0).endVertex();
+        builder.vertex(pose, maxX, minY, maxZ).color(r, g, b, a).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 1, 0, 0).endVertex();
+        builder.vertex(pose, maxX, minY, minZ).color(r, g, b, a).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 1, 0, 0).endVertex();
+        builder.vertex(pose, maxX, maxY, minZ).color(r, g, b, a).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(normal, 1, 0, 0).endVertex();
     }
 }
