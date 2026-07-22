@@ -214,7 +214,10 @@ public class RaceCreatorScreen extends Screen {
                 tabY += tabHeight + 2;
             }
 
-            Button tabBtn = Button.builder(Component.translatable(tabKeys[i]), b -> {
+            String prefix = (editingWereForm || i == 8 || i == 9) ? "🐺 " : "";
+            Component tabText = Component.literal(prefix).append(Component.translatable(tabKeys[i]));
+
+            Button tabBtn = Button.builder(tabText, b -> {
                 readFormInputs();
                 this.activeTab = index;
                 this.init();
@@ -863,20 +866,26 @@ public class RaceCreatorScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, "§b❖ RACES ❖", panelX + 70, panelY + 4, 0xFFFFFF);
         guiGraphics.fill(panelX, panelY + panelHeight - 48, panelX + panelWidth, panelY + panelHeight - 47, 0xFF7B61FF); // Top Violet Border Line
 
-        // 3. High-Tech Header Banner
+        // 3. High-Tech Header Banner (Crimson Theme Shift if editingWereForm is true)
         int contentLeft = 155;
-        guiGraphics.fill(contentLeft - 5, 0, this.width, 24, 0xFF121520);
-        guiGraphics.fill(contentLeft - 5, 23, this.width, 24, 0xFF00CEC9); // Neon Cyan Accent Line
-        guiGraphics.drawString(this.font, "§9§l❖ §c§lRACE CREATOR ADMIN GUI §9§l❖", contentLeft, 8, 0xFFFFFF);
+        boolean isWereMode = editingWereForm && workingRace.enableWereRace;
+        int headerBg = isWereMode ? 0xFF2A0A0A : 0xFF121520;
+        int headerAccent = isWereMode ? 0xFFFF3838 : 0xFF00CEC9;
+        String headerTitle = isWereMode ? "§c§l❖ 🐺 WERE-FORM EDITING MODE ❖" : "§9§l❖ §c§lRACE CREATOR ADMIN GUI §9§l❖";
+
+        guiGraphics.fill(contentLeft - 5, 0, this.width, 24, headerBg);
+        guiGraphics.fill(contentLeft - 5, 23, this.width, 24, headerAccent);
+        guiGraphics.drawString(this.font, headerTitle, contentLeft, 8, 0xFFFFFF);
 
         // 4. Form Content Main Container Card
         int contentTop = 50;
         int contentRight = this.width - 145;
         int contentBottom = this.height - 10;
+        int cardBorderColor = isWereMode ? 0xFFFF3838 : 0xFF7B61FF;
 
         guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentBottom, 0xEE121622);
-        guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentTop - 24, 0xFF7B61FF); // Top Violet Border Line
-        guiGraphics.fill(contentLeft - 5, contentBottom - 1, contentRight, contentBottom, 0xFF7B61FF); // Bottom Violet Border Line
+        guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentTop - 24, cardBorderColor); // Top Border Line
+        guiGraphics.fill(contentLeft - 5, contentBottom - 1, contentRight, contentBottom, cardBorderColor); // Bottom Border Line
 
         // Form Field Labels with Styled Bullet Points
         if (activeTab == 0) {
@@ -887,10 +896,11 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, "§b❖ Icon Item ID:", contentLeft, contentTop + 96, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§b❖ PNG Picture Path:", contentLeft, contentTop + 119, 0xFFFFFF);
         } else if (activeTab == 1) {
-            guiGraphics.drawString(this.font, "§e❖ Height Scale:", contentLeft, contentTop + 34, 0xFFFFFF);
-            guiGraphics.drawString(this.font, "§e❖ Width Scale:", contentLeft, contentTop + 59, 0xFFFFFF);
-            guiGraphics.drawString(this.font, "§e❖ Max Health:", contentLeft, contentTop + 84, 0xFFFFFF);
-            guiGraphics.drawString(this.font, "§e❖ Move Speed:", contentLeft, contentTop + 109, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were Height Scale:" : "§e❖ Height Scale:", contentLeft, contentTop + 34, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were Width Scale:" : "§e❖ Width Scale:", contentLeft, contentTop + 59, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were HP Bonus:" : "§e❖ Max Health:", contentLeft, contentTop + 84, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were Speed Bonus:" : "§e❖ Move Speed:", contentLeft, contentTop + 109, 0xFFFFFF);
+            if (isWereMode) guiGraphics.drawString(this.font, "§c❖ Were Damage Bonus:", contentLeft, contentTop + 134, 0xFFFFFF);
         } else if (activeTab == 2) {
             guiGraphics.drawString(this.font, "§e❖ Part Scale & Offset (X, Y, Z):", contentLeft, contentTop - 12, 0xFFFFFF);
             String[] partKeys = {"Ears", "Wings", "Tail", "Horns", "Halo", "Custom"};
@@ -900,9 +910,9 @@ public class RaceCreatorScreen extends Screen {
                 py += 24;
             }
         } else if (activeTab == 3) {
-            guiGraphics.drawString(this.font, "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Toggle Were-Form Granted Passives:" : "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop - 12, 0xFFFFFF);
         } else if (activeTab == 4) {
-            guiGraphics.drawString(this.font, "§c❖ Assign Active Skills (Slots 1-5):", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Assign Were-Form Active Skills (Slots 1-5):" : "§c❖ Assign Active Skills (Slots 1-5):", contentLeft, contentTop - 12, 0xFFFFFF);
             int py = contentTop;
             for (int slot = 1; slot <= 5; slot++) {
                 guiGraphics.drawString(this.font, "§c❖ Slot " + slot + ":", contentLeft, py + 4, 0xCCCCCC);
@@ -938,11 +948,13 @@ public class RaceCreatorScreen extends Screen {
         int rightRight = this.width - 8;
         int rightTop = 28;
         int rightBottom = this.height - 10;
+        int viewAccent = isWereMode ? 0xFFFF3838 : 0xFF00CEC9;
+        String viewTitle = isWereMode ? "§c❖ 🐺 WERE SHOWCASE ❖" : "§b❖ 3D SHOWCASE ❖";
 
         guiGraphics.fill(rightLeft, rightTop, rightRight, rightBottom, 0xEE101422);
         guiGraphics.fill(rightLeft, rightTop, rightRight, rightTop + 18, 0xFF191F30);
-        guiGraphics.fill(rightLeft, rightTop + 17, rightRight, rightTop + 18, 0xFF00CEC9); // Glowing Cyan Line
-        guiGraphics.drawCenteredString(this.font, "§b❖ 3D SHOWCASE ❖", rightLeft + 66, rightTop + 5, 0xFFFFFF);
+        guiGraphics.fill(rightLeft, rightTop + 17, rightRight, rightTop + 18, viewAccent); // Glowing Line
+        guiGraphics.drawCenteredString(this.font, viewTitle, rightLeft + 66, rightTop + 5, 0xFFFFFF);
 
         if (this.minecraft != null && this.minecraft.player != null) {
             readFormInputs(); // Sync latest form inputs to workingRace
