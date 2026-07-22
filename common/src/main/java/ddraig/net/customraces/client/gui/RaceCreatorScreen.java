@@ -98,9 +98,20 @@ public class RaceCreatorScreen extends Screen {
         this.workingRace = race != null ? race : new RaceData("new_race_" + System.currentTimeMillis() % 1000, "New Race");
     }
 
+    private void resetFormFields() {
+        nameBox = null; nameColorBox = null; difficultyBox = null; loreBox = null;
+        iconBox = null; customTextureBox = null; heightScaleBox = null; widthScaleBox = null;
+        healthBox = null; speedBox = null; wereDamageBox = null; ambientSoundBox = null;
+        hurtSoundBox = null; deathSoundBox = null; spawnDimensionBox = null; spawnBiomeBox = null;
+        minionMobTypeBox = null; minionCountBox = null; minionScaleBox = null; minionProjectileBox = null;
+        wereConditionBox = null; wereModelBox = null; wereTextureBox = null; wereAnimFileBox = null;
+        wereIdleAnimBox = null; wereWalkAnimBox = null; wereAttackAnimBox = null;
+        wereTransformSoundBox = null; wereHowlSoundBox = null; wereAmbientSoundBox = null;
+        wereHurtSoundBox = null; wereDeathSoundBox = null;
+    }
+
     @Override
     protected void init() {
-        readFormInputs();
         super.init();
         this.clearWidgets();
         RaceRegistry.rebuildSuggestionsCache();
@@ -119,7 +130,7 @@ public class RaceCreatorScreen extends Screen {
         this.raceSearchBox.setResponder(filter -> this.init());
         this.addRenderableWidget(this.raceSearchBox);
 
-        // 2. Left Sidebar: Scrollable Race Buttons List
+        // 2. Left Sidebar: Scrollable Race Buttons List (Custom RPG Flat Buttons)
         int listTop = panelY + 36;
         int listBottom = panelY + panelHeight - 48;
         int btnY = listTop;
@@ -130,15 +141,16 @@ public class RaceCreatorScreen extends Screen {
             .collect(Collectors.toList());
 
         for (RaceData r : matchingRaces) {
-            if (btnY + 18 > listBottom) break; // Keep inside sidebar list bounds
+            if (btnY + 18 > listBottom) break;
             boolean selected = r.id.equalsIgnoreCase(workingRace.id);
             String label = (selected ? "▶ " : "") + r.name;
 
-            Button raceBtn = Button.builder(Component.literal(label), b -> {
+            FlatButton raceBtn = new FlatButton(panelX + 5, btnY, 130, 18, Component.literal(label), b -> {
                 readFormInputs();
+                resetFormFields();
                 this.workingRace = r;
                 this.init();
-            }).bounds(panelX + 5, btnY, 130, 18).build();
+            }, selected ? 0xFFFF3838 : 0xFF00CEC9, 0xFF7B61FF);
 
             raceBtn.setTooltip(Tooltip.create(Component.literal("ID: " + r.id + "\nClick to edit race properties.")));
             if (selected) raceBtn.active = false;
@@ -149,22 +161,24 @@ public class RaceCreatorScreen extends Screen {
         // 3. Left Sidebar Bottom Management Buttons: Add, Del, Duplicate
         int mgmtY = panelY + panelHeight - 44;
 
-        Button addBtn = Button.builder(Component.literal("§a+ Add"), b -> {
+        FlatButton addBtn = new FlatButton(panelX + 5, mgmtY, 62, 18, Component.literal("§a+ Add"), b -> {
             readFormInputs();
+            resetFormFields();
             String newId = "race_" + (System.currentTimeMillis() % 10000);
             RaceData newRace = new RaceData(newId, "New Race");
             RaceRegistry.loadedRaces.put(newId, newRace);
             ModPackets.sendSaveRace(newRace);
             this.workingRace = newRace;
             this.init();
-        }).bounds(panelX + 5, mgmtY, 62, 18).build();
+        }, 0xFF55FF55, 0xFF55FFFF);
         addBtn.setTooltip(Tooltip.create(Component.literal("Create a new custom race template.")));
         this.addRenderableWidget(addBtn);
 
-        Button deleteBtn = Button.builder(Component.literal("§c🗑 Del"), b -> {
+        FlatButton deleteBtn = new FlatButton(panelX + 73, mgmtY, 62, 18, Component.literal("§c🗑 Del"), b -> {
             ModPackets.sendDeleteRace(workingRace.id);
             RaceRegistry.loadedRaces.remove(workingRace.id);
             RaceRegistry.playerRaces.entrySet().removeIf(e -> e.getValue().equalsIgnoreCase(workingRace.id));
+            resetFormFields();
             if (!RaceRegistry.loadedRaces.isEmpty()) {
                 this.workingRace = RaceRegistry.loadedRaces.values().iterator().next();
             } else {
@@ -172,23 +186,24 @@ public class RaceCreatorScreen extends Screen {
                 RaceRegistry.loadedRaces.put(this.workingRace.id, this.workingRace);
             }
             this.init();
-        }).bounds(panelX + 73, mgmtY, 62, 18).build();
+        }, 0xFFFF5555, 0xFFFFAA00);
         deleteBtn.setTooltip(Tooltip.create(Component.literal("Delete the currently selected race.")));
         this.addRenderableWidget(deleteBtn);
 
         // Large Duplicate Button spanning across under Add & Del
-        Button duplicateBtn = Button.builder(Component.literal("§e📋 Duplicate"), b -> {
+        FlatButton duplicateBtn = new FlatButton(panelX + 5, mgmtY + 22, 130, 20, Component.literal("§e📋 Duplicate"), b -> {
             readFormInputs();
+            resetFormFields();
             RaceData copy = duplicateRace(workingRace);
             RaceRegistry.loadedRaces.put(copy.id, copy);
             ModPackets.sendSaveRace(copy);
             this.workingRace = copy;
             this.init();
-        }).bounds(panelX + 5, mgmtY + 22, 130, 20).build();
+        }, 0xFFFFFF55, 0xFFFF9900);
         duplicateBtn.setTooltip(Tooltip.create(Component.literal("Create an exact copy of the selected race.")));
         this.addRenderableWidget(duplicateBtn);
 
-        // 4. Horizontal Category Tabs (Positioned right of sidebar)
+        // 4. Horizontal Category Tabs (Custom RPG Flat Buttons)
         int contentLeft = 155;
         int tabX = contentLeft;
         int tabY = 28;
@@ -217,11 +232,12 @@ public class RaceCreatorScreen extends Screen {
             String prefix = (editingWereForm || i == 8 || i == 9) ? "🐺 " : "";
             Component tabText = Component.literal(prefix).append(Component.translatable(tabKeys[i]));
 
-            Button tabBtn = Button.builder(tabText, b -> {
+            int tabBorder = (editingWereForm && workingRace.enableWereRace) ? 0xFFFF3838 : 0xFF00CEC9;
+            FlatButton tabBtn = new FlatButton(tabX, tabY, tabWidth, tabHeight, tabText, b -> {
                 readFormInputs();
                 this.activeTab = index;
                 this.init();
-            }).bounds(tabX, tabY, tabWidth, tabHeight).build();
+            }, activeTab == i ? 0xFFFF9900 : tabBorder, 0xFF7B61FF);
 
             tabBtn.setTooltip(Tooltip.create(Component.translatable(tabKeys[i])));
             if (activeTab == i) tabBtn.active = false;
@@ -231,20 +247,20 @@ public class RaceCreatorScreen extends Screen {
 
         // 5. Header Action Buttons: Save All & Were Mode Toggle
         if (workingRace.enableWereRace) {
-            Button modeToggleBtn = Button.builder(Component.literal(editingWereForm ? "🐺 WERE FORM" : "👤 BASE FORM"), b -> {
+            FlatButton modeToggleBtn = new FlatButton(this.width - 275, 4, 115, 18, Component.literal(editingWereForm ? "🐺 WERE FORM" : "👤 BASE FORM"), b -> {
                 readFormInputs();
                 editingWereForm = !editingWereForm;
                 this.init();
-            }).bounds(this.width - 275, 4, 115, 18).build();
+            }, editingWereForm ? 0xFFFF3838 : 0xFF00CEC9, 0xFFFF5555);
             modeToggleBtn.setTooltip(Tooltip.create(Component.literal("Switch editor mode between Base Form and Were-Form.")));
             this.addRenderableWidget(modeToggleBtn);
         }
 
-        Button saveBtn = Button.builder(Component.literal("§a💾 Save All"), b -> {
+        FlatButton saveBtn = new FlatButton(this.width - 150, 4, 80, 18, Component.literal("§a💾 Save All"), b -> {
             readFormInputs();
             ModPackets.sendSaveRace(workingRace);
             this.onClose();
-        }).bounds(this.width - 150, 4, 80, 18).build();
+        }, 0xFF55FF55, 0xFF55FFFF);
         saveBtn.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.save_race")));
         this.addRenderableWidget(saveBtn);
 
@@ -288,16 +304,24 @@ public class RaceCreatorScreen extends Screen {
             this.customTextureBox.setTooltip(Tooltip.create(Component.literal("ResourceLocation path to PNG picture (e.g. customraces:textures/gui/races/elf.png).")));
             this.addRenderableWidget(this.customTextureBox);
 
-            // Selective Armor Piece Hiding Checkboxes
-            this.hideHelmetBox = new Checkbox(contentLeft, contentTop + 138, 120, 20, Component.literal("Hide Helmet"), workingRace.hideHelmet);
+            // Clean Non-Overlapping Checkboxes Grid (Row 1 at contentTop + 140, Row 2 at contentTop + 162)
+            this.hideHelmetBox = new Checkbox(contentLeft, contentTop + 140, 105, 18, Component.literal("Hide Helmet"), workingRace.hideHelmet);
             this.hideHelmetBox.setTooltip(Tooltip.create(Component.literal("Check to hide player helmet armor piece visually.")));
             this.addRenderableWidget(this.hideHelmetBox);
 
-            this.hideChestplateBox = new Checkbox(contentLeft + 130, contentTop + 138, 120, 20, Component.literal("Hide Chestplate"), workingRace.hideChestplate);
+            this.hideChestplateBox = new Checkbox(contentLeft + 110, contentTop + 140, 110, 18, Component.literal("Hide Chestplate"), workingRace.hideChestplate);
             this.hideChestplateBox.setTooltip(Tooltip.create(Component.literal("Check to hide player chestplate armor piece visually.")));
             this.addRenderableWidget(this.hideChestplateBox);
 
-            this.enableWereBox = new Checkbox(contentLeft + 260, contentTop + 138, 140, 20, Component.literal("Enable Were-Form"), workingRace.enableWereRace) {
+            this.hideLeggingsBox = new Checkbox(contentLeft + 225, contentTop + 140, 105, 18, Component.literal("Hide Leggings"), workingRace.hideLeggings);
+            this.hideLeggingsBox.setTooltip(Tooltip.create(Component.literal("Check to hide player leggings armor piece visually.")));
+            this.addRenderableWidget(this.hideLeggingsBox);
+
+            this.hideBootsBox = new Checkbox(contentLeft, contentTop + 162, 105, 18, Component.literal("Hide Boots"), workingRace.hideBoots);
+            this.hideBootsBox.setTooltip(Tooltip.create(Component.literal("Check to hide player boots armor piece visually.")));
+            this.addRenderableWidget(this.hideBootsBox);
+
+            this.enableWereBox = new Checkbox(contentLeft + 110, contentTop + 162, 140, 18, Component.literal("Enable Were-Form"), workingRace.enableWereRace) {
                 @Override
                 public void onPress() {
                     super.onPress();
@@ -307,14 +331,6 @@ public class RaceCreatorScreen extends Screen {
             };
             this.enableWereBox.setTooltip(Tooltip.create(Component.literal("Check to enable Were-form capabilities and unlock Were Model & Were Sounds tabs.")));
             this.addRenderableWidget(this.enableWereBox);
-
-            this.hideLeggingsBox = new Checkbox(contentLeft, contentTop + 130, 120, 20, Component.literal("Hide Leggings"), workingRace.hideLeggings);
-            this.hideLeggingsBox.setTooltip(Tooltip.create(Component.literal("Check to hide player leggings armor piece visually.")));
-            this.addRenderableWidget(this.hideLeggingsBox);
-
-            this.hideBootsBox = new Checkbox(contentLeft + 130, contentTop + 130, 120, 20, Component.literal("Hide Boots"), workingRace.hideBoots);
-            this.hideBootsBox.setTooltip(Tooltip.create(Component.literal("Check to hide player boots armor piece visually.")));
-            this.addRenderableWidget(this.hideBootsBox);
 
         } else if (activeTab == 1) { // Model & Animations
             if (editingWereForm && workingRace.enableWereRace) {
@@ -1033,13 +1049,27 @@ public class RaceCreatorScreen extends Screen {
 
                 guiGraphics.drawString(this.font, "§e" + sugg, dropX + 6, itemY + 3, 0xFFFFFF);
             }
+
+            // Render Vertical Scrollbar Track & Thumb
+            if (activeSuggestions.size() > maxVisible) {
+                int barX = dropX + dropW - 5;
+                int barY = dropY + 2;
+                int barH = dropH - 4;
+                guiGraphics.fill(barX, barY, barX + 3, barY + barH, 0xFF222233);
+
+                float ratio = (float) maxVisible / activeSuggestions.size();
+                int thumbH = Math.max(6, (int) (barH * ratio));
+                float maxScroll = activeSuggestions.size() - maxVisible;
+                int thumbY = barY + (int) ((barH - thumbH) * ((float) suggestionsScrollOffset / maxScroll));
+
+                guiGraphics.fill(barX, thumbY, barX + 3, thumbY + thumbH, 0xFF00CEC9);
+            }
         }
     }
 
     private void updateCurrentSuggestions() {
         showSuggestions = false;
         activeSuggestions.clear();
-        activeField = null;
 
         for (net.minecraft.client.gui.components.events.GuiEventListener child : this.children()) {
             if (child instanceof EditBox box && box.isFocused()) {
@@ -1079,17 +1109,45 @@ public class RaceCreatorScreen extends Screen {
                 }
 
                 if (source != null && !source.isEmpty()) {
-                    activeField = box;
+                    if (activeField != box) {
+                        activeField = box;
+                        suggestionsScrollOffset = 0;
+                    }
                     final String query = val;
                     activeSuggestions = source.stream()
                             .filter(s -> query.isEmpty() || s.toLowerCase().contains(query))
-                            .limit(20)
+                            .limit(100)
                             .collect(Collectors.toList());
                     showSuggestions = !activeSuggestions.isEmpty();
                 }
                 break;
             }
         }
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (showSuggestions && !activeSuggestions.isEmpty() && activeField != null) {
+            int dropX = activeField.getX();
+            int dropY = activeField.getY() + activeField.getHeight() + 2;
+            int dropW = Math.max(activeField.getWidth(), 200);
+            int maxVisible = 6;
+            int dropH = Math.min(maxVisible, activeSuggestions.size()) * 14 + 4;
+
+            if (mouseX >= dropX && mouseX <= dropX + dropW + 10 && mouseY >= dropY && mouseY <= dropY + dropH) {
+                if (delta < 0) {
+                    if (suggestionsScrollOffset + maxVisible < activeSuggestions.size()) {
+                        suggestionsScrollOffset++;
+                    }
+                } else if (delta > 0) {
+                    if (suggestionsScrollOffset > 0) {
+                        suggestionsScrollOffset--;
+                    }
+                }
+                return true;
+            }
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
@@ -1113,6 +1171,9 @@ public class RaceCreatorScreen extends Screen {
                 }
             }
         }
+        showSuggestions = false;
+        activeSuggestions.clear();
+        activeField = null;
         return super.mouseClicked(mouseX, mouseY, button);
     }
 

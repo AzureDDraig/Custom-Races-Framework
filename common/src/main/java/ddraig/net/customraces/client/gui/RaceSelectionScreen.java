@@ -65,20 +65,20 @@ public class RaceSelectionScreen extends Screen {
         int centerWidth = this.width - leftWidth - 170;
         int confirmY = this.height - 45;
 
-        this.confirmButton = Button.builder(Component.translatable("gui.customraces.button.confirm_choice"), button -> {
+        this.confirmButton = new FlatButton(centerLeft, confirmY, centerWidth - 100, 24, Component.translatable("gui.customraces.button.confirm_choice"), button -> {
             if (!selectedRaceId.isEmpty()) {
                 ModPackets.sendSetPlayerRace(selectedRaceId);
                 this.onClose();
             }
-        }).bounds(centerLeft, confirmY, centerWidth - 100, 24).build();
+        }, 0xFF55FF55, 0xFF55FFFF);
         this.confirmButton.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.confirm")));
         this.addRenderableWidget(this.confirmButton);
 
         // Were-Form Preview Toggle Button
-        this.wereToggleBtn = Button.builder(Component.translatable("gui.customraces.button.were_form"), button -> {
+        this.wereToggleBtn = new FlatButton(centerLeft + centerWidth - 95, confirmY, 95, 24, Component.translatable("gui.customraces.button.were_form"), button -> {
             previewWereForm = !previewWereForm;
             updateWereButtonText();
-        }).bounds(centerLeft + centerWidth - 95, confirmY, 95, 24).build();
+        }, 0xFFFF3838, 0xFFFFAA00);
         this.wereToggleBtn.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.were_toggle")));
         this.addRenderableWidget(this.wereToggleBtn);
         updateWereButtonText();
@@ -155,11 +155,25 @@ public class RaceSelectionScreen extends Screen {
         }
 
         if (selectedRace != null) {
-            // Title Bar
+            // Title Bar with Selected Icon Item Rendering
             guiGraphics.fill(centerLeft, topY, centerLeft + centerWidth, topY + 30, 0xFF1E222A);
             int titleColor = parseHexColor(selectedRace.nameColor, 0xFFFFAA00);
+            int textX = centerLeft + 12;
+
+            if (selectedRace.iconItem != null && !selectedRace.iconItem.trim().isEmpty()) {
+                try {
+                    net.minecraft.world.item.ItemStack iconStack = new net.minecraft.world.item.ItemStack(
+                        net.minecraft.core.registries.BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation(selectedRace.iconItem.trim()))
+                    );
+                    if (!iconStack.isEmpty()) {
+                        guiGraphics.renderItem(iconStack, centerLeft + 10, topY + 7);
+                        textX = centerLeft + 32;
+                    }
+                } catch (Exception ignored) {}
+            }
+
             String titleText = (previewWereForm && selectedRace.enableWereRace) ? "§c§l" + selectedRace.name.toUpperCase() + " §4[WERE-FORM]" : "§l" + selectedRace.name.toUpperCase();
-            guiGraphics.drawString(this.font, titleText, centerLeft + 12, topY + 10, titleColor);
+            guiGraphics.drawString(this.font, titleText, textX, topY + 10, titleColor);
 
             // Playstyle Difficulty Meter (1 to 10)
             int diffY = topY + 38;
