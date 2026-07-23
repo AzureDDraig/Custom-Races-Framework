@@ -165,11 +165,21 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             if (!"none".equalsIgnoreCase(race.wingType)) {
                 float[] rgb = parseRGB(race.getColor("wings"));
                 PartTransformData pt = race.partTransforms.get("wings");
+
+                boolean isFlying = player.getAbilities().flying || !player.onGround();
+                float flapAngle = isFlying ? (float) (Math.sin(player.tickCount * 0.45f) * 0.4f) : 0.0f;
+
+                // Left Wing Panel
                 poseStack.pushPose();
                 if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                // Left Wing Panel
+                poseStack.mulPose(com.mojang.math.Axis.YP.rotation(flapAngle));
                 renderColoredBox(poseStack, vc, packedLight, -0.85f, 0.0f, 0.15f, -0.15f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                poseStack.popPose();
+
                 // Right Wing Panel
+                poseStack.pushPose();
+                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
+                poseStack.mulPose(com.mojang.math.Axis.YP.rotation(-flapAngle));
                 renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.85f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
                 poseStack.popPose();
             }

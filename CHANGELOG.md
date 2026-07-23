@@ -4,6 +4,15 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b058a] - 2026-07-23
+
+### 🪽 Real-Time Dynamic Wing Flapping Visual Animation
+- **Dynamic 60 FPS Wing Flapping Render Engine (`PlayerRaceLayer.java`)**:
+  - Added real-time Y-axis rotational wing matrix calculations for flying races and wing-bearing preset models.
+  - Wings smoothly flap in real-time (`sin(tick * 0.45) * 0.4rad`) when the player is airborne or actively flying, and rest gracefully on the back when grounded.
+
+---
+
 ## [1.0.0-b057a] - 2026-07-23
 
 ### 🌐 Full 10-Language Localization Sync & UI Polishing
@@ -398,7 +407,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 - **Dynamic 3D Model Part Offset Translations (`PlayerRaceLayer.java`)**:
   - `PartTransformData` coordinate offsets mapped to `PoseStack` model matrix translations.
 - **Responsive Multi-Row Tab Header Wrapping (`RaceCreatorScreen.java`)**:
-  - Category tabs wrap onto a second row on narrower GUI scale settings.
+  - Responsive multi-row category tabs for narrower GUI scales.
 
 ---
 
