@@ -7,8 +7,13 @@ import net.minecraft.world.entity.player.Player;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 /**
  * Dynamic Integration Handler for Iron's Spells 'n Spellbooks and T.O Tweaks.
@@ -208,5 +213,70 @@ public class IronSpellsHandler {
             }
         }
         return null;
+    }
+
+    private static final Map<String, UUID> MODIFIER_UUIDS = new HashMap<>();
+
+    public static void applyIronSpellsAttributes(Player player, List<String> passives) {
+        if (player == null || passives == null || passives.isEmpty()) return;
+
+        try {
+            Class<?> attrClass = null;
+            String[] classPaths = {
+                "net.ironsspellbooks.api.registry.AttributeRegistry",
+                "io.github.elytra.irons_spellbooks.api.registry.AttributeRegistry"
+            };
+            for (String cp : classPaths) {
+                try { attrClass = Class.forName(cp); break; } catch (Exception ignored) {}
+            }
+            if (attrClass == null) return;
+
+            Map<String, String> passiveToField = new HashMap<>();
+            passiveToField.put("arcane_overflow", "MAX_MANA");
+            passiveToField.put("mana_fountain", "MANA_REGEN");
+            passiveToField.put("arcane_amplification", "SPELL_POWER");
+            passiveToField.put("spell_ward", "SPELL_RESIST");
+            passiveToField.put("fire_spell_mastery", "FIRE_SPELL_POWER");
+            passiveToField.put("ice_spell_mastery", "ICE_SPELL_POWER");
+            passiveToField.put("lightning_spell_mastery", "LIGHTNING_SPELL_POWER");
+            passiveToField.put("holy_spell_mastery", "HOLY_SPELL_POWER");
+            passiveToField.put("ender_spell_mastery", "ENDER_SPELL_POWER");
+            passiveToField.put("blood_spell_mastery", "BLOOD_SPELL_POWER");
+            passiveToField.put("evocation_spell_mastery", "EVOCATION_SPELL_POWER");
+            passiveToField.put("eldritch_spell_mastery", "ELDRITCH_SPELL_POWER");
+
+            for (Map.Entry<String, String> entry : passiveToField.entrySet()) {
+                String passiveKey = entry.getKey();
+                String fieldName = entry.getValue();
+
+                if (passives.contains(passiveKey)) {
+                    try {
+                        Object holderObj = attrClass.getField(fieldName).get(null);
+                        net.minecraft.world.entity.ai.attributes.Attribute attr = null;
+                        if (holderObj instanceof net.minecraft.world.entity.ai.attributes.Attribute a) {
+                            attr = a;
+                        } else if (holderObj != null) {
+                            Method valMethod = holderObj.getClass().getMethod("value");
+                            Object val = valMethod.invoke(holderObj);
+                            if (val instanceof net.minecraft.world.entity.ai.attributes.Attribute a) {
+                                attr = a;
+                            }
+                        }
+
+                        if (attr != null) {
+                            AttributeInstance inst = player.getAttribute(attr);
+                            if (inst != null) {
+                                UUID modId = MODIFIER_UUIDS.computeIfAbsent(passiveKey, k -> UUID.nameUUIDFromBytes(k.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                                if (inst.getModifier(modId) == null) {
+                                    double val = passiveKey.contains("overflow") ? 150.0 : (passiveKey.contains("fountain") ? 0.40 : 0.25);
+                                    AttributeModifier.Operation op = passiveKey.contains("overflow") ? AttributeModifier.Operation.ADDITION : AttributeModifier.Operation.MULTIPLY_BASE;
+                                    inst.addTransientModifier(new AttributeModifier(modId, "Custom Races " + passiveKey, val, op));
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+        } catch (Exception ignored) {}
     }
 }

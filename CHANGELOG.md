@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b071a] - 2026-07-23
+
+### 🔮 Iron's Spells Spell Power, Mana Regeneration & Attribute Integration
+- **Racial Spell Power & Resistance Attributes (`IronSpellsHandler.java`)**:
+  - Implemented `applyIronSpellsAttributes(...)` soft-reflection method fetching Iron's Spells `AttributeRegistry` fields (`MAX_MANA`, `MANA_REGEN`, `SPELL_POWER`, `SPELL_RESIST`, `FIRE_SPELL_POWER`, `ICE_SPELL_POWER`, `LIGHTNING_SPELL_POWER`, `HOLY_SPELL_POWER`, `ENDER_SPELL_POWER`, `BLOOD_SPELL_POWER`, `EVOCATION_SPELL_POWER`, `ELDRITCH_SPELL_POWER`).
+- **Racial Magic Mastery Traits (`PassiveAbilityHandler.java`)**:
+  - Connected `applyIronSpellsAttributes` to the passive tick handler for traits: `arcane_overflow` (+150 Max Mana), `mana_fountain` (+40% Mana Regen), `arcane_amplification` (+25% Spell Power), `spell_ward` (+25% Spell Resistance), and elemental spell masteries (`fire_spell_mastery`, `ice_spell_mastery`, `lightning_spell_mastery`, etc.).
+
+---
+
 ## [1.0.0-b070a] - 2026-07-23
 
 ### 🔮 Iron's Spells Automatic Namespace Resolution & Native Keybind Aliases

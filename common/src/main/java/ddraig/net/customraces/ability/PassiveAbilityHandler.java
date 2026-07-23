@@ -80,6 +80,7 @@ public class PassiveAbilityHandler {
         }
 
         // 2. Fire, Lava & Thermal
+        ddraig.net.customraces.integration.IronSpellsHandler.applyIronSpellsAttributes(player, passives);
         if (passives.contains("fireproof_scales") || passives.contains("fire_resistance")) {
             player.clearFire();
             player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, true));
