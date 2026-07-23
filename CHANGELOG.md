@@ -4,6 +4,20 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b048a] - 2026-07-22
+
+### 🔮 Native Spells 1, 2, 3, 4, and 5 System Integration
+- **Multi-Slot Native Spells Data (`RaceData.java`)**:
+  - Added support for **Slots 1 through 5** for Native Spells (`nativeSpellId1`..`5`, `wildMagic1`..`5`, `nativeSpellLevel1`..`5`) and Were-Form counterparts.
+  - Added backwards-compatible fallback getters `getNativeSpellId(slot, isWere)`, `getWildMagic(slot, isWere)`, and `getNativeSpellLevel(slot, isWere)`.
+- **Active Skill Keybinds (`ActiveAbilityHandler.java`, `IronSpellsHandler.java`)**:
+  - Registered skill IDs `native_spell_1`, `native_spell_2`, `native_spell_3`, `native_spell_4`, `native_spell_5`.
+  - Pressing keybind slots assigned to any of `native_spell_1` to `5` executes `IronSpellsHandler.castNativeSpell(player, race, isWere, slot)`.
+- **Tab 11 Sub-Slot Controls (`RaceCreatorScreen.java`)**:
+  - Added interactive sub-slot selection buttons (`[Slot 1]`, `[Slot 2]`, `[Slot 3]`, `[Slot 4]`, `[Slot 5]`) in **Tab 11: Native Spells**.
+
+---
+
 ## [1.0.0-b047a] - 2026-07-22
 
 ### 🌟 Expanded 100 Passives & 100 Active Skills Catalogue

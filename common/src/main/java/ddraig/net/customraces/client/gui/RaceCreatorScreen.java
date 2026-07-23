@@ -83,6 +83,69 @@ public class RaceCreatorScreen extends Screen {
     private String searchActivesQuery = "";
     private String searchDrawbacksQuery = "";
 
+    // Native Spells Sub-Slot Selector State
+    private int selectedNativeSpellSlot = 1;
+
+    private void setRaceNativeSpell(int slot, boolean isWere, String spellId) {
+        if (isWere) {
+            switch (slot) {
+                case 2: workingRace.wereNativeSpellId2 = spellId; break;
+                case 3: workingRace.wereNativeSpellId3 = spellId; break;
+                case 4: workingRace.wereNativeSpellId4 = spellId; break;
+                case 5: workingRace.wereNativeSpellId5 = spellId; break;
+                default: workingRace.wereNativeSpellId1 = spellId; workingRace.wereNativeSpellId = spellId; break;
+            }
+        } else {
+            switch (slot) {
+                case 2: workingRace.nativeSpellId2 = spellId; break;
+                case 3: workingRace.nativeSpellId3 = spellId; break;
+                case 4: workingRace.nativeSpellId4 = spellId; break;
+                case 5: workingRace.nativeSpellId5 = spellId; break;
+                default: workingRace.nativeSpellId1 = spellId; workingRace.nativeSpellId = spellId; break;
+            }
+        }
+    }
+
+    private void setRaceWildMagic(int slot, boolean isWere, boolean val) {
+        if (isWere) {
+            switch (slot) {
+                case 2: workingRace.wereWildMagic2 = val; break;
+                case 3: workingRace.wereWildMagic3 = val; break;
+                case 4: workingRace.wereWildMagic4 = val; break;
+                case 5: workingRace.wereWildMagic5 = val; break;
+                default: workingRace.wereWildMagic1 = val; workingRace.wereWildMagic = val; break;
+            }
+        } else {
+            switch (slot) {
+                case 2: workingRace.wildMagic2 = val; break;
+                case 3: workingRace.wildMagic3 = val; break;
+                case 4: workingRace.wildMagic4 = val; break;
+                case 5: workingRace.wildMagic5 = val; break;
+                default: workingRace.wildMagic1 = val; workingRace.wildMagic = val; break;
+            }
+        }
+    }
+
+    private void setRaceNativeSpellLevel(int slot, boolean isWere, int level) {
+        if (isWere) {
+            switch (slot) {
+                case 2: workingRace.wereNativeSpellLevel2 = level; break;
+                case 3: workingRace.wereNativeSpellLevel3 = level; break;
+                case 4: workingRace.wereNativeSpellLevel4 = level; break;
+                case 5: workingRace.wereNativeSpellLevel5 = level; break;
+                default: workingRace.wereNativeSpellLevel1 = level; workingRace.wereNativeSpellLevel = level; break;
+            }
+        } else {
+            switch (slot) {
+                case 2: workingRace.nativeSpellLevel2 = level; break;
+                case 3: workingRace.nativeSpellLevel3 = level; break;
+                case 4: workingRace.nativeSpellLevel4 = level; break;
+                case 5: workingRace.nativeSpellLevel5 = level; break;
+                default: workingRace.nativeSpellLevel1 = level; workingRace.nativeSpellLevel = level; break;
+            }
+        }
+    }
+
     // Passives Scrollbar & Single Column State
     private double passivesScrollAmount = 0;
     private boolean isDraggingPassivesScrollbar = false;
@@ -984,14 +1047,11 @@ public class RaceCreatorScreen extends Screen {
                 cb.setTooltip(Tooltip.create(Component.literal("⚠️ " + rawName + "\n" + desc)));
                 this.addRenderableWidget(cb);
             }
-        } else if (activeTab == 11) { // Native Spells
+        } else if (activeTab == 11) { // Native Spells (Slots 1 to 5)
             boolean isWere = editingWereForm && workingRace.enableWereRace;
             boolean enabled = isWere ? workingRace.enableWereNativeSpells : workingRace.enableNativeSpells;
-            boolean isWild = isWere ? workingRace.wereWildMagic : workingRace.wildMagic;
-            String currentSpell = isWere ? workingRace.wereNativeSpellId : workingRace.nativeSpellId;
-            int level = isWere ? workingRace.wereNativeSpellLevel : workingRace.nativeSpellLevel;
 
-            Checkbox enableNativeCb = new Checkbox(contentLeft, contentTop + 20, 180, 18, Component.literal("Enable Native Spells"), enabled) {
+            Checkbox enableNativeCb = new Checkbox(contentLeft, contentTop + 18, 180, 18, Component.literal("Enable Native Spells"), enabled) {
                 @Override
                 public void onPress() {
                     super.onPress();
@@ -1003,25 +1063,45 @@ public class RaceCreatorScreen extends Screen {
             enableNativeCb.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.native_spells")));
             this.addRenderableWidget(enableNativeCb);
 
-            Checkbox wildMagicCb = new Checkbox(contentLeft + 190, contentTop + 20, 140, 18, Component.literal("✨ Wild Magic"), isWild) {
+            // Slot Selection Sub-Buttons (Slot 1 to 5)
+            int slotBtnX = contentLeft;
+            int slotBtnY = contentTop + 40;
+            for (int s = 1; s <= 5; s++) {
+                final int currentSlot = s;
+                boolean isSelected = (selectedNativeSpellSlot == currentSlot);
+                int borderColor = isSelected ? 0xFF00FFCC : 0xFF7B61FF;
+                FlatButton slotBtn = new FlatButton(slotBtnX, slotBtnY, 60, 18, Component.literal("Slot " + currentSlot), b -> {
+                    selectedNativeSpellSlot = currentSlot;
+                    this.init();
+                }, borderColor, 0xFF9932CC);
+                slotBtn.setTooltip(Tooltip.create(Component.literal("Configure Native Spell Slot " + currentSlot)));
+                this.addRenderableWidget(slotBtn);
+                slotBtnX += 65;
+            }
+
+            int activeSlot = selectedNativeSpellSlot;
+            boolean isWild = workingRace.getWildMagic(activeSlot, isWere);
+            String currentSpell = workingRace.getNativeSpellId(activeSlot, isWere);
+            int level = workingRace.getNativeSpellLevel(activeSlot, isWere);
+
+            Checkbox wildMagicCb = new Checkbox(contentLeft + 190, contentTop + 65, 140, 18, Component.literal("✨ Wild Magic"), isWild) {
                 @Override
                 public void onPress() {
                     super.onPress();
-                    if (isWere) workingRace.wereWildMagic = this.selected();
-                    else workingRace.wildMagic = this.selected();
+                    setRaceWildMagic(activeSlot, isWere, this.selected());
                     autoSaveWorkingRace();
                 }
             };
-            wildMagicCb.setTooltip(Tooltip.create(Component.literal("Wild Magic: Spawns a random spell from any school as if the player cast it.")));
+            wildMagicCb.setTooltip(Tooltip.create(Component.literal("Wild Magic for Slot " + activeSlot + ": Spawns a random spell from any school as if the player cast it.")));
             this.addRenderableWidget(wildMagicCb);
 
-            EditBox spellBox = new EditBox(this.font, contentLeft + 135, contentTop + 50, 190, 18, Component.literal("Native Spell ID"));
+            EditBox spellBox = new EditBox(this.font, contentLeft + 135, contentTop + 90, 190, 18, Component.literal("Native Spell ID Slot " + activeSlot));
             spellBox.setMaxLength(2048);
             spellBox.setValue(currentSpell);
             spellBox.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.native_spells")));
             spellBox.setResponder(val -> {
-                if (isWere) workingRace.wereNativeSpellId = val;
-                else workingRace.nativeSpellId = val;
+                setRaceNativeSpell(activeSlot, isWere, val);
+                autoSaveWorkingRace();
             });
             this.addRenderableWidget(spellBox);
 
@@ -1035,21 +1115,21 @@ public class RaceCreatorScreen extends Screen {
                 }
                 String nextSpell = spells.get(idx);
                 spellBox.setValue(nextSpell);
-                if (isWere) workingRace.wereNativeSpellId = nextSpell;
-                else workingRace.nativeSpellId = nextSpell;
-            }).bounds(contentLeft + 330, contentTop + 50, 95, 18).build();
+                setRaceNativeSpell(activeSlot, isWere, nextSpell);
+                autoSaveWorkingRace();
+            }).bounds(contentLeft + 330, contentTop + 90, 95, 18).build();
             spellCycleBtn.setTooltip(Tooltip.create(Component.literal("Cycle through all Iron's Spells & T.O Tweaks registered spells.")));
             this.addRenderableWidget(spellCycleBtn);
 
-            EditBox lvlBox = new EditBox(this.font, contentLeft + 135, contentTop + 75, 60, 18, Component.literal("Spell Level"));
+            EditBox lvlBox = new EditBox(this.font, contentLeft + 135, contentTop + 115, 60, 18, Component.literal("Spell Level Slot " + activeSlot));
             lvlBox.setMaxLength(2048);
             lvlBox.setValue(String.valueOf(level));
-            lvlBox.setTooltip(Tooltip.create(Component.literal("Level multiplier for cast spell (1 to 10).")));
+            lvlBox.setTooltip(Tooltip.create(Component.literal("Level multiplier for Native Spell Slot " + activeSlot + " (1 to 10).")));
             lvlBox.setResponder(val -> {
                 try {
                     int l = Integer.parseInt(val);
-                    if (isWere) workingRace.wereNativeSpellLevel = l;
-                    else workingRace.nativeSpellLevel = l;
+                    setRaceNativeSpellLevel(activeSlot, isWere, l);
+                    autoSaveWorkingRace();
                 } catch (Exception ignored) {}
             });
             this.addRenderableWidget(lvlBox);
@@ -1401,9 +1481,9 @@ public class RaceCreatorScreen extends Screen {
                 guiGraphics.fill(trackX, thumbY, trackX + trackW, thumbY + thumbH, thumbColor);
             }
         } else if (activeTab == 11) {
-            guiGraphics.drawString(this.font, "§d❖ Native Spells (Iron's Spells & T.O Tweaks):", contentLeft, contentTop + 4, 0xFFFFFF);
-            guiGraphics.drawString(this.font, "§d❖ Selected Spell ID:", contentLeft, contentTop + 54, 0xFFFFFF);
-            guiGraphics.drawString(this.font, "§d❖ Spell Power Level:", contentLeft, contentTop + 79, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Native Spells Configuration (Slots 1-5):", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Spell ID (Slot " + selectedNativeSpellSlot + "):", contentLeft, contentTop + 94, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Spell Level (Slot " + selectedNativeSpellSlot + "):", contentLeft, contentTop + 119, 0xFFFFFF);
         }
 
         // 5. Right Panel: 3D Holographic Showcase Viewport

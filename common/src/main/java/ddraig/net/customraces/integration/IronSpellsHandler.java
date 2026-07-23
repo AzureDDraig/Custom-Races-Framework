@@ -58,15 +58,20 @@ public class IronSpellsHandler {
         "totweaks:dimensional_slash", "totweaks:chronos_warp", "totweaks:aether_shield"
     );
 
-    /**
-     * Casts a Native Spell or triggers Wild Magic for the player.
-     */
     public static void castNativeSpell(Player player, RaceData race, boolean isWereForm) {
-        if (player == null || race == null) return;
+        castNativeSpell(player, race, isWereForm, 1);
+    }
 
-        boolean isWildMagic = isWereForm ? race.wereWildMagic : race.wildMagic;
-        String spellId = isWereForm ? race.wereNativeSpellId : race.nativeSpellId;
-        int spellLevel = isWereForm ? race.wereNativeSpellLevel : race.nativeSpellLevel;
+    /**
+     * Casts a Native Spell (Slots 1-5) or triggers Wild Magic for the player.
+     */
+    public static void castNativeSpell(Player player, RaceData race, boolean isWereForm, int slot) {
+        if (player == null || race == null) return;
+        if (slot < 1 || slot > 5) slot = 1;
+
+        boolean isWildMagic = race.getWildMagic(slot, isWereForm);
+        String spellId = race.getNativeSpellId(slot, isWereForm);
+        int spellLevel = race.getNativeSpellLevel(slot, isWereForm);
 
         if (isWildMagic) {
             spellId = ALL_SPELLS.get(RANDOM.nextInt(ALL_SPELLS.size()));
