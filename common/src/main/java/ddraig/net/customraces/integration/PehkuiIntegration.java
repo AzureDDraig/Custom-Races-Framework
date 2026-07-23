@@ -128,6 +128,7 @@ public class PehkuiIntegration {
 
     public static void resetPlayerScales(Player player) {
         if (player == null) return;
+        clearVanillaAttributes(player);
 
         // Clear Vanilla Modifiers
         clearVanillaAttributes(player);

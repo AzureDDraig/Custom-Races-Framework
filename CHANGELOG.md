@@ -2,6 +2,20 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b075a] - 2026-07-23
+
+### 🛡️ Dynamic Particle Height Scaling, Attribute Reset Safety & Cooldown Protection
+- **Dynamic Particle Y Bounding Box Alignment (`PlayerRaceLayer.java`)**:
+  - Replaced static Y offsets with `player.getRandomY()` for ambient smoke and flame particles, aligning visual effects perfectly with custom player heights (from 0.4x to 3.0x scale).
+- **Comprehensive Attribute & Scale Reset (`PehkuiIntegration.java`)**:
+  - Connected `clearVanillaAttributes(player)` inside `resetPlayerScales(...)`, stripping max health, movement speed, attack damage, and reach modifiers when resetting player races.
+- **Were-Transformation Anti-Spam Cooldown Guard (`WereRaceTransformHandler.java`)**:
+  - Added a 1.0-second anti-spam cooldown (`TRANSFORM_COOLDOWNS`) for manual transformation keybinds and commands, preventing network packet flooding.
+- **Expanded Race Selection Search Filter (`RaceSelectionScreen.java`)**:
+  - Expanded search box filtering to match `wereTriggerCondition` keywords (e.g. searching `"WATER"`, `"FULL_MOON"`, or `"NIGHT"` filters Were-races by trigger condition).
+
+---
+
 ## [1.0.0-b074a] - 2026-07-23
 
 ### 🔮 Iron's Spells Dynamic Invocation Engine & Mod Detection Guard

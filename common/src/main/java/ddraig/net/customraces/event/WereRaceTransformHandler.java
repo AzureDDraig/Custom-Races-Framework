@@ -93,12 +93,22 @@ public class WereRaceTransformHandler {
         }
     }
 
-    public static void toggleManualWereForm(ServerPlayer player) {
+        private static final Map<UUID, Long> TRANSFORM_COOLDOWNS = new java.util.concurrent.ConcurrentHashMap<>();
+
+        public static void toggleManualWereForm(ServerPlayer player) {
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
         if (race == null || !race.enableWereRace) {
             player.displayClientMessage(Component.literal("§c[!] Your current race does not have a Were-form."), true);
             return;
         }
+
+        long now = System.currentTimeMillis();
+        long last = TRANSFORM_COOLDOWNS.getOrDefault(player.getUUID(), 0L);
+        if (now - last < 1000L) {
+            player.displayClientMessage(Component.literal("§c[!] Transformation is on cooldown."), true);
+            return;
+        }
+        TRANSFORM_COOLDOWNS.put(player.getUUID(), now);
 
         String condition = race.wereTriggerCondition != null ? race.wereTriggerCondition.toUpperCase() : "FULL_MOON";
         boolean current = isTransformed(player.getUUID());

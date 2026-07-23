@@ -106,7 +106,11 @@ public class RaceSelectionScreen extends Screen {
         String query = searchBox != null ? searchBox.getValue().toLowerCase().trim() : "";
         filteredRaces = RaceRegistry.loadedRaces.values().stream()
                 .filter(r -> r != null && !r.id.toLowerCase().startsWith("new_race") && !r.name.equalsIgnoreCase("New Race"))
-                .filter(r -> query.isEmpty() || r.name.toLowerCase().contains(query) || r.lore.toLowerCase().contains(query) || (r.passiveAbilities != null && r.passiveAbilities.stream().anyMatch(p -> p.toLowerCase().contains(query))))
+                .filter(r -> query.isEmpty()
+                        || r.name.toLowerCase().contains(query)
+                        || r.lore.toLowerCase().contains(query)
+                        || (r.passiveAbilities != null && r.passiveAbilities.stream().anyMatch(p -> p.toLowerCase().contains(query)))
+                        || (r.wereTriggerCondition != null && r.wereTriggerCondition.toLowerCase().contains(query)))
                 .collect(Collectors.toList());
     }
 
