@@ -276,9 +276,9 @@ public class RaceCreatorScreen extends Screen {
         int contentLeft = 155;
         int tabX = contentLeft;
         int tabY = 28;
-        int tabWidth = 62;
         int tabHeight = 18;
         int maxTabX = this.width - 150;
+        int lastTabY = tabY;
 
         String[] tabKeys = {
             "gui.customraces.tab.basics", "gui.customraces.tab.model", "gui.customraces.tab.positions",
@@ -293,16 +293,19 @@ public class RaceCreatorScreen extends Screen {
             if (i == 7 && !workingRace.enableAlliances) continue;
             if ((i == 8 || i == 9) && !workingRace.enableWereRace) continue;
 
-            if (tabX + tabWidth > maxTabX) {
-                tabX = contentLeft;
-                tabY += tabHeight + 2;
-            }
-
             String prefix = (editingWereForm || i == 8 || i == 9) ? "🐺 " : "";
             Component tabText = Component.literal(prefix).append(Component.translatable(tabKeys[i]));
 
+            int calcTabWidth = Math.max(52, this.font.width(tabText) + 10);
+
+            if (tabX + calcTabWidth > maxTabX) {
+                tabX = contentLeft;
+                tabY += tabHeight + 3;
+            }
+            lastTabY = tabY;
+
             int tabBorder = (editingWereForm && workingRace.enableWereRace) ? 0xFFFF3838 : 0xFF00CEC9;
-            FlatButton tabBtn = new FlatButton(tabX, tabY, tabWidth, tabHeight, tabText, b -> {
+            FlatButton tabBtn = new FlatButton(tabX, tabY, calcTabWidth, tabHeight, tabText, b -> {
                 autoSaveWorkingRace();
                 this.activeTab = index;
                 this.init();
@@ -311,7 +314,7 @@ public class RaceCreatorScreen extends Screen {
             tabBtn.setTooltip(Tooltip.create(Component.translatable(tabKeys[i])));
             if (activeTab == i) tabBtn.active = false;
             this.addRenderableWidget(tabBtn);
-            tabX += tabWidth + 3;
+            tabX += calcTabWidth + 3;
         }
 
         // 5. Header Action Buttons: Save All & Were Mode Toggle
@@ -333,8 +336,8 @@ public class RaceCreatorScreen extends Screen {
         saveBtn.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.save_race")));
         this.addRenderableWidget(saveBtn);
 
-        // Content Area Top Offset
-        int contentTop = 50;
+        // Dynamic Content Area Top Offset (Sits safely below bottom row of tabs)
+        int contentTop = lastTabY + tabHeight + 14;
 
         if (activeTab == 0) { // Basics
             this.nameBox = new EditBox(this.font, contentLeft + 90, contentTop, 160, 18, Component.literal("Name"));
@@ -473,7 +476,7 @@ public class RaceCreatorScreen extends Screen {
             }
 
         } else if (activeTab == 2) { // Positions / Part Transforms
-            int py = contentTop;
+            int py = contentTop + 18;
             String[] partKeys = {"ears", "wings", "tail", "horns", "halo", "custom"};
             for (String pKey : partKeys) {
                 PartTransformData pt = workingRace.partTransforms.computeIfAbsent(pKey, k -> new PartTransformData());
@@ -500,7 +503,7 @@ public class RaceCreatorScreen extends Screen {
             }
 
         } else if (activeTab == 3) { // Passives
-            int py = contentTop;
+            int py = contentTop + 18;
             String[] allPassives = {
                 "night_vision", "water_breathing", "fire_resistance", "flight", "slow_falling",
                 "regeneration", "wither_immunity", "fall_damage_immunity", "lava_swimming", "climbing"
@@ -527,7 +530,7 @@ public class RaceCreatorScreen extends Screen {
             }
 
         } else if (activeTab == 4) { // Actives
-            int py = contentTop;
+            int py = contentTop + 18;
             Map<Integer, String> targetMap = (editingWereForm && workingRace.enableWereRace) ? workingRace.wereActiveAbilities : workingRace.activeAbilities;
 
             for (int slot = 1; slot <= 5; slot++) {
@@ -545,7 +548,7 @@ public class RaceCreatorScreen extends Screen {
             }
 
         } else if (activeTab == 7) { // Alliances
-            int py = contentTop;
+            int py = contentTop + 18;
             String[] factions = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper", "minecraft:enderman", "minecraft:piglin"};
             for (String mobId : factions) {
                 boolean isNeutral = workingRace.alliances.stream().anyMatch(a -> mobId.equalsIgnoreCase(a.mobId));
@@ -765,7 +768,7 @@ public class RaceCreatorScreen extends Screen {
             }
 
             int gridX = contentLeft;
-            int gridY = contentTop;
+            int gridY = contentTop + 18;
             int colWidth = 120;
             int rowHeight = 20;
             int cols = 3;
@@ -1002,13 +1005,36 @@ public class RaceCreatorScreen extends Screen {
         guiGraphics.drawString(this.font, headerTitle, contentLeft, 8, 0xFFFFFF);
 
         // 4. Form Content Main Container Card
-        int contentTop = 50;
+        int lastTabY = 28;
+        int tX = contentLeft;
+        int maxTabX = this.width - 150;
+        String[] tabKeys = {
+            "gui.customraces.tab.basics", "gui.customraces.tab.model", "gui.customraces.tab.positions",
+            "gui.customraces.tab.passives", "gui.customraces.tab.actives", "gui.customraces.tab.sounds",
+            "gui.customraces.tab.advanced", "gui.customraces.tab.alliances", "gui.customraces.tab.were_model",
+            "gui.customraces.tab.were_sounds", "gui.customraces.tab.drawbacks"
+        };
+        for (int i = 0; i < tabKeys.length; i++) {
+            if (i == 2 && !"Custom".equalsIgnoreCase(workingRace.modelType)) continue;
+            if (i == 7 && !workingRace.enableAlliances) continue;
+            if ((i == 8 || i == 9) && !workingRace.enableWereRace) continue;
+            String prefix = (editingWereForm || i == 8 || i == 9) ? "🐺 " : "";
+            Component tabText = Component.literal(prefix).append(Component.translatable(tabKeys[i]));
+            int calcTabWidth = Math.max(52, this.font.width(tabText) + 10);
+            if (tX + calcTabWidth > maxTabX) {
+                tX = contentLeft;
+                lastTabY += 18 + 3;
+            }
+            tX += calcTabWidth + 3;
+        }
+
+        int contentTop = lastTabY + 18 + 14;
         int contentRight = this.width - 145;
         int contentBottom = this.height - 10;
         int cardBorderColor = isWereMode ? 0xFFFF3838 : 0xFF7B61FF;
 
-        guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentBottom, 0xEE121622);
-        guiGraphics.fill(contentLeft - 5, contentTop - 25, contentRight, contentTop - 24, cardBorderColor); // Top Border Line
+        guiGraphics.fill(contentLeft - 5, contentTop - 5, contentRight, contentBottom, 0xEE121622);
+        guiGraphics.fill(contentLeft - 5, contentTop - 5, contentRight, contentTop - 4, cardBorderColor); // Top Border Line
         guiGraphics.fill(contentLeft - 5, contentBottom - 1, contentRight, contentBottom, cardBorderColor); // Bottom Border Line
 
         // Form Field Labels with Styled Bullet Points
@@ -1026,24 +1052,24 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were Speed Bonus:" : "§e❖ Move Speed:", contentLeft, contentTop + 109, 0xFFFFFF);
             if (isWereMode) guiGraphics.drawString(this.font, "§c❖ Were Damage Bonus:", contentLeft, contentTop + 134, 0xFFFFFF);
         } else if (activeTab == 2) {
-            guiGraphics.drawString(this.font, "§e❖ Part Scale & Offset (X, Y, Z):", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§e❖ Part Scale & Offset (X, Y, Z):", contentLeft, contentTop + 4, 0xFFFFFF);
             String[] partKeys = {"Ears", "Wings", "Tail", "Horns", "Halo", "Custom"};
-            int py = contentTop;
+            int py = contentTop + 20;
             for (String pKey : partKeys) {
                 guiGraphics.drawString(this.font, "§e❖ " + pKey + ":", contentLeft, py + 4, 0xCCCCCC);
                 py += 24;
             }
         } else if (activeTab == 3) {
-            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Toggle Were-Form Granted Passives:" : "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Toggle Were-Form Granted Passives:" : "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop + 4, 0xFFFFFF);
         } else if (activeTab == 4) {
-            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Assign Were-Form Active Skills (Slots 1-5):" : "§c❖ Assign Active Skills (Slots 1-5):", contentLeft, contentTop - 12, 0xFFFFFF);
-            int py = contentTop;
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Assign Were-Form Active Skills (Slots 1-5):" : "§c❖ Assign Active Skills (Slots 1-5):", contentLeft, contentTop + 4, 0xFFFFFF);
+            int py = contentTop + 20;
             for (int slot = 1; slot <= 5; slot++) {
                 guiGraphics.drawString(this.font, "§c❖ Slot " + slot + ":", contentLeft, py + 4, 0xCCCCCC);
                 py += 24;
             }
         } else if (activeTab == 7) {
-            guiGraphics.drawString(this.font, "§b❖ Mob Faction Neutrality Stances:", contentLeft, contentTop - 12, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Mob Faction Neutrality Stances:", contentLeft, contentTop + 4, 0xFFFFFF);
         } else if (activeTab == 5) {
             guiGraphics.drawString(this.font, "§d❖ Ambient Sound:", contentLeft, contentTop + 4, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§d❖ Hurt Sound:", contentLeft, contentTop + 34, 0xFFFFFF);
@@ -1065,6 +1091,8 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, "§c❖ Ambient Sound:", contentLeft, contentTop + 54, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§c❖ Hurt Sound:", contentLeft, contentTop + 79, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§c❖ Death Sound:", contentLeft, contentTop + 104, 0xFFFFFF);
+        } else if (activeTab == 10) {
+            guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were-Form Race Drawbacks & Weaknesses:" : "§c❖ Race Drawbacks & Weaknesses:", contentLeft, contentTop + 4, 0xFFFFFF);
         }
 
         // 5. Right Panel: 3D Holographic Showcase Viewport
