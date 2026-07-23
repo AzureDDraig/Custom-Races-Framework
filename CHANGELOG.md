@@ -2,6 +2,35 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b088a] - 2026-07-23
+
+### 🔮 Core Reflection Bridge & Iron's Spells Integration Engine
+- **Multi-Tiered Dynamic Candidate Method Selection (`IronSpellsHandler.java`)**:
+  - Implemented multi-tiered candidate method selection and sorting for spell invocation (`onCast`, `castSpell`, `onCastSpell`), prioritizing 5-parameter and 4-parameter signatures over legacy or unmapped generic parameter overloads.
+- **Safe Parameter Array Construction & Type Matching (`IronSpellsHandler.java`)**:
+  - Dynamically inspects and satisfies parameter signatures using `Level`, `spellLevel` (int), `LivingEntity`/`ServerPlayer`/`Player`/`Entity`, `CastSource`, and `MagicData`.
+  - Automatically supplies primitive defaults for unmapped primitive parameters.
+- **Recursion Depth-Limiting & Circular Reference Protection (`IronSpellsHandler.java`)**:
+  - Added depth-limiting (`depth > 10`) in `unwrapSpellHolder` to prevent stack overflow exceptions when resolving wrapped spell object structures.
+- **Container Null & Empty State Handling (`IronSpellsHandler.java`)**:
+  - Handles `Optional`/holder wrappers by querying `isPresent()` / `isEmpty()` methods, returning `null` for empty holders or invalid spells (`VoidSpell`, `NoneSpell`, `"none"`).
+- **Root Class Type Exclusions (`IronSpellsHandler.java`)**:
+  - Explicitly excludes root Java classes (`Object.class`, `Enum.class`, `Comparable.class`, `java.io.Serializable.class`) from `isCastSourceType` and `isMagicDataType` reflection checks to prevent false-positive type matching.
+
+### ⌨️ Active Ability Keybind Binding & Native Spell Slot Integration
+- **Multi-Slot Native Spell Integration (`ActiveAbilityHandler.java`)**:
+  - Integrated hotbar active skill keybind routing for `native_spell_1` through `native_spell_5` across both human base form and transformed Were-form.
+- **Unassigned Slot Actionbar Overlay Feedback (`ActiveAbilityHandler.java`)**:
+  - Displays immediate actionbar feedback (`§cActive Skill Slot X is unassigned!`) when attempting to execute an empty or unconfigured skill slot.
+- **Form Toggle Enforcement (`IronSpellsHandler.java` & `ActiveAbilityHandler.java`)**:
+  - Enforces form-specific toggle flags (`enableNativeSpells` for base form, `enableWereNativeSpells` for Were-form), notifying players if native spells are disabled for their active form.
+- **Form-Specific Cooldown Querying (`ActiveAbilityHandler.java`)**:
+  - Queries form-specific cooldown configurations (`nativeSpellCooldown` vs `wereNativeSpellCooldown`) for native spell slots 1-5.
+- **Deferred Cooldown Commitment (`ActiveAbilityHandler.java`)**:
+  - Defers cooldown application until after successful spell invocation (`if (executed) pMap.put(slot, now)`), ensuring failed casts or missing requirements do not penalize players with wasted cooldowns.
+
+---
+
 ## [1.0.0-b076a] - 2026-07-23
 
 ### 🔮 Removal of Hardcoded Native Spell Fallbacks

@@ -36,57 +36,70 @@ public class ActiveAbilityHandler {
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
         if (race == null) return;
 
+        boolean isWere = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
         String abilityId = race.activeAbilities != null ? race.activeAbilities.get(slot) : null;
-        if (ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID()) && race.wereActiveAbilities != null) {
+        if (isWere && race.wereActiveAbilities != null) {
             String wAbility = race.wereActiveAbilities.get(slot);
             if (wAbility != null && !wAbility.isEmpty() && !"none".equalsIgnoreCase(wAbility)) {
                 abilityId = wAbility;
             }
         }
-        if (abilityId == null || abilityId.isEmpty() || abilityId.equals("none")) return;
+        if (abilityId == null || abilityId.trim().isEmpty() || "none".equalsIgnoreCase(abilityId.trim())) {
+            player.displayClientMessage(Component.literal("§cActive Skill Slot " + slot + " is unassigned!"), true);
+            return;
+        }
+
+        String normId = abilityId.toLowerCase().replace(" ", "_");
+        boolean isNativeSpell = normId.startsWith("native_spell");
+
+        // Form-Specific Cooldown Query
+        long cooldownMs = DEFAULT_COOLDOWN_MS;
+        if (isNativeSpell) {
+            int ticks = isWere ? race.wereNativeSpellCooldown : race.nativeSpellCooldown;
+            cooldownMs = ticks > 0 ? (ticks >= 1000 ? (long) ticks : ticks * 50L) : DEFAULT_COOLDOWN_MS;
+        }
 
         // Check Cooldown
         long now = System.currentTimeMillis();
         Map<Integer, Long> pMap = COOLDOWNS.computeIfAbsent(player.getUUID(), k -> new ConcurrentHashMap<>());
         long lastUse = pMap.getOrDefault(slot, 0L);
 
-        if (now - lastUse < DEFAULT_COOLDOWN_MS) {
-            long remainingSec = (DEFAULT_COOLDOWN_MS - (now - lastUse)) / 1000 + 1;
-            player.sendSystemMessage(Component.literal("§cAbility " + slot + " on cooldown! (" + remainingSec + "s)"), true);
+        if (now - lastUse < cooldownMs) {
+            long remainingSec = (cooldownMs - (now - lastUse)) / 1000 + 1;
+            player.displayClientMessage(Component.literal("§cAbility " + slot + " on cooldown! (" + remainingSec + "s)"), true);
             return;
         }
 
-        // Set Cooldown
-        pMap.put(slot, now);
-
-        boolean isWere = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
         if (!(player.level() instanceof ServerLevel level)) return;
         Vec3 look = player.getLookAngle();
         Vec3 pos = player.position();
 
-        player.sendSystemMessage(Component.literal("§aUsed Ability: §e" + abilityId.replace("_", " ")));
+        boolean executed = !isNativeSpell;
+        if (!isNativeSpell) {
+            player.displayClientMessage(Component.literal("§aUsed Ability: §e" + abilityId.replace("_", " ")), true);
+        }
 
-        switch (abilityId.toLowerCase().replace(" ", "_")) {
+        switch (normId) {
             case "native_spell":
             case "native_spell_1":
             case "native_spell1":
-                ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 1);
+                executed = ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 1);
                 break;
             case "native_spell_2":
             case "native_spell2":
-                ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 2);
+                executed = ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 2);
                 break;
             case "native_spell_3":
             case "native_spell3":
-                ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 3);
+                executed = ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 3);
                 break;
             case "native_spell_4":
             case "native_spell4":
-                ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 4);
+                executed = ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 4);
                 break;
             case "native_spell_5":
             case "native_spell5":
-                ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 5);
+                executed = ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 5);
                 break;
 
             case "flame_breath":
@@ -477,6 +490,10 @@ public class ActiveAbilityHandler {
                 level.playSound(null, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0f, 1.0f);
                 level.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.5, 0.5, 0.5, 0.1);
                 break;
+        }
+
+        if (executed) {
+            pMap.put(slot, now);
         }
     }
 
