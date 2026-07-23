@@ -4,6 +4,18 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b047a] - 2026-07-22
+
+### 🌟 Expanded 100 Passives & 100 Active Skills Catalogue
+- **100 Unique Passives Catalogue (`ALL_PASSIVES`)**:
+  - Expanded Passives list to **100 unique options** across 10 categories (Elemental, Defense, Mobility, Combat, Utility, Magic, Vampiric, Celestial, Beast, Tech).
+  - Converted **Tab 3: Passives** into a 1-column scrollable list with a vertical scrollbar track and dragable green thumb (`0xFF5555FF` / `0xFFFF9900`).
+- **100 Unique Active Skills Catalogue (`ALL_ACTIVES`)**:
+  - Expanded Active Skills list to **100 unique options** across 10 categories (Fire, Ice, Lightning, Shadow, Holy, Blood, Earth, Wind, Beast, Tech).
+  - Updated autocomplete suggestion overlays for all active skill textboxes to suggest all 100 active skills.
+
+---
+
 ## [1.0.0-b046a] - 2026-07-22
 
 ### 📜 Single-Column Scrollable Drawbacks Tab & Interactive Scrollbar

@@ -83,6 +83,11 @@ public class RaceCreatorScreen extends Screen {
     private String searchActivesQuery = "";
     private String searchDrawbacksQuery = "";
 
+    // Passives Scrollbar & Single Column State
+    private double passivesScrollAmount = 0;
+    private boolean isDraggingPassivesScrollbar = false;
+    private int matchingPassivesCount = 0;
+
     // Drawbacks Scrollbar & Single Column State
     private double drawbacksScrollAmount = 0;
     private boolean isDraggingDrawbacksScrollbar = false;
@@ -117,6 +122,72 @@ public class RaceCreatorScreen extends Screen {
         String name = drawbackId.replace("_", " ").toLowerCase();
         return name + " weakness drawback penalty restriction curse vulnerability damage slowness debuff intolerance inability";
     }
+
+    public static final List<String> ALL_PASSIVES = java.util.List.of(
+        // 1-10: Elemental & Environmental
+        "night_vision", "water_breathing", "fire_resistance", "flight", "slow_falling",
+        "lava_swimming", "climbing", "frost_immunity", "lightning_immunity", "poison_immunity",
+        // 11-20: Defense & Resilience
+        "regeneration", "wither_immunity", "fall_damage_immunity", "arrow_deflection", "explosion_resistance",
+        "magic_resistance", "knockback_immunity", "thorns_skin", "shield_mastery", "unbreakable_will",
+        // 21-30: Mobility & Movement
+        "speed_boost", "high_jump", "web_walking", "soul_speed", "step_assist",
+        "wall_run", "dolphin_grace", "feather_weight", "shadow_dash_passive", "void_floating",
+        // 31-40: Combat & Damage
+        "lifesteal", "critical_strike_boost", "berserk_rage", "backstab_bonus", "giant_slayer",
+        "armor_piercing", "execute_passive", "bleed_on_hit", "counter_attack", "dual_wield_mastery",
+        // 41-50: Utility & Gathering
+        "auto_smelt", "double_mining_drops", "magnet_aura", "luck_of_the_sea", "haste_passive",
+        "night_miner", "silk_touch_hands", "xp_boost", "hunger_less_drain", "saturation_regen",
+        // 51-60: Magic & Spectral
+        "mana_regen_boost", "spell_power_boost", "cooldown_reduction", "arcane_shield", "astral_projection",
+        "spectral_glowing", "invisibility_in_shadows", "telepathic_aura", "elemental_affinity", "native_spell",
+        // 61-70: Vampiric & Nether
+        "vampiric_bite_regen", "sunlight_evasion", "nether_affinity", "wither_touch", "shadow_healing",
+        "soul_collector", "blood_essence_pool", "demon_flame_aura", "hellfire_immunity", "abyssal_resilience",
+        // 71-80: Celestial & Divine
+        "divine_aura", "angel_wings_passive", "holy_damage_boost", "undead_bane_aura", "solar_charging",
+        "lunar_power_boost", "radiant_light", "blessing_of_protection", "grace_of_the_gods", "sanctuary_field",
+        // 81-90: Draconic & Beast
+        "dragon_scales", "beast_instincts", "pack_leader_buff", "natural_armor", "scent_tracking",
+        "intimidating_presence", "tail_sweep_passive", "predator_stealth", "thick_hide", "wild_regeneration",
+        // 91-100: Tech & Golem
+        "nanite_repair", "kinetic_absorption", "thermal_regulation", "cybernetic_sight", "forcefield_barrier",
+        "overclock_speed", "golem_density", "magnetic_repulsion", "radiation_immunity", "energy_core_boost"
+    );
+
+    public static final List<String> ALL_ACTIVES = java.util.List.of(
+        // 1-10: Fire & Magma
+        "flame_breath", "fireball_burst", "inferno_ring", "magma_slam", "meteor_strike",
+        "heat_wave", "combustion_aura", "flame_charge", "pyroblast", "volcanic_eruption",
+        // 11-20: Ice & Frost
+        "frost_nova", "ice_lance", "blizzard_storm", "frost_dash", "deep_freeze",
+        "glacier_wall", "icicle_barrage", "frozen_shield", "absolute_zero", "snowstorm_burst",
+        // 21-30: Lightning & Storm
+        "lightning_strike", "chain_lightning", "thunder_clap", "storm_dash", "overcharge_buff",
+        "plasma_beam", "ball_lightning", "static_field", "lightning_spear", "sky_bolt",
+        // 31-40: Shadow & Ender
+        "shadow_step", "teleport_dash", "black_hole_pull", "shadow_clone", "void_slash",
+        "veil_of_shadows", "abyssal_grip", "dimensional_rift", "blink_teleport", "nightmare_burst",
+        // 41-50: Holy & Light
+        "healing_wave", "divine_smite", "radiant_beam", "holy_shield", "sanctuary_heal",
+        "blessing_buff", "purifying_blast", "solar_beam", "angelic_flight_burst", "heavenly_resurrection",
+        // 51-60: Blood & Dark Magic
+        "blood_slash", "vampiric_drain", "dark_pulse", "wither_blast", "curse_aura",
+        "soul_reap", "corruption_wave", "blood_shield", "plague_cloud", "necromancy_summon",
+        // 61-70: Earth & Nature
+        "earthquake_slam", "boulder_toss", "root_entrapment", "poison_spit", "vine_whip",
+        "thorn_barrage", "nature_heal", "rock_armor_buff", "mud_slide", "seismic_wave",
+        // 71-80: Wind & Kinetic
+        "gale_blast", "cyclone_vortex", "wind_dash", "sonic_boom", "shockwave_slam",
+        "air_slash", "repulsion_field", "tornado_burst", "vacuum_pull", "kinetic_blast",
+        // 81-90: Beast & Transformation
+        "dragon_roar", "transform_were", "summon_minions", "beast_leap", "feral_frenzy",
+        "howl_buff", "claw_slash", "pack_call", "predator_pounce", "primal_rage",
+        // 91-100: Special & Tech
+        "native_spell", "laser_beam", "emp_blast", "gravity_flip", "time_stop_pulse",
+        "shield_overload", "orbital_strike", "nano_heal", "overdrive_buff", "singularity_bomb"
+    );
 
     public static final List<String> ALL_DRAWBACKS = java.util.List.of(
         // 1-10: Environmental & Elemental
@@ -542,35 +613,54 @@ public class RaceCreatorScreen extends Screen {
                 py += 24;
             }
 
-        } else if (activeTab == 3) { // Passives
-            EditBox pSearch = new EditBox(this.font, contentLeft + 230, contentTop, 130, 16, Component.literal("Search"));
+        } else if (activeTab == 3) { // Passives (1 Column Scrollable List)
+            EditBox pSearch = new EditBox(this.font, contentLeft + 200, contentTop, 160, 16, Component.literal("Search"));
             pSearch.setMaxLength(2048);
             pSearch.setValue(searchPassivesQuery);
-            pSearch.setHint(Component.literal("🔍 Search..."));
+            pSearch.setHint(Component.literal("🔍 Search passives..."));
             pSearch.setResponder(val -> {
                 searchPassivesQuery = val;
                 this.init();
             });
             this.addRenderableWidget(pSearch);
 
-            int py = contentTop + 24;
-            String[] allPassives = {
-                "night_vision", "water_breathing", "fire_resistance", "flight", "slow_falling",
-                "regeneration", "wither_immunity", "fall_damage_immunity", "lava_swimming", "climbing", "native_spell"
-            };
-
             List<String> targetList = (editingWereForm && workingRace.enableWereRace) ? workingRace.werePassiveAbilities : workingRace.passiveAbilities;
             String q = searchPassivesQuery.toLowerCase().trim();
 
-            for (String passive : allPassives) {
+            int visibleTop = contentTop + 24;
+            int visibleBottom = this.height - 20;
+            int visibleHeight = visibleBottom - visibleTop;
+
+            List<String> matchingPassives = new ArrayList<>();
+            for (String passive : ALL_PASSIVES) {
                 String raw = passive.replace("_", " ");
                 String desc = getPassiveDescription(passive);
-                if (!q.isEmpty() && !raw.toLowerCase().contains(q) && !desc.toLowerCase().contains(q)) {
-                    continue; // Skip items that don't match query or tooltip description
+                if (q.isEmpty() || raw.toLowerCase().contains(q) || desc.toLowerCase().contains(q)) {
+                    matchingPassives.add(passive);
                 }
+            }
+
+            this.matchingPassivesCount = matchingPassives.size();
+            int totalContentH = matchingPassives.size() * 20;
+            float maxScrollPassives = Math.max(0, totalContentH - visibleHeight);
+            passivesScrollAmount = Math.max(0, Math.min(passivesScrollAmount, maxScrollPassives));
+
+            int cbX = contentLeft;
+            int cbWidth = 320;
+            int rowHeight = 20;
+
+            for (int i = 0; i < matchingPassives.size(); i++) {
+                String passive = matchingPassives.get(i);
+                int cbY = visibleTop + (i * rowHeight) - (int) passivesScrollAmount;
+
+                // Render only checkboxes that fit inside the visible scroll viewport
+                if (cbY < visibleTop - rowHeight || cbY > visibleBottom) continue;
 
                 boolean active = targetList.contains(passive);
-                Checkbox pBox = new Checkbox(contentLeft, py, 200, 20, Component.literal(raw.toUpperCase()), active) {
+                String raw = passive.replace("_", " ").toUpperCase();
+                String desc = getPassiveDescription(passive);
+
+                Checkbox pBox = new Checkbox(cbX, cbY, cbWidth, 18, Component.literal("✨ " + raw), active) {
                     @Override
                     public void onPress() {
                         super.onPress();
@@ -579,11 +669,11 @@ public class RaceCreatorScreen extends Screen {
                         } else {
                             targetList.remove(passive);
                         }
+                        autoSaveWorkingRace();
                     }
                 };
-                pBox.setTooltip(Tooltip.create(Component.literal(raw.toUpperCase() + ": " + desc)));
+                pBox.setTooltip(Tooltip.create(Component.literal("✨ " + raw + "\n" + desc)));
                 this.addRenderableWidget(pBox);
-                py += 21;
             }
 
         } else if (activeTab == 4) { // Actives
@@ -1226,6 +1316,32 @@ public class RaceCreatorScreen extends Screen {
             }
         } else if (activeTab == 3) {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Toggle Were-Form Granted Passives:" : "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop + 4, 0xFFFFFF);
+
+            // Render Passives Vertical Scrollbar Track & Thumb
+            int visibleTop = contentTop + 24;
+            int visibleBottom = this.height - 20;
+            int visibleHeight = visibleBottom - visibleTop;
+            int totalContentH = matchingPassivesCount * 20;
+
+            if (totalContentH > visibleHeight && visibleHeight > 0) {
+                int trackX = contentLeft + 330;
+                int trackY = visibleTop;
+                int trackW = 6;
+                int trackH = visibleHeight;
+
+                // Track Background
+                guiGraphics.fill(trackX, trackY, trackX + trackW, trackY + trackH, 0xFF191F30);
+                guiGraphics.fill(trackX + 1, trackY + 1, trackX + trackW - 1, trackY + trackH - 1, 0xEE101422);
+
+                // Scrollbar Thumb
+                int thumbH = Math.max(16, (visibleHeight * visibleHeight) / totalContentH);
+                float maxScroll = totalContentH - visibleHeight;
+                int thumbY = trackY + (int) ((trackH - thumbH) * (passivesScrollAmount / maxScroll));
+                thumbY = Math.max(trackY, Math.min(trackY + trackH - thumbH, thumbY));
+
+                int thumbColor = isDraggingPassivesScrollbar ? 0xFFFF9900 : 0xFF55FF55;
+                guiGraphics.fill(trackX, thumbY, trackX + trackW, thumbY + thumbH, thumbColor);
+            }
         } else if (activeTab == 4) {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Assign Were-Form Active Skills (Slots 1-5):" : "§c❖ Assign Active Skills (Slots 1-5):", contentLeft, contentTop + 4, 0xFFFFFF);
             int py = contentTop + 20;
@@ -1495,6 +1611,25 @@ public class RaceCreatorScreen extends Screen {
             return true;
         }
 
+        // Tab 3 Passives Single Column Mouse Wheel Scroll
+        if (activeTab == 3) {
+            int visibleTop = getContentTop() + 24;
+            int visibleBottom = this.height - 20;
+            int visibleHeight = visibleBottom - visibleTop;
+            int totalContentH = matchingPassivesCount * 20;
+            float maxScroll = Math.max(0, totalContentH - visibleHeight);
+
+            if (mouseX >= getContentLeft() && mouseX <= getContentLeft() + 340 && mouseY >= visibleTop && mouseY <= visibleBottom) {
+                if (delta < 0) {
+                    passivesScrollAmount = Math.min(maxScroll, passivesScrollAmount + 20);
+                } else if (delta > 0) {
+                    passivesScrollAmount = Math.max(0, passivesScrollAmount - 20);
+                }
+                this.init();
+                return true;
+            }
+        }
+
         // Tab 10 Drawbacks Single Column Mouse Wheel Scroll
         if (activeTab == 10) {
             int visibleTop = getContentTop() + 24;
@@ -1519,6 +1654,17 @@ public class RaceCreatorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (activeTab == 3) {
+            int visibleTop = getContentTop() + 24;
+            int visibleBottom = this.height - 20;
+            int trackX = getContentLeft() + 330;
+            if (mouseX >= trackX - 2 && mouseX <= trackX + 10 && mouseY >= visibleTop && mouseY <= visibleBottom) {
+                isDraggingPassivesScrollbar = true;
+                updatePassivesScrollFromMouse(mouseY);
+                return true;
+            }
+        }
+
         if (activeTab == 10) {
             int visibleTop = getContentTop() + 24;
             int visibleBottom = this.height - 20;
@@ -1557,6 +1703,10 @@ public class RaceCreatorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (isDraggingPassivesScrollbar) {
+            updatePassivesScrollFromMouse(mouseY);
+            return true;
+        }
         if (isDraggingDrawbacksScrollbar) {
             updateDrawbacksScrollFromMouse(mouseY);
             return true;
@@ -1566,8 +1716,21 @@ public class RaceCreatorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        isDraggingPassivesScrollbar = false;
         isDraggingDrawbacksScrollbar = false;
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private void updatePassivesScrollFromMouse(double mouseY) {
+        int visibleTop = getContentTop() + 24;
+        int visibleBottom = this.height - 20;
+        int visibleHeight = visibleBottom - visibleTop;
+        int totalContentH = matchingPassivesCount * 20;
+        float maxScroll = Math.max(1, totalContentH - visibleHeight);
+
+        float ratio = (float) (mouseY - visibleTop) / (float) visibleHeight;
+        passivesScrollAmount = Math.max(0, Math.min(ratio * maxScroll, maxScroll));
+        this.init();
     }
 
     private void updateDrawbacksScrollFromMouse(double mouseY) {
