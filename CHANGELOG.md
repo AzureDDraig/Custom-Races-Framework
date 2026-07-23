@@ -4,6 +4,15 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b060a] - 2026-07-23
+
+### 🔊 Custom Race & Were-Form In-Game Sound FX Engine
+- **In-Game Sound Playback Handler (`RaceSoundHandler.java`)**:
+  - Implemented event-driven sound playback for `hurtSound`, `deathSound`, `ambientSound`, `wereHurtSound`, `wereDeathSound`, and `wereAmbientSound`.
+  - Players now dynamically trigger configured sound event IDs upon receiving damage, dying, or roaming in-game (both base form and transformed Were-form).
+
+---
+
 ## [1.0.0-b059a] - 2026-07-23
 
 ### 🐺 Deep Multiplayer Werewolf Sync & Chat Cleanliness Polish

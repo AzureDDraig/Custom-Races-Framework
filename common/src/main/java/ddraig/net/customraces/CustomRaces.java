@@ -25,6 +25,7 @@ public class CustomRaces {
         CustomRacesCommands.init();
         FirstJoinHandler.init();
         ddraig.net.customraces.event.WereRaceTransformHandler.init();
+        ddraig.net.customraces.event.RaceSoundHandler.init();
 
         // Passive ability player tick loop
         TickEvent.PLAYER_POST.register(player -> {
