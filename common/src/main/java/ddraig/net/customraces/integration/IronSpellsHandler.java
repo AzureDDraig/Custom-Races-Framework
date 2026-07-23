@@ -80,7 +80,7 @@ public class IronSpellsHandler {
 
         boolean isWildMagic = race.getWildMagic(slot, isWereForm);
         String spellId = race.getNativeSpellId(slot, isWereForm);
-        int spellLevel = race.getNativeSpellLevel(slot, isWereForm);
+        int spellLevel = Math.max(1, Math.min(10, race.getNativeSpellLevel(slot, isWereForm)));
 
         if (isWildMagic) {
             spellId = ALL_SPELLS.get(RANDOM.nextInt(ALL_SPELLS.size()));
@@ -93,62 +93,137 @@ public class IronSpellsHandler {
             spellId = "irons_spellbooks:" + spellId;
         }
 
-        try {
-            Class<?> spellRegistryClass = getSpellRegistryClass();
-            Object spellObj = null;
+        boolean modLoaded = isIronSpellsLoaded();
 
-            if (spellRegistryClass != null) {
-                try {
-                    Method getSpellStr = spellRegistryClass.getMethod("getSpell", String.class);
-                    spellObj = getSpellStr.invoke(null, spellId);
-                } catch (Exception e1) {
-                    try {
-                        Method getSpellRes = spellRegistryClass.getMethod("getSpell", net.minecraft.resources.ResourceLocation.class);
-                        spellObj = getSpellRes.invoke(null, new net.minecraft.resources.ResourceLocation(spellId));
-                    } catch (Exception ignored) {}
-                }
-            }
-
-            if (spellObj != null && spellObj.getClass().getName().contains("Holder")) {
-                try {
-                    Method valMethod = spellObj.getClass().getMethod("value");
-                    spellObj = valMethod.invoke(spellObj);
-                } catch (Exception ignored) {}
-            }
-
-            if (spellObj != null) {
-                Object castSource = getCastSourceEnum();
-                Object magicData = getPlayerMagicData(player);
-                for (Method m : spellObj.getClass().getMethods()) {
-                    String mName = m.getName().toLowerCase();
-                    if (mName.contains("cast") || mName.contains("oncast") || mName.contains("initiate")) {
-                        try {
-                            m.setAccessible(true);
-                            Class<?>[] params = m.getParameterTypes();
-                            if (params.length == 5) {
-                                m.invoke(spellObj, player.level(), spellLevel, player, castSource, magicData);
-                                return;
-                            } else if (params.length == 4) {
-                                m.invoke(spellObj, player.level(), spellLevel, player, castSource);
-                                return;
-                            } else if (params.length == 3) {
-                                m.invoke(spellObj, player.level(), spellLevel, player);
-                                return;
-                            }
-                        } catch (Exception ignored) {}
+        if (modLoaded) {
+            try {
+                Object spellObj = resolveSpellObject(spellId);
+                if (spellObj != null) {
+                    boolean success = invokeSpellCast(player, spellObj, spellLevel);
+                    if (success) {
+                        if (player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
+                            sLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.0, player.getZ(), 25, 0.4, 0.4, 0.4, 0.1);
+                        }
+                        return;
                     }
                 }
+            } catch (Exception e) {
+                System.err.println("[CustomRaces] Failed to cast Iron's Spell: " + spellId + " - " + e.getMessage());
             }
-        } catch (Exception ignored) {}
-
-        // Fallback FX if Iron's Spells mod is not loaded
-        if (!isWildMagic) {
-            player.displayClientMessage(Component.literal("§c[Native Spell " + slot + "] §f" + spellId + " §7(Requires Iron's Spells mod)"), true);
         }
+
+        // Fallback feedback: Only say "(Requires Iron's Spells mod)" if mod is NOT actually installed
+        if (!modLoaded) {
+            player.displayClientMessage(Component.literal("§c[Native Spell " + slot + "] §f" + spellId + " §7(Requires Iron's Spells mod)"), true);
+        } else {
+            player.displayClientMessage(Component.literal("§d✨ [Native Spell " + slot + "] §fCasting " + spellId.replace("irons_spellbooks:", "") + " (Lvl " + spellLevel + ")"), true);
+        }
+
         if (player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
             sLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.4, 0.4, 0.4, 0.05);
             sLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.WITCH, player.getX(), player.getY() + 1.0, player.getZ(), 15, 0.3, 0.3, 0.3, 0.05);
         }
+    }
+
+    private static Object resolveSpellObject(String spellId) {
+        String[] registryClasses = {
+            "net.ironsspellbooks.api.registry.SpellRegistry",
+            "io.github.elytra.irons_spellbooks.api.registry.SpellRegistry",
+            "net.ironsspellbooks.spells.SpellRegistry",
+            "net.ironsspellbooks.api.spells.AbstractSpell"
+        };
+
+        net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(spellId);
+        String pathOnly = loc.getPath();
+
+        for (String cName : registryClasses) {
+            try {
+                Class<?> clazz = Class.forName(cName);
+                try {
+                    Method m = clazz.getMethod("getSpell", net.minecraft.resources.ResourceLocation.class);
+                    Object res = m.invoke(null, loc);
+                    Object unwrapped = unwrapSpellHolder(res);
+                    if (unwrapped != null) return unwrapped;
+                } catch (Exception ignored) {}
+
+                try {
+                    Method m = clazz.getMethod("getSpell", String.class);
+                    Object res = m.invoke(null, spellId);
+                    Object unwrapped = unwrapSpellHolder(res);
+                    if (unwrapped != null) return unwrapped;
+                } catch (Exception ignored) {}
+
+                try {
+                    Method m = clazz.getMethod("getSpell", String.class);
+                    Object res = m.invoke(null, pathOnly);
+                    Object unwrapped = unwrapSpellHolder(res);
+                    if (unwrapped != null) return unwrapped;
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    private static Object unwrapSpellHolder(Object obj) {
+        if (obj == null) return null;
+        if (obj.getClass().getName().contains("AbstractSpell")) {
+            return obj;
+        }
+        try {
+            Method valM = obj.getClass().getMethod("value");
+            Object val = valM.invoke(obj);
+            if (val != null) return val;
+        } catch (Exception ignored) {}
+        try {
+            Method getM = obj.getClass().getMethod("get");
+            Object val = getM.invoke(obj);
+            if (val != null) return val;
+        } catch (Exception ignored) {}
+        return obj;
+    }
+
+    private static boolean invokeSpellCast(Player player, Object spellObj, int spellLevel) {
+        if (spellObj == null || player == null) return false;
+        Object castSource = getCastSourceEnum();
+        Object magicData = getPlayerMagicData(player);
+
+        Method[] methods = spellObj.getClass().getMethods();
+        for (Method m : methods) {
+            String mName = m.getName().toLowerCase();
+            if (mName.contains("oncast") || mName.contains("cast") || mName.contains("initiate")) {
+                Class<?>[] pTypes = m.getParameterTypes();
+                if (pTypes.length == 0) continue;
+
+                Object[] args = new Object[pTypes.length];
+                for (int i = 0; i < pTypes.length; i++) {
+                    Class<?> p = pTypes[i];
+                    if (net.minecraft.world.level.Level.class.isAssignableFrom(p)) {
+                        args[i] = player.level();
+                    } else if (p == int.class || p == Integer.class) {
+                        args[i] = spellLevel;
+                    } else if (net.minecraft.world.entity.player.Player.class.isAssignableFrom(p)
+                            || net.minecraft.world.entity.LivingEntity.class.isAssignableFrom(p)
+                            || net.minecraft.server.level.ServerPlayer.class.isAssignableFrom(p)) {
+                        args[i] = player;
+                    } else if (castSource != null && p.isAssignableFrom(castSource.getClass())) {
+                        args[i] = castSource;
+                    } else if (magicData != null && p.isAssignableFrom(magicData.getClass())) {
+                        args[i] = magicData;
+                    } else if (p.isEnum()) {
+                        args[i] = castSource;
+                    } else {
+                        args[i] = null;
+                    }
+                }
+
+                try {
+                    m.setAccessible(true);
+                    m.invoke(spellObj, args);
+                    return true;
+                } catch (Exception ignored) {}
+            }
+        }
+        return false;
     }
 
     private static Class<?> getSpellRegistryClass() {

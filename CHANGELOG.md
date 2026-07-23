@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b074a] - 2026-07-23
+
+### 🔮 Iron's Spells Dynamic Invocation Engine & Mod Detection Guard
+- **Universal Iron's Spells Reflection Resolver (`IronSpellsHandler.java`)**:
+  - Implemented `resolveSpellObject` and `unwrapSpellHolder` resolving spells across all 1.20.1 Iron's Spells API variants (e.g. `irons_spellbooks:blood_slash`), supporting `ResourceLocation`, string keys, `Holder`, `Supplier`, and `RegistryObject` wrappers.
+- **Dynamic Parameter Type Matcher (`IronSpellsHandler.java`)**:
+  - Implemented `invokeSpellCast` which dynamically constructs matching parameter arrays (`Level`, `spellLevel`, `ServerPlayer`/`LivingEntity`, `CastSource`, `MagicData`), preventing parameter mismatch exceptions during spell invocation.
+- **Mod Detection Fallback Guard (`IronSpellsHandler.java`)**:
+  - Restricted the `"(Requires Iron's Spells mod)"` message strictly to environments where Iron's Spells is not loaded (`!isIronSpellsLoaded()`). When Iron's Spells is installed, spell casting outputs real-time casting feedback and particle effects (`ENCHANT`).
+
+---
+
 ## [1.0.0-b073a] - 2026-07-23
 
 ### 🔮 Iron's Spells Creator Guidance & One-Click Active Skill Binding
