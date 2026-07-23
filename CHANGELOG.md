@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b073a] - 2026-07-23
+
+### 🔮 Iron's Spells Creator Guidance & One-Click Active Skill Binding
+- **One-Click Native Spell Binding Buttons (`RaceCreatorScreen.java`)**:
+  - Added `[🔮 Spell X]` buttons in **Tab 4: Active Skills** and `[⚡ Auto-Assign to Active Slot X]` buttons in **Tab 11: Native Spells**, enabling race creators to instantly link Native Spells to Active Skill keybind slots in a single click.
+- **On-Screen Native Spell Guide Banner (`RaceCreatorScreen.java`)**:
+  - Rendered a clear step-by-step explanatory guide banner in **Tab 11: Native Spells** walking creators through configuring spells and assigning them to active hotkeys.
+- **Enhanced Native Spell Tooltips (`en_us.json`)**:
+  - Clarified tooltips across creator screens explaining that active keybind slot assignment is required to cast native spells in-game.
+
+---
+
 ## [1.0.0-b072a] - 2026-07-23
 
 ### 💡 Race Selection Screen Ability Hover Tooltips & Explanations

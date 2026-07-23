@@ -805,12 +805,26 @@ public class RaceCreatorScreen extends Screen {
                 final int currentSlot = slot;
                 String currentSkill = targetMap.getOrDefault(slot, "none");
 
-                EditBox slotBox = new EditBox(this.font, contentLeft + 60, py, 200, 18, Component.literal("Slot " + slot));
+                EditBox slotBox = new EditBox(this.font, contentLeft + 60, py, 170, 18, Component.literal("Slot " + slot));
                 slotBox.setMaxLength(2048);
                 slotBox.setValue(currentSkill);
-                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + " (e.g. flame_breath, teleport_dash, native_spell, transform_were, summon_minions).")));
-                slotBox.setResponder(val -> targetMap.put(currentSlot, val));
+                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + ".\nUse 'native_spell_1' to '5' to cast Iron's Spells.")));
+                slotBox.setResponder(val -> {
+                    targetMap.put(currentSlot, val);
+                    autoSaveWorkingRace();
+                });
                 this.addRenderableWidget(slotBox);
+
+                // Quick Bind Native Spell Button
+                boolean isWere = editingWereForm && workingRace.enableWereRace;
+                Button bindSpellBtn = Button.builder(Component.literal("🔮 Spell " + currentSlot), b -> {
+                    targetMap.put(currentSlot, "native_spell_" + currentSlot);
+                    slotBox.setValue("native_spell_" + currentSlot);
+                    autoSaveWorkingRace();
+                    this.init();
+                }).bounds(contentLeft + 235, py, 75, 18).build();
+                bindSpellBtn.setTooltip(Tooltip.create(Component.literal("Instantly bind Native Spell Slot " + currentSlot + " to Active Skill Slot " + currentSlot + ".")));
+                this.addRenderableWidget(bindSpellBtn);
 
                 py += 24;
             }
@@ -1195,6 +1209,16 @@ public class RaceCreatorScreen extends Screen {
                 } catch (Exception ignored) {}
             });
             this.addRenderableWidget(lvlBox);
+
+            // Auto-Bind to Active Skill Button
+            Map<Integer, String> targetMap = isWere ? workingRace.wereActiveAbilities : workingRace.activeAbilities;
+            Button autoBindBtn = Button.builder(Component.literal("⚡ Auto-Assign to Active Slot " + activeSlot), b -> {
+                targetMap.put(activeSlot, "native_spell_" + activeSlot);
+                autoSaveWorkingRace();
+                this.init();
+            }).bounds(contentLeft + 205, contentTop + 115, 185, 18).build();
+            autoBindBtn.setTooltip(Tooltip.create(Component.literal("Assigns 'native_spell_" + activeSlot + "' to Active Skill Slot " + activeSlot + " in Tab 4 so players can cast it in-game.")));
+            this.addRenderableWidget(autoBindBtn);
         }
     }
 
@@ -1560,6 +1584,12 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, "§d❖ Native Spells Configuration (Slots 1-5):", contentLeft, contentTop + 4, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§d❖ Spell ID (Slot " + selectedNativeSpellSlot + "):", contentLeft, contentTop + 94, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§d❖ Spell Level (Slot " + selectedNativeSpellSlot + "):", contentLeft, contentTop + 119, 0xFFFFFF);
+
+            // Explanatory On-Screen Guide
+            guiGraphics.drawString(this.font, "§e💡 HOW TO USE IN-GAME:", contentLeft, contentTop + 140, 0xFFFF55);
+            guiGraphics.drawString(this.font, "§71. Configure Spell ID & Level above.", contentLeft, contentTop + 152, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§72. Click '⚡ Auto-Assign' or go to Tab 4.", contentLeft, contentTop + 164, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§73. Set Active Skill Slot to 'native_spell_" + selectedNativeSpellSlot + "'.", contentLeft, contentTop + 176, 0xCCCCCC);
         }
 
         // 5. Right Panel: 3D Holographic Showcase Viewport
