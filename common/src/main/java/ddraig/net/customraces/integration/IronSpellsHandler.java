@@ -127,7 +127,7 @@ public class IronSpellsHandler {
 
         // Fallback FX if Iron's Spells mod is not loaded
         if (!isWildMagic) {
-            player.sendSystemMessage(Component.literal("§c[Native Spell " + slot + "] §f" + spellId + " §7(Requires Iron's Spells mod installed)"));
+            player.displayClientMessage(Component.literal("§c[Native Spell " + slot + "] §f" + spellId + " §7(Requires Iron's Spells mod)"), true);
         }
         if (player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
             sLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.4, 0.4, 0.4, 0.05);

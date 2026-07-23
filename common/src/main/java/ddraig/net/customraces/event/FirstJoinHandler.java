@@ -26,5 +26,14 @@ public class FirstJoinHandler {
                 ModPackets.openRaceSelection(serverPlayer);
             }
         });
+
+        PlayerEvent.PLAYER_RESPAWN.register((newPlayer, conqueredEnd) -> {
+            if (newPlayer != null) {
+                RaceData race = RaceRegistry.getPlayerRace(newPlayer.getUUID());
+                if (race != null) {
+                    PehkuiIntegration.applyRaceScales(newPlayer, race);
+                }
+            }
+        });
     }
 }

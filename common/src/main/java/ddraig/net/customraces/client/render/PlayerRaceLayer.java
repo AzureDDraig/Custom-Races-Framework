@@ -32,7 +32,8 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
         if (race == null) return;
 
-        poseStack.pushPose();
+        try {
+            poseStack.pushPose();
 
         // 1. Check Were-Form Transformation State (Server & Client Synced)
         boolean isWereTransformed = ddraig.net.customraces.client.ClientWereState.isTransformed(player.getUUID())
@@ -87,7 +88,9 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             }
         }
 
-        poseStack.popPose();
+        } catch (Exception ignored) {} finally {
+            poseStack.popPose();
+        }
     }
 
     private void renderWereBeastParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {

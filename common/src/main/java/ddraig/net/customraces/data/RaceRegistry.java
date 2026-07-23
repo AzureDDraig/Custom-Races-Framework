@@ -317,10 +317,22 @@ public class RaceRegistry {
 
     public static void saveRaces() {
         File file = getRacesFile();
-        try (FileWriter writer = new FileWriter(file)) {
+        File tmpFile = new File(file.getParentFile(), file.getName() + ".tmp");
+        try (FileWriter writer = new FileWriter(tmpFile)) {
             GSON.toJson(loadedRaces, writer);
+            writer.flush();
         } catch (Exception e) {
-            System.err.println("[CustomRaces] Error saving races.json: " + e.getMessage());
+            System.err.println("[CustomRaces] Error writing races.json.tmp: " + e.getMessage());
+            return;
+        }
+        try {
+            java.nio.file.Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+        } catch (Exception e) {
+            try {
+                java.nio.file.Files.move(tmpFile.toPath(), file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception ex) {
+                System.err.println("[CustomRaces] Error saving races.json: " + ex.getMessage());
+            }
         }
     }
 

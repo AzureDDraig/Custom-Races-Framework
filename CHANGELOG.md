@@ -2,6 +2,22 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b066a] - 2026-07-23
+
+### 🛡️ Atomic Data Persistence, Network Buffer Safety & Scale Respawn Refresh
+- **Atomic Race File Saving (`RaceRegistry.java`)**:
+  - Implemented atomic temp file writes (`races.json.tmp` -> `races.json`) preventing JSON data corruption or file wiping during unexpected crashes.
+- **Network Sync Payload Buffer Expansion (`ModPackets.java`)**:
+  - Expanded packet string buffer limit to `1048576` (1MB) in `SYNC_RACES_ID` and `SAVE_RACE_ID` receivers, preventing network decoding exceptions when loading large race packs.
+- **Render Exception Isolation Guard (`PlayerRaceLayer.java`)**:
+  - Wrapped feature layer rendering inside `try-catch-finally` block to ensure rendering anomalies never crash the game client or entity renderer.
+- **Actionbar Native Spell Fallback Overlay (`IronSpellsHandler.java`)**:
+  - Updated fallback notifications when Iron's Spells mod is missing to display as clean actionbar overlay messages (`displayClientMessage`).
+- **Persistent Player Scale Refresh on Respawn (`FirstJoinHandler.java`)**:
+  - Registered `PlayerEvent.PLAYER_RESPAWN` listener to re-apply race scale multipliers (`applyRaceScales`) immediately upon player death and respawn.
+
+---
+
 ## [1.0.0-b065a] - 2026-07-23
 
 ### 🐺 Were-Form Sonic Howl Shockwaves, Water Transformation & Particle Aura Polish

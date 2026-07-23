@@ -47,8 +47,8 @@ public class ModPackets {
         });
         // Register Client-Bound (S2C)
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, SYNC_RACES_ID, (buf, context) -> {
-            String racesJson = buf.readUtf(262144);
-            String playersJson = buf.readUtf(262144);
+            String racesJson = buf.readUtf(1048576);
+            String playersJson = buf.readUtf(1048576);
             context.queue(() -> {
                 try {
                     Type raceMapType = new TypeToken<Map<String, RaceData>>() {}.getType();
@@ -94,7 +94,7 @@ public class ModPackets {
 
         // Register Server-Bound (C2S)
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, SAVE_RACE_ID, (buf, context) -> {
-            String raceJson = buf.readUtf(262144);
+            String raceJson = buf.readUtf(1048576);
             ServerPlayer player = (ServerPlayer) context.getPlayer();
             if (player.hasPermissions(2)) {
                 context.queue(() -> {
