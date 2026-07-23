@@ -53,7 +53,6 @@ public class ActiveAbilityHandler {
         if (now - lastUse < DEFAULT_COOLDOWN_MS) {
             long remainingSec = (DEFAULT_COOLDOWN_MS - (now - lastUse)) / 1000 + 1;
             player.sendSystemMessage(Component.literal("§cAbility " + slot + " on cooldown! (" + remainingSec + "s)"), true);
-            player.sendSystemMessage(Component.literal("§cAbility " + slot + " on cooldown! (" + remainingSec + "s)"));
             return;
         }
 

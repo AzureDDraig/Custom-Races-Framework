@@ -37,6 +37,18 @@ public class WereRaceTransformHandler {
         });
     }
 
+    public static void syncAllWereStatesTo(ServerPlayer targetPlayer) {
+        if (targetPlayer == null || targetPlayer.getServer() == null) return;
+        for (Map.Entry<UUID, Boolean> entry : TRANSFORMED_PLAYERS.entrySet()) {
+            if (Boolean.TRUE.equals(entry.getValue())) {
+                net.minecraft.network.FriendlyByteBuf buf = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+                buf.writeUUID(entry.getKey());
+                buf.writeBoolean(true);
+                dev.architectury.networking.NetworkManager.sendToPlayer(targetPlayer, ddraig.net.customraces.network.ModPackets.SYNC_WERE_STATE_ID, buf);
+            }
+        }
+    }
+
     public static boolean isTransformed(UUID uuid) {
         if (uuid == null) return false;
         if (TRANSFORMED_PLAYERS.getOrDefault(uuid, false)) return true;

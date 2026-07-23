@@ -13,15 +13,17 @@ import net.minecraft.server.level.ServerPlayer;
 public class FirstJoinHandler {
 
     public static void init() {
-        PlayerEvent.PLAYER_JOIN.register(player -> {
-            if (player instanceof ServerPlayer) {
-                ServerPlayer serverPlayer = (ServerPlayer) player;
-                RaceData race = RaceRegistry.getPlayerRace(serverPlayer.getUUID());
-                if (race != null) {
-                    PehkuiIntegration.applyRaceScales(serverPlayer, race);
-                } else if (RaceRegistry.autoOpenSelectionOnJoin) {
-                    ModPackets.openRaceSelection(serverPlayer);
-                }
+        PlayerEvent.PLAYER_JOIN.register(serverPlayer -> {
+            if (serverPlayer != null && serverPlayer.getServer() != null) {
+                ModPackets.syncRacesToAll(serverPlayer.getServer());
+                WereRaceTransformHandler.syncAllWereStatesTo(serverPlayer);
+            }
+
+            RaceData race = RaceRegistry.getPlayerRace(serverPlayer.getUUID());
+            if (race != null) {
+                PehkuiIntegration.applyRaceScales(serverPlayer, race);
+            } else if (RaceRegistry.autoOpenSelectionOnJoin) {
+                ModPackets.openRaceSelection(serverPlayer);
             }
         });
     }

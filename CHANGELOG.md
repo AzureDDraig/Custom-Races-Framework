@@ -4,6 +4,17 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b059a] - 2026-07-23
+
+### 🐺 Deep Multiplayer Werewolf Sync & Chat Cleanliness Polish
+- **Multiplayer Werewolf Transformation Sync (`WereRaceTransformHandler.java` & `FirstJoinHandler.java`)**:
+  - Implemented `syncAllWereStatesTo(serverPlayer)` so when a player logs into a server, all currently active Werewolf transformation states across all online players are immediately synchronized to the joining player.
+  - Ensures newly joining players immediately see transformed players as Werewolves with proper 3D models, scales, smoke particles, and beast features.
+- **Chat Cooldown Polish (`ActiveAbilityHandler.java`)**:
+  - Removed duplicate chat message output on ability cooldown checks, restricting cooldown alerts strictly to actionbar overlay messages (`true`).
+
+---
+
 ## [1.0.0-b058a] - 2026-07-23
 
 ### 🪽 Real-Time Dynamic Wing Flapping Visual Animation
