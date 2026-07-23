@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b068a] - 2026-07-23
+
+### 🐺 Client Were-State Cache Clearing & Model Transformation Reliability
+- **Client Were State Cache Clearing (`ClientWereState.java`)**:
+  - Implemented `ClientWereState.clear()` method to reset client-side transformation caches upon world unload or server disconnect.
+- **Were-Form Render Layer Exception Isolation (`PlayerRaceLayer.java`)**:
+  - Isolated model matrix transformations and particle emissions inside `try-catch-finally` blocks to guarantee player entity rendering never fails or freezes.
+- **Synchronized Were Transformation Packet Handling (`ModPackets.java`)**:
+  - Guaranteed `ClientWereState.setTransformed` executes on the client main render thread (`context.queue(...)`) preventing thread concurrency issues during transformation state sync.
+
+---
+
 ## [1.0.0-b067a] - 2026-07-23
 
 ### 🐺 Were-Form Manual Hotkey Condition Guards & Safe Attribute Modifier Checks

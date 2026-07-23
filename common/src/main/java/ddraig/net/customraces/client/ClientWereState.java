@@ -22,4 +22,8 @@ public class ClientWereState {
             TRANSFORMED_PLAYERS.remove(uuid);
         }
     }
+
+    public static void clear() {
+        TRANSFORMED_PLAYERS.clear();
+    }
 }
