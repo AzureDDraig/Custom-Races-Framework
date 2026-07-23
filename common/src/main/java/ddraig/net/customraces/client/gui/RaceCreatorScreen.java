@@ -79,18 +79,51 @@ public class RaceCreatorScreen extends Screen {
     private boolean editingWereForm = false;
 
     public static final List<String> ALL_DRAWBACKS = java.util.List.of(
+        // 1-10: Environmental & Elemental
         "water_vulnerability", "sunlight_burn", "sunlight_slowness", "cold_vulnerability", "fire_vulnerability",
         "hydrophobia", "claustrophobia", "agoraphobia", "nether_vulnerability", "end_vulnerability",
+        // 11-20: Diet & Metabolism
         "carnivore_diet", "vegetarian_diet", "hyper_metabolism", "sluggish_metabolism", "hematophagy",
         "photosynthetic_dependency", "golden_allergy", "potion_intolerance", "soul_hunger", "heavy_eater",
+        // 21-30: Combat & Armor
         "fragile_bone", "no_heavy_armor", "no_shield_use", "melee_weakness", "ranged_inaccuracy",
         "silver_vulnerability", "smite_vulnerability", "knockback_vulnerability", "slow_attack_cooldown", "shield_shatter_vulnerability",
+        // 31-40: Movement & Physics
         "slowness_curse", "no_sprinting", "reduced_step_height", "slippery_feet", "gravity_bound",
         "jump_penalty", "stamina_exhaustion", "cobweb_entanglement", "clumsy_swimmer", "steep_fall_paralysis",
+        // 41-50: Hitbox & Dimensions
         "oversized_hitbox", "undersized_reach", "low_max_health", "glass_cannon", "no_helmet_slot",
         "no_chestplate_slot", "no_boots_slot", "translucent_fragility", "heavy_weight", "drowning_in_shallow_water",
+        // 51-60: Arcane & Factions
         "villager_fear", "iron_golem_hostility", "curse_of_shadows", "mana_drain", "totem_nullification",
-        "wither_vulnerability", "poison_vulnerability", "insomnia_curse", "lightning_attraction", "blindness_in_nether"
+        "wither_vulnerability", "poison_vulnerability", "insomnia_curse", "lightning_attraction", "blindness_in_nether",
+        // 61-70: Extreme Biome & Climate
+        "desert_dehydration", "snow_hypothermia", "swamp_miasma", "cave_suffocation", "high_altitude_sickness",
+        "ocean_pressure", "jungle_fever", "mushrooms_allergy", "dimension_shock", "weather_depression",
+        // 71-80: Equipment & Material
+        "no_iron_equipment", "no_diamond_equipment", "no_bow_use", "no_trident_use", "no_elytra_equip",
+        "heavy_armor_slowness", "gold_tool_brittleness", "wooden_tool_fragility", "enchantment_rejection", "single_weapon_mastery",
+        // 81-90: Advanced Combat
+        "vampiric_burn_on_hit", "blunt_damage_vulnerability", "piercing_vulnerability", "slashing_vulnerability", "recoil_damage",
+        "bleed_vulnerability", "critical_vulnerability", "shield_break_paralysis", "no_critical_hits", "sweep_attack_weakness",
+        // 91-100: Chemical & Status
+        "milk_allergy", "extended_debuffs", "reduced_buff_duration", "splash_potion_fragility", "honey_stickiness",
+        "sweet_berries_thorns", "fireworks_vulnerability", "anoxia", "sugar_crash", "rotten_flesh_sickness",
+        // 101-110: Mob Hostility
+        "creeper_attraction", "skeleton_precision_vulnerability", "enderman_aggro", "wolf_hostility", "piglin_permanent_aggro",
+        "warden_sonic_vulnerability", "phantom_attraction", "spider_venom_vulnerability", "blaze_fireball_vulnerability", "stray_slowness_vulnerability",
+        // 111-120: Mobility & Mounts
+        "climb_inability", "boat_inability", "minecart_inability", "horse_mount_inability", "strider_mount_inability",
+        "fall_stun", "sprint_jump_exhaustion", "crouch_slowness", "water_current_vulnerability", "lava_sink",
+        // 121-130: Sensory & Perception
+        "blind_in_darkness", "tunnel_vision", "sound_sensitivity", "echolocation_dependency", "hallucinations",
+        "glowing_curse", "paranoia", "vertigo", "color_blindness", "bloodlust_frenzy",
+        // 131-140: Magic & Soul
+        "wither_rose_curse", "beacon_rejection", "conduit_rejection", "xp_inefficiency", "enchantment_cost_doubled",
+        "curse_of_vanishing_gear", "respawn_weakness", "portal_sickness", "totem_shatter", "ender_pearl_damage",
+        // 141-150: Morph & Body Shape
+        "no_offhand_slot", "tail_tangled", "heavy_horns", "wing_flapping_exhaustion", "web_producer_hunger",
+        "shell_weight", "slime_splitting_vulnerability", "centaur_stair_clumsiness", "golem_rust", "dragon_greed"
     );
 
     // Minion Ability Controls
