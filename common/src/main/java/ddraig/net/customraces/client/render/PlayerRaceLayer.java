@@ -34,14 +34,43 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
 
         poseStack.pushPose();
 
-        // 1. Render Preset Body Parts (Ears, Wings, Tail, Horns, Halo, Legs) - hide if transformed into custom Were model
-        boolean isWereTransformed = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
-        if (!isWereTransformed || race.wereModelPath == null || race.wereModelPath.trim().isEmpty()) {
+        // 1. Check Were-Form Transformation State (Server & Client Synced)
+        boolean isWereTransformed = ddraig.net.customraces.client.ClientWereState.isTransformed(player.getUUID())
+                || ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+
+        if (isWereTransformed && race.enableWereRace) {
+            // Apply Were-Form Visual Scale Transformation
+            float hScale = race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f;
+            float wScale = race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f;
+            poseStack.scale(wScale, hScale, wScale);
+
+            // Render Were-Form Beast Features (Ears, Horns, Snout, Crimson Eye Aura)
+            renderWereBeastParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
+
+            // Render Real-Time Dark Were-Form Smoke Particles
+            if (player.level().isClientSide && player.tickCount % 3 == 0) {
+                player.level().addParticle(
+                        net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
+                        player.getRandomX(0.6),
+                        player.getRandomY() + 0.5,
+                        player.getRandomZ(0.6),
+                        0.0, 0.05, 0.0
+                );
+                player.level().addParticle(
+                        net.minecraft.core.particles.ParticleTypes.FLAME,
+                        player.getRandomX(0.4),
+                        player.getRandomY() + 0.5,
+                        player.getRandomZ(0.4),
+                        0.0, 0.02, 0.0
+                );
+            }
+        } else {
+            // Render Base Race Preset Body Parts (Ears, Wings, Tail, Horns, Halo, Legs)
             renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
         }
 
         // 2. Render Particle Auras in Real-Time
-        if (player.level().isClientSide && !race.particleAuras.isEmpty()) {
+        if (player.level().isClientSide && race.particleAuras != null && !race.particleAuras.isEmpty()) {
             for (ParticleAuraData aura : race.particleAuras) {
                 if (player.tickCount % 4 == 0) {
                     net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.particleType));
@@ -57,6 +86,26 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                 }
             }
         }
+
+        poseStack.popPose();
+    }
+
+    private void renderWereBeastParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
+        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE));
+
+        poseStack.pushPose();
+        this.getParentModel().getHead().translateAndRotate(poseStack);
+
+        // Werewolf ears (Crimson & Dark Fur)
+        renderColoredBox(poseStack, vc, packedLight, -0.40f, -0.75f, -0.05f, -0.25f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
+        renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.75f, -0.05f, 0.40f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
+
+        // Werewolf snout
+        renderColoredBox(poseStack, vc, packedLight, -0.15f, -0.25f, -0.55f, 0.15f, -0.05f, -0.25f, 0.15f, 0.04f, 0.04f, 1.0f);
+
+        // Glowing Crimson Eyes Overlay
+        renderColoredBox(poseStack, vc, packedLight, -0.25f, -0.42f, -0.32f, -0.08f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
+        renderColoredBox(poseStack, vc, packedLight, 0.08f, -0.42f, -0.32f, 0.25f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
 
         poseStack.popPose();
     }

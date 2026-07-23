@@ -4,6 +4,19 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b051a] - 2026-07-22
+
+### 🐺 Fixed Were-Form Model Transformation & Visual Rendering
+- **Client Transformation State Sync (`WereRaceTransformHandler.java` & `PlayerRaceLayer.java`)**:
+  - Fixed client-side transformation detection by querying `ClientWereState.isTransformed(uuid)` as a fallback in `WereRaceTransformHandler.isTransformed(...)`.
+  - Ensures player render layers immediately register transformation states synchronized from the server.
+- **Were-Form Visual Scale & Model Layer (`PlayerRaceLayer.java`)**:
+  - Implemented real-time Were-form model matrix scaling (`wereHeightScale` and `wereWidthScale`).
+  - Implemented 3D Werewolf Beast feature overlays (wolf ears, ferocious snout, glowing crimson eye overlay).
+  - Added real-time dark smoke and flame aura particles around transformed Were players.
+
+---
+
 ## [1.0.0-b050a] - 2026-07-22
 
 ### 🛡️ 100% Un-Truncated Complete Abilities Expansion

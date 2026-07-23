@@ -38,7 +38,9 @@ public class WereRaceTransformHandler {
     }
 
     public static boolean isTransformed(UUID uuid) {
-        return TRANSFORMED_PLAYERS.getOrDefault(uuid, false);
+        if (uuid == null) return false;
+        if (TRANSFORMED_PLAYERS.getOrDefault(uuid, false)) return true;
+        return ddraig.net.customraces.client.ClientWereState.isTransformed(uuid);
     }
 
     public static void checkTransformation(ServerPlayer player) {
