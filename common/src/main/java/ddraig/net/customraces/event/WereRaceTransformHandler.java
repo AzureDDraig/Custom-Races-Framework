@@ -151,6 +151,7 @@ public class WereRaceTransformHandler {
         TRANSFORMED_PLAYERS.remove(player.getUUID());
         ddraig.net.customraces.network.ModPackets.syncWereStateToAll(player.getServer(), player.getUUID(), false);
         clearWereModifiers(player);
+        player.removeEffect(net.minecraft.world.effect.MobEffects.NIGHT_VISION);
 
         ServerLevel level = player.serverLevel();
         level.playSound(null, player.blockPosition(), SoundEvents.POWDER_SNOW_BREAK, SoundSource.PLAYERS, 1.0f, 1.0f);

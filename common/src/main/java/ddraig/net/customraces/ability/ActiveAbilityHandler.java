@@ -215,10 +215,16 @@ public class ActiveAbilityHandler {
             case "were_howl":
             case "were howl":
                 level.playSound(null, player.blockPosition(), SoundEvents.WOLF_HOWL, SoundSource.PLAYERS, 1.5f, 0.7f);
-                level.sendParticles(ParticleTypes.SONIC_BOOM, player.getX(), player.getEyeY(), player.getZ(), 1, look.x, look.y, look.z, 0.0);
+                for (int i = 0; i < 8; i++) {
+                    double angle = i * (Math.PI / 4);
+                    level.sendParticles(ParticleTypes.SONIC_BOOM, player.getX() + Math.cos(angle) * 1.5, player.getEyeY(), player.getZ() + Math.sin(angle) * 1.5, 1, Math.cos(angle), 0.0, Math.sin(angle), 0.0);
+                }
                 AABB howlBox = player.getBoundingBox().inflate(12.0);
                 for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class, howlBox)) {
                     if (mob != player) {
+                        Vec3 pushVec = mob.position().subtract(player.position()).normalize().scale(1.2);
+                        mob.setDeltaMovement(pushVec.x, 0.5, pushVec.z);
+                        mob.hurtMarked = true;
                         mob.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 2));
                         mob.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 2));
                     }

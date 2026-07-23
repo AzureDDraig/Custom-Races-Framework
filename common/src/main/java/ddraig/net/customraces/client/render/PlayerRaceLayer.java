@@ -57,7 +57,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                         0.0, 0.05, 0.0
                 );
                 player.level().addParticle(
-                        net.minecraft.core.particles.ParticleTypes.FLAME,
+                        race.isWereFlyingRace ? net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME : net.minecraft.core.particles.ParticleTypes.FLAME,
                         player.getRandomX(0.4),
                         player.getRandomY() + 0.5,
                         player.getRandomZ(0.4),

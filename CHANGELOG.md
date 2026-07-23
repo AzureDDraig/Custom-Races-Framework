@@ -2,6 +2,22 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b065a] - 2026-07-23
+
+### 🐺 Were-Form Sonic Howl Shockwaves, Water Transformation & Particle Aura Polish
+- **Were-Form Howl 360-Degree Radial Pushback (`ActiveAbilityHandler.java`)**:
+  - Upgraded `were_howl` to generate a 360-degree expanding radial sonic boom particle ring pushing back nearby hostile entities and inflicting `WEAKNESS` and `SLOWNESS`.
+- **Water & Submerged Were-Form Transformation Trigger (`WereRaceTransformHandler.java`)**:
+  - Implemented automatic aquatic beast transformation when `wereTriggerCondition` is `"WATER"`, transforming players in water and reverting upon stepping onto dry land.
+- **Flying Were-Form Soul Fire Aura Particles (`PlayerRaceLayer.java`)**:
+  - Transformed Were-flying races now emit `SOUL_FIRE_FLAME` ambient particles alongside dark smoke trails.
+- **Were-Form Revert Status Effect Cleanup (`WereRaceTransformHandler.java`)**:
+  - Guarantees `Night Vision` is cleanly removed from the player upon reverting from Were-form to base form.
+- **Client Keybind Network Packet Helper (`ModPackets.java`)**:
+  - Added `sendToggleWereForm()` helper method to streamline client-side keybind transformation toggling.
+
+---
+
 ## [1.0.0-b064a] - 2026-07-23
 
 ### 💫 Custom Werewolf Transformation Sounds, Orb of Rebirth Particle Wave & Minion FX
