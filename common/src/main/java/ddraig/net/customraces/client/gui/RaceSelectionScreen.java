@@ -77,11 +77,23 @@ public class RaceSelectionScreen extends Screen {
         // Were-Form Preview Toggle Button
         this.wereToggleBtn = new FlatButton(centerLeft + centerWidth - 95, confirmY, 95, 24, Component.translatable("gui.customraces.button.were_form"), button -> {
             previewWereForm = !previewWereForm;
+            if (this.minecraft != null && this.minecraft.player != null) {
+                ddraig.net.customraces.client.ClientWereState.setTransformed(this.minecraft.player.getUUID(), previewWereForm);
+            }
             updateWereButtonText();
         }, 0xFFFF3838, 0xFFFFAA00);
         this.wereToggleBtn.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.were_toggle")));
         this.addRenderableWidget(this.wereToggleBtn);
         updateWereButtonText();
+    }
+
+    @Override
+    public void onClose() {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            boolean serverState = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(this.minecraft.player.getUUID());
+            ddraig.net.customraces.client.ClientWereState.setTransformed(this.minecraft.player.getUUID(), serverState);
+        }
+        super.onClose();
     }
 
     private void updateWereButtonText() {
@@ -256,6 +268,19 @@ public class RaceSelectionScreen extends Screen {
                     if (actName == null || actName.isEmpty()) actName = "None";
                     guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §e" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xDDDDDD);
                     actItemY += 12;
+                }
+
+                if (selectedRace.enableNativeSpells) {
+                    guiGraphics.drawString(this.font, "§d§l🔮 NATIVE SPELLS (Slots 1-5):", centerLeft + 12, actItemY + 4, 0xFFFFFF);
+                    int spellY = actItemY + 16;
+                    for (int slot = 1; slot <= 5; slot++) {
+                        String spellId = selectedRace.getNativeSpellId(slot, false);
+                        boolean isWild = selectedRace.getWildMagic(slot, false);
+                        int lvl = selectedRace.getNativeSpellLevel(slot, false);
+                        String spellName = isWild ? "✨ Wild Magic" : (spellId != null ? spellId.replace("irons_spellbooks:", "").replace("totweaks:", "").replace("_", " ") : "None");
+                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §d" + spellName + " §8(Lvl " + lvl + ")", centerLeft + 18, spellY, 0xEEAAFF);
+                        spellY += 12;
+                    }
                 }
             }
         }

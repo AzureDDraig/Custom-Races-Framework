@@ -4,6 +4,18 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b052a] - 2026-07-22
+
+### 🔍 System-Wide Audit & Race Selection 3D Showcase Sync
+- **Race Selection Screen 3D Showcase Were-Form Sync (`RaceSelectionScreen.java`)**:
+  - Connected `[Were-Form Preview]` toggle button directly to `ClientWereState.setTransformed(player.getUUID(), previewWereForm)`.
+  - Guarantees 3D Showcase viewport model transforms live when toggling Were-form preview mode, and cleanly restores on screen close (`onClose()`).
+- **Native Spells Slots 1-5 Selection Summary (`RaceSelectionScreen.java`)**:
+  - Added dedicated `🔮 NATIVE SPELLS (Slots 1-5)` summary section in the Race Selection GUI.
+  - Displays spell IDs, Wild Magic status (`✨ Wild Magic`), and spell levels (Lvl 1-10) for all 5 native spell slots.
+
+---
+
 ## [1.0.0-b051a] - 2026-07-22
 
 ### 🐺 Fixed Were-Form Model Transformation & Visual Rendering
