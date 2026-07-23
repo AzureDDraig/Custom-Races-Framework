@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b076a] - 2026-07-23
+
+### ⚔️ Minion Attacker Memory, Orb Cooldown Feedback & Flying Protection
+- **Minion Defender Attacker Target Memory (`ActiveAbilityHandler.java`)**:
+  - Updated `minion_summon` AI targeting to check `player.getLastHurtByMob()`, directing summoned minions to immediately retaliate against whoever recently attacked their owner.
+- **Orb of Rebirth Cooldown Feedback Overlay (`RaceOrbItem.java`)**:
+  - Added 1.0-second item cooldown (`player.getCooldowns().addCooldown`) to the Orb of Rebirth and displayed actionbar feedback when attempting to spam the item (`§c[!] Orb of Rebirth is on cooldown!`).
+- **Continuous Flight Fall-Distance Nullification (`PassiveAbilityHandler.java`)**:
+  - Guaranteed `player.fallDistance = 0.0f` continuously executes for flying races, ensuring flight toggles near the ground never inflict accidental fall damage.
+
+---
+
 ## [1.0.0-b075a] - 2026-07-23
 
 ### 🛡️ Dynamic Particle Height Scaling, Attribute Reset Safety & Cooldown Protection

@@ -268,12 +268,15 @@ public class ActiveAbilityHandler {
                                 }
 
                                 if (minion instanceof net.minecraft.world.entity.Mob mob) {
-                                    // Target nearest hostile mob if available
-                                    AABB area = player.getBoundingBox().inflate(15.0);
-                                    for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area)) {
-                                        if (target != player && !(target instanceof net.minecraft.world.entity.TamableAnimal && ((net.minecraft.world.entity.TamableAnimal)target).isOwnedBy(player))) {
-                                            mob.setTarget(target);
-                                            break;
+                                    if (player.getLastHurtByMob() != null) {
+                                        mob.setTarget(player.getLastHurtByMob());
+                                    } else {
+                                        AABB area = player.getBoundingBox().inflate(15.0);
+                                        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area)) {
+                                            if (target != player && !(target instanceof net.minecraft.world.entity.TamableAnimal animal && animal.isOwnedBy(player)) && !(target instanceof net.minecraft.world.entity.player.Player)) {
+                                                mob.setTarget(target);
+                                                break;
+                                            }
                                         }
                                     }
                                 }
