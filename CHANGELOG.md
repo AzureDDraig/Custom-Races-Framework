@@ -2,6 +2,20 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b064a] - 2026-07-23
+
+### 💫 Custom Werewolf Transformation Sounds, Orb of Rebirth Particle Wave & Minion FX
+- **Custom Werewolf Transformation Sound Events (`WereRaceTransformHandler.java`)**:
+  - Dynamically resolves and plays configured `wereTransformSound` event IDs upon player transformation.
+- **Orb of Rebirth Level-Up Chime & Particle Wave (`RaceOrbItem.java`)**:
+  - Added level-up chime (`SoundEvents.PLAYER_LEVELUP`) and Totem/End Rod particle waves when right-clicking the Orb of Rebirth.
+- **Minion Summoning Witch & Soul Flame Particle Bursts (`ActiveAbilityHandler.java`)**:
+  - Added 3D witch and soul flame particle bursts spawning around each summoned minion position (`summon_minion`).
+- **Fall Damage Immunity & Slow Falling Safety (`PassiveAbilityHandler.java`)**:
+  - Refined `fall_damage_immunity` and `slow_falling` logic to continuously reset fall distance without status effect clutter.
+- **Eye-Level Projectile Origin Alignment (`ActiveAbilityHandler.java`)**:
+  - Aligned projectile spawn coordinates for active abilities (`fireball_volley`, `web_trap_throw`) with `player.getEyeY()`.
+
 ---
 
 ## [1.0.0-b063a] - 2026-07-23

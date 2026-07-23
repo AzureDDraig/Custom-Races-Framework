@@ -244,6 +244,8 @@ public class ActiveAbilityHandler {
                             net.minecraft.world.entity.Entity minion = mobType.create(level);
                             if (minion != null) {
                                 minion.setPos(spawnX, spawnY, spawnZ);
+                                level.sendParticles(ParticleTypes.WITCH, spawnX, spawnY + 0.5, spawnZ, 15, 0.3, 0.5, 0.3, 0.05);
+                                level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, spawnX, spawnY + 0.5, spawnZ, 10, 0.2, 0.4, 0.2, 0.03);
 
                                 // Pehkui scaling for minion
                                 if (race.minionScale != 1.0f) {

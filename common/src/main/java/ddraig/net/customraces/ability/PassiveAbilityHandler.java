@@ -131,7 +131,9 @@ public class PassiveAbilityHandler {
             }
         }
         if (passives.contains("feather_light") || passives.contains("slow_falling") || passives.contains("fall_damage_immunity")) {
-            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 40, 0, false, false, true));
+            if (passives.contains("slow_falling")) {
+                player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 40, 0, false, false, true));
+            }
             player.fallDistance = 0.0f;
         }
         if (passives.contains("step_assist")) {

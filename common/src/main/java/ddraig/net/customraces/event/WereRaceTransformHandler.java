@@ -8,6 +8,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -109,7 +110,14 @@ public class WereRaceTransformHandler {
         ddraig.net.customraces.network.ModPackets.syncWereStateToAll(player.getServer(), player.getUUID(), true);
 
         ServerLevel level = player.serverLevel();
-        level.playSound(null, player.blockPosition(), SoundEvents.WOLF_HOWL, SoundSource.PLAYERS, 1.2f, 0.8f);
+        SoundEvent tfSound = SoundEvents.WOLF_HOWL;
+        if (race != null && race.wereTransformSound != null && !race.wereTransformSound.trim().isEmpty()) {
+            try {
+                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(race.wereTransformSound.trim());
+                tfSound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getOptional(loc).orElse(SoundEvents.WOLF_HOWL);
+            } catch (Exception ignored) {}
+        }
+        level.playSound(null, player.blockPosition(), tfSound, SoundSource.PLAYERS, 1.2f, 0.8f);
         level.sendParticles(ParticleTypes.LARGE_SMOKE, player.getX(), player.getY() + 1.0, player.getZ(), 40, 0.6, 1.0, 0.6, 0.1);
         level.sendParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.4, 0.8, 0.4, 0.05);
 
