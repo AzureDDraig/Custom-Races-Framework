@@ -95,10 +95,33 @@ public class WereRaceTransformHandler {
 
     public static void toggleManualWereForm(ServerPlayer player) {
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
-        if (race == null || !race.enableWereRace) return;
+        if (race == null || !race.enableWereRace) {
+            player.displayClientMessage(Component.literal("§c[!] Your current race does not have a Were-form."), true);
+            return;
+        }
 
+        String condition = race.wereTriggerCondition != null ? race.wereTriggerCondition.toUpperCase() : "FULL_MOON";
         boolean current = isTransformed(player.getUUID());
         if (!current) {
+            if (!"MANUAL".equals(condition) && !"KEY".equals(condition)) {
+                ServerLevel level = player.serverLevel();
+                boolean isNight = level.isNight();
+                int moonPhase = level.getMoonPhase();
+                boolean met = switch (condition) {
+                    case "FULL_MOON" -> isNight && moonPhase == 0;
+                    case "NEW_MOON" -> isNight && moonPhase == 4;
+                    case "NIGHT" -> isNight;
+                    case "DAY" -> !isNight;
+                    case "WATER", "SUBMERGED" -> player.isInWaterOrBubble() || player.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
+                    case "RAGE", "LOW_HEALTH" -> player.getHealth() <= (player.getMaxHealth() * 0.30f);
+                    default -> isNight && moonPhase == 0;
+                };
+
+                if (!met) {
+                    player.displayClientMessage(Component.literal("§c[!] Were-form requires trigger condition: " + condition), true);
+                    return;
+                }
+            }
             transformIntoWereForm(player, race);
         } else {
             revertWereForm(player, race);
@@ -127,17 +150,23 @@ public class WereRaceTransformHandler {
         if (race != null) {
             AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
             if (healthAttr != null && race.wereHealthBonus > 0) {
-                healthAttr.addTransientModifier(new AttributeModifier(WERE_HEALTH_MOD_UUID, "Were Health Bonus", race.wereHealthBonus, AttributeModifier.Operation.ADDITION));
+                if (healthAttr.getModifier(WERE_HEALTH_MOD_UUID) == null) {
+                    healthAttr.addTransientModifier(new AttributeModifier(WERE_HEALTH_MOD_UUID, "Were Health Bonus", race.wereHealthBonus, AttributeModifier.Operation.ADDITION));
+                }
             }
 
             AttributeInstance damageAttr = player.getAttribute(Attributes.ATTACK_DAMAGE);
             if (damageAttr != null && race.wereDamageBonus > 0) {
-                damageAttr.addTransientModifier(new AttributeModifier(WERE_DAMAGE_MOD_UUID, "Were Damage Bonus", race.wereDamageBonus, AttributeModifier.Operation.ADDITION));
+                if (damageAttr.getModifier(WERE_DAMAGE_MOD_UUID) == null) {
+                    damageAttr.addTransientModifier(new AttributeModifier(WERE_DAMAGE_MOD_UUID, "Were Damage Bonus", race.wereDamageBonus, AttributeModifier.Operation.ADDITION));
+                }
             }
 
             AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
             if (speedAttr != null && race.wereSpeedBonus > 0) {
-                speedAttr.addTransientModifier(new AttributeModifier(WERE_SPEED_MOD_UUID, "Were Speed Bonus", race.wereSpeedBonus, AttributeModifier.Operation.ADDITION));
+                if (speedAttr.getModifier(WERE_SPEED_MOD_UUID) == null) {
+                    speedAttr.addTransientModifier(new AttributeModifier(WERE_SPEED_MOD_UUID, "Were Speed Bonus", race.wereSpeedBonus, AttributeModifier.Operation.ADDITION));
+                }
             }
 
             // Apply Were Scales
@@ -165,13 +194,14 @@ public class WereRaceTransformHandler {
     }
 
     private static void clearWereModifiers(ServerPlayer player) {
+        if (player == null) return;
         AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
-        if (healthAttr != null) healthAttr.removeModifier(WERE_HEALTH_MOD_UUID);
+        if (healthAttr != null && healthAttr.getModifier(WERE_HEALTH_MOD_UUID) != null) healthAttr.removeModifier(WERE_HEALTH_MOD_UUID);
 
         AttributeInstance damageAttr = player.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (damageAttr != null) damageAttr.removeModifier(WERE_DAMAGE_MOD_UUID);
+        if (damageAttr != null && damageAttr.getModifier(WERE_DAMAGE_MOD_UUID) != null) damageAttr.removeModifier(WERE_DAMAGE_MOD_UUID);
 
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
-        if (speedAttr != null) speedAttr.removeModifier(WERE_SPEED_MOD_UUID);
+        if (speedAttr != null && speedAttr.getModifier(WERE_SPEED_MOD_UUID) != null) speedAttr.removeModifier(WERE_SPEED_MOD_UUID);
     }
 }

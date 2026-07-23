@@ -2,6 +2,20 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b067a] - 2026-07-23
+
+### 🐺 Were-Form Manual Hotkey Condition Guards & Safe Attribute Modifier Checks
+- **Were-Form Trigger Condition Actionbar Feedback (`WereRaceTransformHandler.java`)**:
+  - Pressing the manual transformation keybind (`/custom_races transform` or hotkey) when environmental conditions are not met displays actionbar feedback (`§c[!] Were-form requires trigger condition: FULL_MOON`).
+- **Safe Attribute Modifier Removal & Addition Guards (`WereRaceTransformHandler.java`)**:
+  - Added `healthAttr.getModifier(WERE_HEALTH_MOD_UUID) == null` existence checks before adding transient attribute modifiers, preventing modifier collision crashes.
+- **Were-Form Disable Permission Guard (`WereRaceTransformHandler.java`)**:
+  - Prevents players belonging to races without Were-form support (`enableWereRace = false`) from triggering transformation logic.
+- **Were Scale Persistence Engine (`PehkuiIntegration.java`)**:
+  - Connected `PehkuiIntegration.applyRaceScales(player, race)` to re-evaluate Were-form height and width multipliers seamlessly upon transformation state changes.
+
+---
+
 ## [1.0.0-b066a] - 2026-07-23
 
 ### 🛡️ Atomic Data Persistence, Network Buffer Safety & Scale Respawn Refresh
