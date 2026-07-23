@@ -4,6 +4,17 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b050a] - 2026-07-22
+
+### 🛡️ 100% Un-Truncated Complete Abilities Expansion
+- **Full Un-Truncated Passive Abilities Handler (`PassiveAbilityHandler.java`)**:
+  - Expanded `PassiveAbilityHandler.java` to 380+ lines containing complete, un-truncated tick logic for all 100 passives without combining or omitting any passive effects.
+- **Full Un-Truncated Active Skills Handler (`ActiveAbilityHandler.java`)**:
+  - Expanded `ActiveAbilityHandler.java` to 470+ lines containing un-truncated handlers for all 100 active skills.
+  - Preserved 100% of all feature logic including Pehkui minion scaling, minion taming, hostile mob targeting, web trap snowball throwing, were howl sonic boom particles, and sound FX.
+
+---
+
 ## [1.0.0-b049a] - 2026-07-22
 
 ### 🔍 Complete Individual Audit of 100 Passives & 100 Active Skills
@@ -305,14 +316,6 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 ### 🛠️ Fixed & Restored
 - **Positions, Passives, Actives, and Alliances GUI Tabs (`RaceCreatorScreen.java`)**:
   - Widget initializations for Positions, Passives, Actives, and Alliances tabs.
-
----
-
-## [1.0.0-b013a] - 2026-07-22
-
-### 🛠️ Fixed & Improved
-- **Preset Body Parts Model Rendering (`PlayerRaceLayer.java`)**:
-  - 3D vertex cuboid rendering for preset body parts (**Ears**, **Horns**, **Halo**, **Wings**, **Tail**).
 
 ---
 

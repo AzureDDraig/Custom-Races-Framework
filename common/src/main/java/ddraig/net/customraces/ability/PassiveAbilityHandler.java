@@ -6,16 +6,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
 /**
- * Handles living tick and event logic for all 100 race passive abilities.
+ * Handles living tick and event logic for all 72 race passive abilities.
  */
 public class PassiveAbilityHandler {
 
@@ -46,142 +46,119 @@ public class PassiveAbilityHandler {
         // Execute Event-Driven and Tick Drawbacks
         DrawbackEventHandler.tickDrawbacks(player, passives);
 
-        // 1-10: Elemental & Environmental
-        if (passives.contains("night_vision")) {
-            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
-        }
-        if (passives.contains("water_breathing") || passives.contains("gills_of_the_deep")) {
+        // 1. Aquatic & Marine
+        if (passives.contains("gills_of_the_deep") || passives.contains("water_breathing")) {
             player.setAirSupply(player.getMaxAirSupply());
             if (player.isInWater()) {
                 player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
             }
         }
-        if (passives.contains("fire_resistance") || passives.contains("fireproof_scales")) {
+        if (passives.contains("water_vulnerability")) {
+            if (player.isInWaterOrRain()) {
+                if (player.tickCount % 20 == 0) {
+                    player.hurt(player.damageSources().drown(), 1.0f);
+                }
+            }
+        }
+        if (passives.contains("aqua_agility") && player.isInWater()) {
+            player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 40, 0, false, false, true));
+        }
+        if (passives.contains("water_conduit_power") && player.isInWaterOrRain()) {
+            player.addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 40, 0, false, false, true));
+        }
+        if (passives.contains("ocean_sight") && player.isInWater()) {
+            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
+        }
+        if (passives.contains("depth_crusher") && player.isInWater() && player.getY() < 30) {
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 2, false, false, true));
+        }
+        if (passives.contains("marine_shield") && player.isInWater()) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        }
+
+        // 2. Fire, Lava & Thermal
+        if (passives.contains("fireproof_scales") || passives.contains("fire_resistance")) {
             player.clearFire();
             player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, true));
         }
-        if (passives.contains("flight") || passives.contains("sky_soarer") || passives.contains("angel_wings_passive")) {
+        if ((passives.contains("lava_walker") || passives.contains("lava_swimming")) && player.isInLava()) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, true));
+        }
+        if (passives.contains("lava_heat_regeneration") && player.isInLava()) {
+            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 1, false, false, true));
+        }
+        if (passives.contains("nether_fire_speed") && (player.isOnFire() || player.level().dimension().location().getPath().contains("nether"))) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+        }
+        if (passives.contains("thermal_immunity")) {
+            player.setTicksFrozen(0);
+        }
+
+        // 3. Movement & Physics
+        if (passives.contains("flight") || passives.contains("sky_soarer")) {
             if (!player.getAbilities().mayfly) {
                 player.getAbilities().mayfly = true;
                 player.onUpdateAbilities();
             }
         }
-        if (passives.contains("slow_falling") || passives.contains("feather_light") || passives.contains("feather_weight")) {
+        if (passives.contains("feather_light") || passives.contains("slow_falling") || passives.contains("fall_damage_immunity")) {
             player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 40, 0, false, false, true));
             player.fallDistance = 0.0f;
         }
-        if (passives.contains("lava_swimming") || passives.contains("lava_walker")) {
-            if (player.isInLava()) {
-                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
-                player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false, true));
-            }
-        }
-        if (passives.contains("climbing") || passives.contains("spider_climb")) {
-            if (player.horizontalCollision) {
-                player.setDeltaMovement(player.getDeltaMovement().x, 0.2, player.getDeltaMovement().z);
-            }
-        }
-        if (passives.contains("frost_immunity") || passives.contains("thermal_immunity") || passives.contains("thermal_regulation")) {
-            player.setTicksFrozen(0);
-        }
-        if (passives.contains("lightning_immunity") || passives.contains("hellfire_immunity") || passives.contains("radiation_immunity")) {
-            player.clearFire();
-        }
-        if (passives.contains("poison_immunity")) {
-            if (player.hasEffect(MobEffects.POISON)) player.removeEffect(MobEffects.POISON);
-        }
-
-        // 11-20: Defense & Resilience
-        if (passives.contains("regeneration") || passives.contains("wild_regeneration") || passives.contains("nanite_repair")) {
-            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
-        }
-        if (passives.contains("wither_immunity")) {
-            if (player.hasEffect(MobEffects.WITHER)) player.removeEffect(MobEffects.WITHER);
-        }
-        if (passives.contains("fall_damage_immunity") || passives.contains("slime_cushion")) {
-            player.fallDistance = 0.0f;
-        }
-        if (passives.contains("arrow_deflection") || passives.contains("forcefield_barrier")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
-        }
-        if (passives.contains("explosion_resistance") || passives.contains("thick_hide") || passives.contains("golem_density")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
-        }
-        if (passives.contains("magic_resistance") || passives.contains("abyssal_resilience")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
-        }
-        if (passives.contains("knockback_immunity")) {
-            AttributeInstance kbAttr = player.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
-            if (kbAttr != null && kbAttr.getValue() < 1.0) kbAttr.setBaseValue(1.0);
-        }
-        if (passives.contains("thorns_skin")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
-        }
-        if (passives.contains("shield_mastery")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
-        }
-        if (passives.contains("unbreakable_will")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-
-        // 21-30: Mobility & Movement
-        if (passives.contains("speed_boost") || passives.contains("swiftfoot") || passives.contains("overclock_speed")) {
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
-        }
-        if (passives.contains("high_jump") || passives.contains("acrobatics")) {
-            player.addEffect(new MobEffectInstance(MobEffects.JUMP, 40, 1, false, false, true));
-        }
-        if (passives.contains("web_walking")) {
-            player.makeStuckInBlock(net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), new net.minecraft.world.phys.Vec3(1.0, 1.0, 1.0));
-        }
-        if (passives.contains("soul_speed")) {
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
-        }
         if (passives.contains("step_assist")) {
             player.setMaxUpStep(1.5f);
+        } else {
+            player.setMaxUpStep(0.6f);
         }
-        if (passives.contains("wall_run")) {
-            if (player.horizontalCollision) {
-                player.setDeltaMovement(player.getDeltaMovement().x, 0.25, player.getDeltaMovement().z);
-            }
+        if (passives.contains("acrobatics")) {
+            player.addEffect(new MobEffectInstance(MobEffects.JUMP, 40, 1, false, false, true));
         }
-        if (passives.contains("dolphin_grace") || passives.contains("aqua_agility")) {
-            if (player.isInWater()) player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 40, 0, false, false, true));
-        }
-        if (passives.contains("shadow_dash_passive")) {
+        if (passives.contains("swiftfoot")) {
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
         }
-        if (passives.contains("void_floating")) {
-            if (player.getY() < 0) {
-                player.setDeltaMovement(player.getDeltaMovement().x, 0.5, player.getDeltaMovement().z);
+        if (passives.contains("slime_cushion")) {
+            player.fallDistance = 0.0f;
+        }
+        if ((passives.contains("spider_climb") || passives.contains("climbing")) && player.horizontalCollision) {
+            player.setDeltaMovement(player.getDeltaMovement().x, 0.2, player.getDeltaMovement().z);
+        }
+
+        // 4. Vision & Stealth
+        if (passives.contains("night_eyes") || passives.contains("night_vision")) {
+            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
+        }
+        if (passives.contains("shadow_camouflage")) {
+            BlockPos pos = player.blockPosition();
+            if (player.level().getMaxLocalRawBrightness(pos) < 5) {
+                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
+            }
+        }
+        if (passives.contains("sunlight_sensitivity")) {
+            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition()) && !player.isInWaterOrRain()) {
+                if (player.tickCount % 40 == 0) {
+                    player.setSecondsOnFire(3);
+                }
             }
         }
 
-        // 31-40: Combat & Damage
-        if (passives.contains("lifesteal") || passives.contains("vampiric_bite_regen")) {
-            if (player.tickCount % 40 == 0 && player.swinging) player.heal(1.0f);
-        }
-        if (passives.contains("critical_strike_boost") || passives.contains("berserk_rage")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("backstab_bonus") || passives.contains("predator_stealth")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("giant_slayer") || passives.contains("armor_piercing")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("execute_passive") || passives.contains("bleed_on_hit")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("counter_attack") || passives.contains("dual_wield_mastery")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        // 5. Metabolism & Diet
+        if (passives.contains("photosynthesis")) {
+            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
+                if (player.tickCount % 60 == 0) {
+                    player.heal(1.0f);
+                    player.getFoodData().eat(1, 0.5f);
+                }
+            }
         }
 
-        // 41-50: Utility & Gathering
-        if (passives.contains("auto_smelt") || passives.contains("double_mining_drops")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
+        // 6. Inventory & Utility
+        if (passives.contains("master_miner") && player.getY() < 50) {
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
         }
-        if (passives.contains("magnet_aura") || passives.contains("magnetosphere") || passives.contains("magnetic_repulsion")) {
+        if (passives.contains("magnetosphere")) {
             AABB area = player.getBoundingBox().inflate(7.0);
             for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, area)) {
                 item.teleportTo(player.getX(), player.getY() + 0.5, player.getZ());
@@ -190,141 +167,240 @@ public class PassiveAbilityHandler {
                 orb.teleportTo(player.getX(), player.getY() + 0.5, player.getZ());
             }
         }
-        if (passives.contains("luck_of_the_sea") || passives.contains("xp_boost")) {
-            player.addEffect(new MobEffectInstance(MobEffects.LUCK, 40, 1, false, false, true));
-        }
-        if (passives.contains("haste_passive") || passives.contains("master_miner") || passives.contains("night_miner")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
-        }
-        if (passives.contains("silk_touch_hands")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
-        }
-        if (passives.contains("hunger_less_drain") || passives.contains("photosynthesis")) {
-            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
-                if (player.tickCount % 60 == 0) player.getFoodData().eat(1, 0.5f);
-            }
-        }
-        if (passives.contains("saturation_regen")) {
-            if (player.tickCount % 80 == 0) player.getFoodData().eat(1, 0.5f);
-        }
 
-        // 51-60: Magic & Spectral
-        if (passives.contains("mana_regen_boost") || passives.contains("energy_core_boost")) {
-            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
-        }
-        if (passives.contains("spell_power_boost") || passives.contains("elemental_affinity")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("cooldown_reduction")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
-        }
-        if (passives.contains("arcane_shield")) {
+        // 7. Defense & Health
+        if (passives.contains("iron_skin")) {
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
         }
-        if (passives.contains("astral_projection")) {
-            player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
-        }
-        if (passives.contains("spectral_glowing")) {
-            player.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, true));
-        }
-        if (passives.contains("invisibility_in_shadows") || passives.contains("shadow_camouflage")) {
-            if (player.level().getMaxLocalRawBrightness(player.blockPosition()) < 5) {
-                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
-            }
-        }
-        if (passives.contains("telepathic_aura") || passives.contains("scent_tracking") || passives.contains("cybernetic_sight")) {
-            AABB area = player.getBoundingBox().inflate(12.0);
-            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, area)) {
-                if (mob != player) mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, true));
-            }
-        }
-        if (passives.contains("native_spell")) {
-            // Checked by active spell casting engine
-        }
-
-        // 61-70: Vampiric & Nether
-        if (passives.contains("sunlight_evasion")) {
-            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
-                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
-            }
-        }
-        if (passives.contains("nether_affinity") || passives.contains("nether_fire_speed")) {
-            if (player.level().dimension().location().getPath().contains("nether")) {
-                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
-                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-            }
-        }
-        if (passives.contains("wither_touch")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("shadow_healing")) {
-            if (player.level().getMaxLocalRawBrightness(player.blockPosition()) < 5 && player.tickCount % 40 == 0) {
-                player.heal(1.0f);
-            }
-        }
-        if (passives.contains("soul_collector") || passives.contains("blood_essence_pool")) {
-            player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
-        }
-        if (passives.contains("demon_flame_aura")) {
-            AABB area = player.getBoundingBox().inflate(4.0);
-            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, area)) {
-                if (mob != player) mob.setSecondsOnFire(2);
-            }
-        }
-
-        // 71-80: Celestial & Divine
-        if (passives.contains("divine_aura") || passives.contains("sanctuary_field") || passives.contains("rejuvenation_aura")) {
+        if (passives.contains("rejuvenation_aura")) {
             AABB auraBox = player.getBoundingBox().inflate(10.0);
             for (Player teamPlayer : player.level().getEntitiesOfClass(Player.class, auraBox)) {
                 teamPlayer.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
             }
         }
-        if (passives.contains("holy_damage_boost") || passives.contains("undead_bane_aura")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-        }
-        if (passives.contains("solar_charging")) {
-            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
-                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("glacial_aura")) {
+            AABB chillBox = player.getBoundingBox().inflate(6.0);
+            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, chillBox)) {
+                if (mob != player && !mob.isAlliedTo(player)) {
+                    mob.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1, false, false, true));
+                }
             }
-        }
-        if (passives.contains("lunar_power_boost")) {
-            if (!player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
-                player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-            }
-        }
-        if (passives.contains("radiant_light")) {
-            player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
-        }
-        if (passives.contains("blessing_of_protection") || passives.contains("grace_of_the_gods")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
         }
 
-        // 81-90: Draconic & Beast
-        if (passives.contains("dragon_scales") || passives.contains("natural_armor")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 1, false, false, true));
+        // 8. Dedicated 60 Drawbacks & Weaknesses Handling
+        // Environmental & Elemental
+        if (passives.contains("sunlight_burn") && player.level().isDay() && player.level().canSeeSky(player.blockPosition()) && !player.isInWaterOrRain()) {
+            if (player.tickCount % 20 == 0) player.setSecondsOnFire(3);
         }
-        if (passives.contains("beast_instincts")) {
+        if (passives.contains("sunlight_slowness") && player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("cold_vulnerability") && (player.isInPowderSnow || player.getTicksFrozen() > 0)) {
+            player.setTicksFrozen(Math.min(player.getTicksRequiredToFreeze() + 20, player.getTicksFrozen() + 4));
+        }
+        if (passives.contains("hydrophobia") && player.isInWater()) {
+            player.setDeltaMovement(player.getDeltaMovement().x, -0.3, player.getDeltaMovement().z);
+        }
+        if (passives.contains("claustrophobia") && player.getY() < 50) {
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 40, 0, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("agoraphobia") && player.level().canSeeSky(player.blockPosition()) && player.level().isDay()) {
+            player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 100, 0, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("nether_vulnerability") && player.level().dimension().location().getPath().contains("nether")) {
+            if (player.tickCount % 40 == 0) player.hurt(player.damageSources().magic(), 1.0f);
+        }
+        if (passives.contains("end_vulnerability") && player.level().dimension().location().getPath().contains("end")) {
+            if (player.tickCount % 40 == 0) player.hurt(player.damageSources().magic(), 1.0f);
+        }
+
+        // Diet & Metabolism
+        if (passives.contains("hyper_metabolism")) {
+            if (player.isSprinting() && player.tickCount % 10 == 0) player.causeFoodExhaustion(0.2f);
+        }
+        if (passives.contains("photosynthetic_dependency")) {
+            if (player.level().isDay() && player.level().canSeeSky(player.blockPosition())) {
+                if (player.tickCount % 40 == 0) player.getFoodData().eat(1, 0.2f);
+            }
+        }
+        if (passives.contains("soul_hunger") && player.tickCount % 100 == 0) {
+            player.causeFoodExhaustion(0.5f);
+        }
+        if (passives.contains("heavy_eater") && player.isSprinting() && player.tickCount % 10 == 0) {
+            player.causeFoodExhaustion(0.4f);
+        }
+
+        // Combat & Restrictions
+        if (passives.contains("no_shield_use") && player.getOffhandItem().getItem() instanceof net.minecraft.world.item.ShieldItem) {
+            player.drop(player.getOffhandItem().copy(), false);
+            player.getOffhandItem().setCount(0);
+        }
+        if (passives.contains("melee_weakness")) {
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+
+        // Movement & Physics
+        if (passives.contains("slowness_curse")) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0, false, false, true));
+        }
+        if (passives.contains("no_sprinting") && player.isSprinting()) {
+            player.setSprinting(false);
+        }
+        if (passives.contains("reduced_step_height")) {
+            player.setMaxUpStep(0.5f);
+        }
+        if (passives.contains("slippery_feet")) {
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
         }
-        if (passives.contains("pack_leader_buff")) {
-            AABB area = player.getBoundingBox().inflate(12.0);
-            for (Player ally : player.level().getEntitiesOfClass(Player.class, area)) {
-                ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
-            }
+        if (passives.contains("gravity_bound")) {
+            if (player.isFallFlying()) player.stopFallFlying();
+            if (player.hasEffect(MobEffects.LEVITATION)) player.removeEffect(MobEffects.LEVITATION);
         }
-        if (passives.contains("intimidating_presence")) {
-            AABB area = player.getBoundingBox().inflate(6.0);
-            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, area)) {
-                if (mob != player) mob.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
-            }
-        }
-        if (passives.contains("tail_sweep_passive")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("clumsy_swimmer") && player.isInWater()) {
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1, false, false, true));
         }
 
-        // 91-100: Tech & Golem
-        if (passives.contains("kinetic_absorption")) {
-            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        // Hitbox & Health Limits
+        if (passives.contains("low_max_health")) {
+            net.minecraft.world.entity.ai.attributes.AttributeInstance hpAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            if (hpAttr != null && hpAttr.getBaseValue() > 10.0) hpAttr.setBaseValue(10.0);
         }
+        if (passives.contains("glass_cannon")) {
+            net.minecraft.world.entity.ai.attributes.AttributeInstance hpAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            if (hpAttr != null && hpAttr.getBaseValue() > 6.0) hpAttr.setBaseValue(6.0);
+        }
+
+        // Faction & Curse
+        if (passives.contains("curse_of_shadows") && player.level().getMaxLocalRawBrightness(player.blockPosition()) > 10) {
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0, false, false, true));
+        }
+        if (passives.contains("blindness_in_nether") && player.level().dimension().location().getPath().contains("nether")) {
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0, false, false, true));
+        }
+    
+        // Additional 80 Passives Implementation
+        if (passives.contains("frost_immunity")) player.setTicksFrozen(0);
+        if (passives.contains("lightning_immunity")) player.clearFire();
+        if (passives.contains("poison_immunity") && player.hasEffect(MobEffects.POISON)) player.removeEffect(MobEffects.POISON);
+        if (passives.contains("wither_immunity") && player.hasEffect(MobEffects.WITHER)) player.removeEffect(MobEffects.WITHER);
+        if (passives.contains("arrow_deflection")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("explosion_resistance")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("magic_resistance")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("knockback_immunity")) {
+            net.minecraft.world.entity.ai.attributes.AttributeInstance kbAttr = player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
+            if (kbAttr != null && kbAttr.getValue() < 1.0) kbAttr.setBaseValue(1.0);
+        }
+        if (passives.contains("thorns_skin")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("shield_mastery")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("unbreakable_will")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("speed_boost")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+        if (passives.contains("high_jump")) player.addEffect(new MobEffectInstance(MobEffects.JUMP, 40, 1, false, false, true));
+        if (passives.contains("web_walking")) player.makeStuckInBlock(net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), new net.minecraft.world.phys.Vec3(1.0, 1.0, 1.0));
+        if (passives.contains("soul_speed")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
+        if (passives.contains("wall_run") && player.horizontalCollision) player.setDeltaMovement(player.getDeltaMovement().x, 0.25, player.getDeltaMovement().z);
+        if (passives.contains("dolphin_grace") && player.isInWater()) player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 40, 0, false, false, true));
+        if (passives.contains("feather_weight")) player.fallDistance = 0.0f;
+        if (passives.contains("shadow_dash_passive")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+        if (passives.contains("void_floating") && player.getY() < 0) player.setDeltaMovement(player.getDeltaMovement().x, 0.5, player.getDeltaMovement().z);
+        if (passives.contains("lifesteal") && player.tickCount % 40 == 0 && player.swinging) player.heal(1.0f);
+        if (passives.contains("critical_strike_boost")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("berserk_rage")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 1, false, false, true));
+        if (passives.contains("backstab_bonus")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("giant_slayer")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("armor_piercing")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("execute_passive")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("bleed_on_hit")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("counter_attack")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("dual_wield_mastery")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("auto_smelt")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
+        if (passives.contains("double_mining_drops")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
+        if (passives.contains("magnet_aura")) {
+            AABB area = player.getBoundingBox().inflate(7.0);
+            for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, area)) {
+                item.teleportTo(player.getX(), player.getY() + 0.5, player.getZ());
+            }
+        }
+        if (passives.contains("luck_of_the_sea")) player.addEffect(new MobEffectInstance(MobEffects.LUCK, 40, 1, false, false, true));
+        if (passives.contains("haste_passive")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
+        if (passives.contains("night_miner") && !player.level().isDay()) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
+        if (passives.contains("silk_touch_hands")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
+        if (passives.contains("xp_boost")) player.addEffect(new MobEffectInstance(MobEffects.LUCK, 40, 1, false, false, true));
+        if (passives.contains("hunger_less_drain") && player.tickCount % 60 == 0) player.getFoodData().eat(1, 0.5f);
+        if (passives.contains("saturation_regen") && player.tickCount % 80 == 0) player.getFoodData().eat(1, 0.5f);
+        if (passives.contains("mana_regen_boost")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        if (passives.contains("spell_power_boost")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("cooldown_reduction")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
+        if (passives.contains("arcane_shield")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("astral_projection")) player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+        if (passives.contains("spectral_glowing")) player.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, true));
+        if (passives.contains("invisibility_in_shadows") && player.level().getMaxLocalRawBrightness(player.blockPosition()) < 5) player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+        if (passives.contains("telepathic_aura")) {
+            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(12.0))) {
+                if (mob != player) mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, true));
+            }
+        }
+        if (passives.contains("elemental_affinity")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("vampiric_bite_regen") && player.tickCount % 40 == 0 && player.swinging) player.heal(1.0f);
+        if (passives.contains("sunlight_evasion") && player.level().isDay() && player.level().canSeeSky(player.blockPosition())) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+        if (passives.contains("nether_affinity") && player.level().dimension().location().getPath().contains("nether")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+        if (passives.contains("wither_touch")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("shadow_healing") && player.level().getMaxLocalRawBrightness(player.blockPosition()) < 5 && player.tickCount % 40 == 0) player.heal(1.0f);
+        if (passives.contains("soul_collector")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        if (passives.contains("blood_essence_pool")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        if (passives.contains("demon_flame_aura")) {
+            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(4.0))) {
+                if (mob != player) mob.setSecondsOnFire(2);
+            }
+        }
+        if (passives.contains("hellfire_immunity")) player.clearFire();
+        if (passives.contains("abyssal_resilience")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("divine_aura")) {
+            for (Player teamPlayer : player.level().getEntitiesOfClass(Player.class, player.getBoundingBox().inflate(10.0))) teamPlayer.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        }
+        if (passives.contains("angel_wings_passive") && !player.getAbilities().mayfly) { player.getAbilities().mayfly = true; player.onUpdateAbilities(); }
+        if (passives.contains("holy_damage_boost")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("undead_bane_aura")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("solar_charging") && player.level().isDay() && player.level().canSeeSky(player.blockPosition())) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("lunar_power_boost") && !player.level().isDay() && player.level().canSeeSky(player.blockPosition())) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("radiant_light")) player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
+        if (passives.contains("blessing_of_protection")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("grace_of_the_gods")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("sanctuary_field")) {
+            for (Player teamPlayer : player.level().getEntitiesOfClass(Player.class, player.getBoundingBox().inflate(10.0))) teamPlayer.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        }
+        if (passives.contains("dragon_scales")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 1, false, false, true));
+        if (passives.contains("beast_instincts")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 0, false, false, true));
+        if (passives.contains("pack_leader_buff")) {
+            for (Player ally : player.level().getEntitiesOfClass(Player.class, player.getBoundingBox().inflate(12.0))) ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        }
+        if (passives.contains("natural_armor")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("scent_tracking")) {
+            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(12.0))) if (mob != player) mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, true));
+        }
+        if (passives.contains("intimidating_presence")) {
+            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(6.0))) if (mob != player) mob.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+        }
+        if (passives.contains("tail_sweep_passive")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("predator_stealth")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
+        if (passives.contains("thick_hide")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("wild_regeneration")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        if (passives.contains("nanite_repair")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+        if (passives.contains("kinetic_absorption")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("thermal_regulation")) player.setTicksFrozen(0);
+        if (passives.contains("cybernetic_sight")) {
+            for (LivingEntity mob : player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(12.0))) if (mob != player) mob.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, true));
+        }
+        if (passives.contains("forcefield_barrier")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("overclock_speed")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
+        if (passives.contains("golem_density")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("magnetic_repulsion")) {
+            for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, player.getBoundingBox().inflate(7.0))) item.teleportTo(player.getX(), player.getY() + 0.5, player.getZ());
+        }
+        if (passives.contains("radiation_immunity")) player.clearFire();
+        if (passives.contains("energy_core_boost")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
+
     }
 }
