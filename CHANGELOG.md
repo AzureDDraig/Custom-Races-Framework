@@ -2,6 +2,20 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b070a] - 2026-07-23
+
+### 🔮 Iron's Spells Automatic Namespace Resolution & Native Keybind Aliases
+- **Automatic Spell Namespace Formatting (`IronSpellsHandler.java`)**:
+  - Automatically prepends `"irons_spellbooks:"` to un-prefixed spell IDs (e.g. `"fireball"` -> `"irons_spellbooks:fireball"`), ensuring native spell lookups resolve smoothly.
+- **Holder & RegistryObject Unwrapping (`IronSpellsHandler.java`)**:
+  - Dynamically unwraps `Holder<AbstractSpell>` objects returned from `SpellRegistry` in modern 1.20.1 API versions.
+- **Native Spell Active Skill Keybind Aliases (`ActiveAbilityHandler.java`)**:
+  - Added keybind alias routing for `native_spell1` through `native_spell5` alongside standard spaced and underscored formats.
+- **Actionbar Fallback Alerts (`IronSpellsHandler.java`)**:
+  - Restricted missing spell alerts strictly to actionbar overlay messages (`displayClientMessage`).
+
+---
+
 ## [1.0.0-b069a] - 2026-07-23
 
 ### 💫 Complete Workspace Model Pipeline & Form Persistence Verification

@@ -83,6 +83,10 @@ public class IronSpellsHandler {
         }
 
         if (spellId == null || spellId.trim().isEmpty() || spellId.equalsIgnoreCase("none")) return;
+        spellId = spellId.trim();
+        if (!spellId.contains(":")) {
+            spellId = "irons_spellbooks:" + spellId;
+        }
 
         try {
             Class<?> spellRegistryClass = getSpellRegistryClass();
@@ -98,6 +102,13 @@ public class IronSpellsHandler {
                         spellObj = getSpellRes.invoke(null, new net.minecraft.resources.ResourceLocation(spellId));
                     } catch (Exception ignored) {}
                 }
+            }
+
+            if (spellObj != null && spellObj.getClass().getName().contains("Holder")) {
+                try {
+                    Method valMethod = spellObj.getClass().getMethod("value");
+                    spellObj = valMethod.invoke(spellObj);
+                } catch (Exception ignored) {}
             }
 
             if (spellObj != null) {

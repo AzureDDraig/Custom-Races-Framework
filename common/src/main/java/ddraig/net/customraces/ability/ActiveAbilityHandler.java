@@ -69,18 +69,23 @@ public class ActiveAbilityHandler {
         switch (abilityId.toLowerCase().replace(" ", "_")) {
             case "native_spell":
             case "native_spell_1":
+            case "native_spell1":
                 ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 1);
                 break;
             case "native_spell_2":
+            case "native_spell2":
                 ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 2);
                 break;
             case "native_spell_3":
+            case "native_spell3":
                 ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 3);
                 break;
             case "native_spell_4":
+            case "native_spell4":
                 ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 4);
                 break;
             case "native_spell_5":
+            case "native_spell5":
                 ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere, 5);
                 break;
 
