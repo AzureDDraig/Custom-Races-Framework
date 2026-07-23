@@ -1347,7 +1347,11 @@ public class RaceCreatorScreen extends Screen {
         copy.minionScale = source.minionScale;
         copy.minionIsRanged = source.minionIsRanged;
         copy.minionProjectile = source.minionProjectile;
+        copy.isFlyingRace = source.isFlyingRace;
+        copy.flyAnim = source.flyAnim;
+        copy.swimAnim = source.swimAnim;
         copy.enableWereRace = source.enableWereRace;
+        copy.isWereFlyingRace = source.isWereFlyingRace;
         copy.wereTriggerCondition = source.wereTriggerCondition;
         copy.wereModelPath = source.wereModelPath;
         copy.wereTexturePath = source.wereTexturePath;
@@ -1355,6 +1359,8 @@ public class RaceCreatorScreen extends Screen {
         copy.wereIdleAnim = source.wereIdleAnim;
         copy.wereWalkAnim = source.wereWalkAnim;
         copy.wereAttackAnim = source.wereAttackAnim;
+        copy.wereFlyAnim = source.wereFlyAnim;
+        copy.wereSwimAnim = source.wereSwimAnim;
         copy.wereHeightScale = source.wereHeightScale;
         copy.wereWidthScale = source.wereWidthScale;
         copy.wereHealthBonus = source.wereHealthBonus;

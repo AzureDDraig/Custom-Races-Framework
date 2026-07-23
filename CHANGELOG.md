@@ -4,6 +4,17 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b056a] - 2026-07-23
+
+### 🛡️ Flight Fall Damage Safety & Race Duplication Copy Audit
+- **Flight Fall Distance Safety (`PassiveAbilityHandler.java`)**:
+  - Automatically resets `player.fallDistance = 0.0f` while a player is actively flying.
+  - Prevents players from taking fall damage when landing after flying or mid-air transformations.
+- **Race Copy & Duplication Field Preservation (`RaceCreatorScreen.java`)**:
+  - Updated `copyRace(...)` to copy `isFlyingRace`, `flyAnim`, `swimAnim`, `isWereFlyingRace`, `wereFlyAnim`, and `wereSwimAnim` when duplicating a race in the creator screen.
+
+---
+
 ## [1.0.0-b055a] - 2026-07-23
 
 ### 🕊️ Flight/Swim Animations & Flying-Only Race Capabilities
