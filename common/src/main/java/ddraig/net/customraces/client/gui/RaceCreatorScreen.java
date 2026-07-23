@@ -83,6 +83,13 @@ public class RaceCreatorScreen extends Screen {
     private String searchActivesQuery = "";
     private String searchDrawbacksQuery = "";
 
+    // Native Spell Controls
+    private EditBox nativeSpellBox;
+
+    // Passive & Drawback Widget Cache for Lag-Free Scroll
+    private final List<Checkbox> passiveWidgets = new java.util.ArrayList<>();
+    private final List<Checkbox> drawbackWidgets = new java.util.ArrayList<>();
+
     // Native Spells Sub-Slot Selector State
     private int selectedNativeSpellSlot = 1;
 
@@ -320,7 +327,18 @@ public class RaceCreatorScreen extends Screen {
 
     public RaceCreatorScreen(RaceData race) {
         super(Component.literal("Race Creator Admin"));
-        this.workingRace = race != null ? race : new RaceData("new_race_" + System.currentTimeMillis() % 1000, "New Race");
+        if (race != null) {
+            this.workingRace = race;
+        } else if (!RaceRegistry.loadedRaces.isEmpty()) {
+            RaceData selected = RaceRegistry.loadedRaces.values().iterator().next();
+            if (this.minecraft != null && this.minecraft.player != null) {
+                RaceData playerRace = RaceRegistry.getPlayerRace(this.minecraft.player.getUUID());
+                if (playerRace != null) selected = playerRace;
+            }
+            this.workingRace = selected;
+        } else {
+            this.workingRace = new RaceData("race_template", "Template Race");
+        }
     }
 
     private void autoSaveWorkingRace() {
@@ -339,7 +357,8 @@ public class RaceCreatorScreen extends Screen {
         wereConditionBox = null; wereModelBox = null; wereTextureBox = null; wereAnimFileBox = null;
         wereIdleAnimBox = null; wereWalkAnimBox = null; wereAttackAnimBox = null;
         wereTransformSoundBox = null; wereHowlSoundBox = null; wereAmbientSoundBox = null;
-        wereHurtSoundBox = null; wereDeathSoundBox = null;
+        wereHurtSoundBox = null; wereDeathSoundBox = null; nativeSpellBox = null;
+        passiveWidgets.clear(); drawbackWidgets.clear();
     }
 
     @Override
@@ -679,6 +698,7 @@ public class RaceCreatorScreen extends Screen {
             }
 
         } else if (activeTab == 3) { // Passives (1 Column Scrollable List)
+            passiveWidgets.clear();
             EditBox pSearch = new EditBox(this.font, contentLeft + 200, contentTop, 160, 16, Component.literal("Search"));
             pSearch.setMaxLength(2048);
             pSearch.setValue(searchPassivesQuery);
@@ -718,9 +738,6 @@ public class RaceCreatorScreen extends Screen {
                 String passive = matchingPassives.get(i);
                 int cbY = visibleTop + (i * rowHeight) - (int) passivesScrollAmount;
 
-                // Render only checkboxes that fit inside the visible scroll viewport
-                if (cbY < visibleTop - rowHeight || cbY > visibleBottom) continue;
-
                 boolean active = targetList.contains(passive);
                 String raw = passive.replace("_", " ").toUpperCase();
                 String desc = getPassiveDescription(passive);
@@ -738,7 +755,9 @@ public class RaceCreatorScreen extends Screen {
                     }
                 };
                 pBox.setTooltip(Tooltip.create(Component.literal("✨ " + raw + "\n" + desc)));
+                pBox.visible = (cbY >= visibleTop - rowHeight && cbY <= visibleBottom);
                 this.addRenderableWidget(pBox);
+                this.passiveWidgets.add(pBox);
             }
 
         } else if (activeTab == 4) { // Actives
@@ -982,6 +1001,7 @@ public class RaceCreatorScreen extends Screen {
             Button pDt = Button.builder(Component.literal("▶ Play"), b -> playPreviewSound(this.wereDeathSoundBox.getValue())).bounds(contentLeft + 325, contentTop + 100, 50, 18).build();
             this.addRenderableWidget(pDt);
         } else if (activeTab == 10) { // Drawbacks (Single Column Scrollable List)
+            drawbackWidgets.clear();
             EditBox dSearch = new EditBox(this.font, contentLeft + 200, contentTop, 160, 16, Component.literal("Search Drawbacks"));
             dSearch.setMaxLength(2048);
             dSearch.setValue(searchDrawbacksQuery);
@@ -1026,9 +1046,6 @@ public class RaceCreatorScreen extends Screen {
                 String drawbackId = matchingDrawbacks.get(i);
                 int cbY = visibleTop + (i * rowHeight) - (int) drawbacksScrollAmount;
 
-                // Render only checkboxes that fit inside the visible scroll viewport
-                if (cbY < visibleTop - rowHeight || cbY > visibleBottom) continue;
-
                 boolean selected = activeList.contains(drawbackId);
                 final List<String> targetList = activeList;
                 String rawName = drawbackId.replace("_", " ").toUpperCase();
@@ -1047,7 +1064,9 @@ public class RaceCreatorScreen extends Screen {
                     }
                 };
                 cb.setTooltip(Tooltip.create(Component.literal("⚠️ " + rawName + "\n" + desc)));
+                cb.visible = (cbY >= visibleTop - rowHeight && cbY <= visibleBottom);
                 this.addRenderableWidget(cb);
+                this.drawbackWidgets.add(cb);
             }
         } else if (activeTab == 11) { // Native Spells (Slots 1 to 5)
             boolean isWere = editingWereForm && workingRace.enableWereRace;
@@ -1097,26 +1116,26 @@ public class RaceCreatorScreen extends Screen {
             wildMagicCb.setTooltip(Tooltip.create(Component.literal("Wild Magic for Slot " + activeSlot + ": Spawns a random spell from any school as if the player cast it.")));
             this.addRenderableWidget(wildMagicCb);
 
-            EditBox spellBox = new EditBox(this.font, contentLeft + 135, contentTop + 90, 190, 18, Component.literal("Native Spell ID Slot " + activeSlot));
-            spellBox.setMaxLength(2048);
-            spellBox.setValue(currentSpell);
-            spellBox.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.native_spells")));
-            spellBox.setResponder(val -> {
+            this.nativeSpellBox = new EditBox(this.font, contentLeft + 135, contentTop + 90, 190, 18, Component.literal("Native Spell ID Slot " + activeSlot));
+            this.nativeSpellBox.setMaxLength(2048);
+            this.nativeSpellBox.setValue(currentSpell);
+            this.nativeSpellBox.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.native_spells")));
+            this.nativeSpellBox.setResponder(val -> {
                 setRaceNativeSpell(activeSlot, isWere, val);
                 autoSaveWorkingRace();
             });
-            this.addRenderableWidget(spellBox);
+            this.addRenderableWidget(this.nativeSpellBox);
 
             // Cycle Spell Button
             Button spellCycleBtn = Button.builder(Component.literal("▶ Cycle Spell"), b -> {
                 List<String> spells = ddraig.net.customraces.integration.IronSpellsHandler.ALL_SPELLS;
                 int idx = 0;
-                String cur = spellBox.getValue();
+                String cur = this.nativeSpellBox != null ? this.nativeSpellBox.getValue() : "";
                 for (int i = 0; i < spells.size(); i++) {
                     if (spells.get(i).equalsIgnoreCase(cur)) { idx = (i + 1) % spells.size(); break; }
                 }
                 String nextSpell = spells.get(idx);
-                spellBox.setValue(nextSpell);
+                if (this.nativeSpellBox != null) this.nativeSpellBox.setValue(nextSpell);
                 setRaceNativeSpell(activeSlot, isWere, nextSpell);
                 autoSaveWorkingRace();
             }).bounds(contentLeft + 330, contentTop + 90, 95, 18).build();
@@ -1632,6 +1651,8 @@ public class RaceCreatorScreen extends Screen {
                 } else if (box == wereIdleAnimBox || box == wereWalkAnimBox || box == wereAttackAnimBox) {
                     String animPath = (wereAnimFileBox != null && !wereAnimFileBox.getValue().trim().isEmpty()) ? wereAnimFileBox.getValue().trim() : workingRace.wereAnimationPath;
                     source = RaceRegistry.parseAnimationKeysFromFile(animPath);
+                } else if (box == nativeSpellBox) {
+                    source = ddraig.net.customraces.integration.IronSpellsHandler.ALL_SPELLS;
                 } else if (box == heightScaleBox || box == widthScaleBox || box == healthBox || box == speedBox || box == difficultyBox || box == minionCountBox || box == minionScaleBox) {
                     source = RaceRegistry.CACHED_NUMBERS;
                 } else {
@@ -1645,7 +1666,9 @@ public class RaceCreatorScreen extends Screen {
                     }
                     final String query = val;
                     activeSuggestions = source.stream()
-                            .filter(s -> query.isEmpty() || s.toLowerCase().contains(query))
+                            .filter(s -> query.isEmpty()
+                                    || s.toLowerCase().contains(query)
+                                    || s.replaceAll(".*/", "").replaceAll(".*:", "").toLowerCase().contains(query))
                             .limit(100)
                             .collect(Collectors.toList());
                     showSuggestions = !activeSuggestions.isEmpty();
@@ -1707,7 +1730,7 @@ public class RaceCreatorScreen extends Screen {
                 } else if (delta > 0) {
                     passivesScrollAmount = Math.max(0, passivesScrollAmount - 20);
                 }
-                this.init();
+                updatePassivesWidgetPositions();
                 return true;
             }
         }
@@ -1726,7 +1749,7 @@ public class RaceCreatorScreen extends Screen {
                 } else if (delta > 0) {
                     drawbacksScrollAmount = Math.max(0, drawbacksScrollAmount - 20);
                 }
-                this.init();
+                updateDrawbacksWidgetPositions();
                 return true;
             }
         }
@@ -1812,7 +1835,7 @@ public class RaceCreatorScreen extends Screen {
 
         float ratio = (float) (mouseY - visibleTop) / (float) visibleHeight;
         passivesScrollAmount = Math.max(0, Math.min(ratio * maxScroll, maxScroll));
-        this.init();
+        updatePassivesWidgetPositions();
     }
 
     private void updateDrawbacksScrollFromMouse(double mouseY) {
@@ -1824,7 +1847,33 @@ public class RaceCreatorScreen extends Screen {
 
         float ratio = (float) (mouseY - visibleTop) / (float) visibleHeight;
         drawbacksScrollAmount = Math.max(0, Math.min(ratio * maxScroll, maxScroll));
-        this.init();
+        updateDrawbacksWidgetPositions();
+    }
+
+    private void updatePassivesWidgetPositions() {
+        int visibleTop = getContentTop() + 24;
+        int visibleBottom = this.height - 20;
+        int rowHeight = 20;
+
+        for (int i = 0; i < passiveWidgets.size(); i++) {
+            Checkbox cb = passiveWidgets.get(i);
+            int cbY = visibleTop + (i * rowHeight) - (int) passivesScrollAmount;
+            cb.setY(cbY);
+            cb.visible = (cbY >= visibleTop - rowHeight && cbY <= visibleBottom);
+        }
+    }
+
+    private void updateDrawbacksWidgetPositions() {
+        int visibleTop = getContentTop() + 24;
+        int visibleBottom = this.height - 20;
+        int rowHeight = 20;
+
+        for (int i = 0; i < drawbackWidgets.size(); i++) {
+            Checkbox cb = drawbackWidgets.get(i);
+            int cbY = visibleTop + (i * rowHeight) - (int) drawbacksScrollAmount;
+            cb.setY(cbY);
+            cb.visible = (cbY >= visibleTop - rowHeight && cbY <= visibleBottom);
+        }
     }
 
     @Override

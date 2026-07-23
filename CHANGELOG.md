@@ -4,6 +4,21 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b054a] - 2026-07-23
+
+### 🔮 Iron's Spells Autocomplete, Lag-Free Scroll, and Creator Persistence Fix
+- **Native Spells Autocomplete Dropdown (`RaceCreatorScreen.java`)**:
+  - Connected `nativeSpellBox` in **Tab 11: Native Spells** to `IronSpellsHandler.ALL_SPELLS`.
+  - Added fuzzy search matching so typing `"fireball"` or `"lightning"` immediately displays `irons_spellbooks:fireball`, `irons_spellbooks:lightning_lance`, etc., in the floating autocomplete suggestion overlay.
+- **60 FPS Lag-Free Scroll Performance (`RaceCreatorScreen.java`)**:
+  - Eliminated GUI teardown (`this.init()`) and heap allocations during mouse scrolling and scrollbar dragging in **Tab 3 (Passives)** and **Tab 10 (Drawbacks)**.
+  - Replaced screen re-initialization with lightweight widget position updating (`updatePassivesWidgetPositions()` and `updateDrawbacksWidgetPositions()`), making scrolling silky smooth with zero stutter or garbage collection lag.
+- **Prevent Orphan "New Race" Template Persistence (`RaceCreatorScreen.java` & `RaceSelectionScreen.java`)**:
+  - Fixed `RaceCreatorScreen` constructor to select the first existing race or the player's active race when opened without arguments, preventing auto-creation and saving of unwanted `"New Race"` templates on opening the creator GUI.
+  - Added filter in `RaceSelectionScreen.java` to exclude unconfigured draft template entries (`"New Race"`) from the player race selection list.
+
+---
+
 ## [1.0.0-b053a] - 2026-07-22
 
 ### 🔮 Iron's Spells Reflection Fix & Raycast Safe Teleportation
