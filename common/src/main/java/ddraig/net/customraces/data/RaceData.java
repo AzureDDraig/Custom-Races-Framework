@@ -82,8 +82,14 @@ public class RaceData {
     public Map<Integer, String> activeAbilities = new HashMap<>(); // Keybind Slot (1 to 5) -> Ability ID
     public List<String> drawbacks = new ArrayList<>();
 
+    // Flying & Swimming Custom Model Animations
+    public boolean isFlyingRace = false;
+    public String flyAnim = "animation.model.fly";
+    public String swimAnim = "animation.model.swim";
+
     // Were-Race Transformation System
     public boolean enableWereRace = false;
+    public boolean isWereFlyingRace = false;
     public String wereTriggerCondition = "FULL_MOON"; // FULL_MOON, NEW_MOON, NIGHT, MANUAL
     public String wereModelPath = "";      // e.g. customraces:models/were/werewolf.geo.json
     public String wereTexturePath = "";    // e.g. customraces:textures/were/werewolf.png
@@ -91,6 +97,8 @@ public class RaceData {
     public String wereIdleAnim = "animation.were.idle";
     public String wereWalkAnim = "animation.were.walk";
     public String wereAttackAnim = "animation.were.attack";
+    public String wereFlyAnim = "animation.were.fly";
+    public String wereSwimAnim = "animation.were.swim";
     public String wereTransformAnim = "animation.were.transform";
     public String wereHowlAnim = "animation.were.howl";
     public float wereHeightScale = 1.3f;

@@ -97,7 +97,10 @@ public class PassiveAbilityHandler {
         }
 
         // 3. Movement & Physics
-        if (passives.contains("flight") || passives.contains("sky_soarer")) {
+        boolean isTransformed = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+        boolean isFlyingRace = isTransformed && race != null && race.enableWereRace ? race.isWereFlyingRace : (race != null && race.isFlyingRace);
+
+        if (isFlyingRace || passives.contains("flight") || passives.contains("sky_soarer")) {
             if (!player.getAbilities().mayfly) {
                 player.getAbilities().mayfly = true;
                 player.onUpdateAbilities();

@@ -4,6 +4,22 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b055a] - 2026-07-23
+
+### 🕊️ Flight/Swim Animations & Flying-Only Race Capabilities
+- **Flying-Only Race System (`RaceData.java`, `PassiveAbilityHandler.java`)**:
+  - Added `isFlyingRace` (Base Form) and `isWereFlyingRace` (Were-Form) configuration flags.
+  - Automatically grants creative-style flight capabilities (`player.getAbilities().mayfly = true`) when enabled for a race or transformed Were-form.
+  - Added `[🕊️ FLYING RACE]` visual badge in `RaceSelectionScreen.java` details panel.
+- **Flight & Swim GeckoLib Model Animations (`RaceData.java`, `RaceCreatorScreen.java`)**:
+  - Added custom GeckoLib animation key controls:
+    - **Base Form**: `flyAnim` (`animation.model.fly`) and `swimAnim` (`animation.model.swim`).
+    - **Were-Form**: `wereFlyAnim` (`animation.were.fly`) and `wereSwimAnim` (`animation.were.swim`).
+  - Integrated into **Tab 0 (Basics)**, **Tab 1 (Model & Animations)**, and **Tab 8 (Were Model)** in `RaceCreatorScreen.java`.
+  - Added live autocomplete support so typing animation names suggests keys parsed directly from the GeckoLib animation JSON file.
+
+---
+
 ## [1.0.0-b054a] - 2026-07-23
 
 ### 🔮 Iron's Spells Autocomplete, Lag-Free Scroll, and Creator Persistence Fix

@@ -68,12 +68,21 @@ public class RaceCreatorScreen extends Screen {
     private EditBox wereIdleAnimBox;
     private EditBox wereWalkAnimBox;
     private EditBox wereAttackAnimBox;
+    private EditBox wereFlyAnimBox;
+    private EditBox wereSwimAnimBox;
+    private Checkbox isWereFlyingRaceBox;
+
     private EditBox wereTransformSoundBox;
     private EditBox wereHowlSoundBox;
     private EditBox wereAmbientSoundBox;
     private EditBox wereHurtSoundBox;
     private EditBox wereDeathSoundBox;
     private EditBox wereDamageBox;
+
+    // Flight & Swim Controls for Base Model
+    private Checkbox isFlyingRaceBox;
+    private EditBox flyAnimBox;
+    private EditBox swimAnimBox;
 
     // Form Mode Toggle (Base Form vs Were-Form)
     private boolean editingWereForm = false;
@@ -599,6 +608,10 @@ public class RaceCreatorScreen extends Screen {
             this.enableWereBox.setTooltip(Tooltip.create(Component.literal("Check to enable Were-form capabilities and unlock Were Model & Were Sounds tabs.")));
             this.addRenderableWidget(this.enableWereBox);
 
+            this.isFlyingRaceBox = new Checkbox(contentLeft + 255, contentTop + 162, 135, 18, Component.literal("Flying-Only Race"), workingRace.isFlyingRace);
+            this.isFlyingRaceBox.setTooltip(Tooltip.create(Component.literal("Check if this race is a flying-only race (always flight capable).")));
+            this.addRenderableWidget(this.isFlyingRaceBox);
+
         } else if (activeTab == 1) { // Model & Animations
             if (editingWereForm && workingRace.enableWereRace) {
                 this.heightScaleBox = new EditBox(this.font, contentLeft + 140, contentTop + 30, 60, 18, Component.literal("Were Height Scale"));
@@ -662,10 +675,24 @@ public class RaceCreatorScreen extends Screen {
                 this.speedBox.setTooltip(Tooltip.create(Component.literal("Base Movement Speed multiplier (Vanilla default is 0.1).")));
                 this.addRenderableWidget(this.speedBox);
 
+                this.flyAnimBox = new EditBox(this.font, contentLeft + 140, contentTop + 130, 150, 18, Component.literal("Fly Animation"));
+                this.flyAnimBox.setMaxLength(2048);
+                this.flyAnimBox.setValue(workingRace.flyAnim);
+                this.flyAnimBox.setTooltip(Tooltip.create(Component.literal("GeckoLib fly animation key (e.g. animation.model.fly).")));
+                this.addRenderableWidget(this.flyAnimBox);
+
+                this.swimAnimBox = new EditBox(this.font, contentLeft + 140, contentTop + 155, 150, 18, Component.literal("Swim Animation"));
+                this.swimAnimBox.setMaxLength(2048);
+                this.swimAnimBox.setValue(workingRace.swimAnim);
+                this.swimAnimBox.setTooltip(Tooltip.create(Component.literal("GeckoLib swim animation key (e.g. animation.model.swim).")));
+                this.addRenderableWidget(this.swimAnimBox);
+
                 // Open Body Parts & Color Picker Overlay
                 Button partsBtn = Button.builder(Component.literal("§ePreset Body Parts & Colors"), b -> {
                     Minecraft.getInstance().setScreen(new BodyPartOverlay(this, workingRace));
-                }).bounds(contentLeft, contentTop + 135, 200, 22).build();
+                }).bounds(contentLeft, contentTop + 180, 200, 22).build();
+                partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
+                this.addRenderableWidget(partsBtn);
                 partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
                 this.addRenderableWidget(partsBtn);
             }
@@ -950,6 +977,10 @@ public class RaceCreatorScreen extends Screen {
             this.wereIdleAnimBox.setValue(workingRace.wereIdleAnim);
             this.addRenderableWidget(this.wereIdleAnimBox);
 
+            this.isWereFlyingRaceBox = new Checkbox(contentLeft + 280, contentTop + 112, 140, 18, Component.literal("Were Flying Race"), workingRace.isWereFlyingRace);
+            this.isWereFlyingRaceBox.setTooltip(Tooltip.create(Component.literal("Check if Were-Form is a flying-only race.")));
+            this.addRenderableWidget(this.isWereFlyingRaceBox);
+
             this.wereWalkAnimBox = new EditBox(this.font, contentLeft + 135, contentTop + 134, 140, 18, Component.literal("Walk Animation"));
             this.wereWalkAnimBox.setMaxLength(2048);
             this.wereWalkAnimBox.setValue(workingRace.wereWalkAnim);
@@ -959,6 +990,16 @@ public class RaceCreatorScreen extends Screen {
             this.wereAttackAnimBox.setMaxLength(2048);
             this.wereAttackAnimBox.setValue(workingRace.wereAttackAnim);
             this.addRenderableWidget(this.wereAttackAnimBox);
+
+            this.wereFlyAnimBox = new EditBox(this.font, contentLeft + 135, contentTop + 178, 140, 18, Component.literal("Fly Animation"));
+            this.wereFlyAnimBox.setMaxLength(2048);
+            this.wereFlyAnimBox.setValue(workingRace.wereFlyAnim);
+            this.addRenderableWidget(this.wereFlyAnimBox);
+
+            this.wereSwimAnimBox = new EditBox(this.font, contentLeft + 135, contentTop + 200, 140, 18, Component.literal("Swim Animation"));
+            this.wereSwimAnimBox.setMaxLength(2048);
+            this.wereSwimAnimBox.setValue(workingRace.wereSwimAnim);
+            this.addRenderableWidget(this.wereSwimAnimBox);
 
         } else if (activeTab == 9) { // Were Sounds
             this.wereTransformSoundBox = new EditBox(this.font, contentLeft + 135, contentTop, 185, 18, Component.literal("Transform Sound"));
@@ -1158,20 +1199,22 @@ public class RaceCreatorScreen extends Screen {
     }
 
     private void readFormInputs() {
+        if (workingRace == null) return;
         if (nameBox != null) workingRace.name = nameBox.getValue();
         if (nameColorBox != null) workingRace.nameColor = nameColorBox.getValue();
-        if (customTextureBox != null) workingRace.customTexture = customTextureBox.getValue();
-        if (loreBox != null) workingRace.lore = loreBox.getValue();
-        if (iconBox != null) workingRace.iconItem = iconBox.getValue();
         if (difficultyBox != null) {
             try { workingRace.playstyleDifficulty = Integer.parseInt(difficultyBox.getValue()); } catch (Exception ignored) {}
         }
+        if (loreBox != null) workingRace.lore = loreBox.getValue();
+        if (iconBox != null) workingRace.iconItem = iconBox.getValue();
+        if (customTextureBox != null) workingRace.customTexture = customTextureBox.getValue();
         if (hideHelmetBox != null) workingRace.hideHelmet = hideHelmetBox.selected();
         if (hideChestplateBox != null) workingRace.hideChestplate = hideChestplateBox.selected();
         if (hideLeggingsBox != null) workingRace.hideLeggings = hideLeggingsBox.selected();
         if (hideBootsBox != null) workingRace.hideBoots = hideBootsBox.selected();
+        if (isFlyingRaceBox != null) workingRace.isFlyingRace = isFlyingRaceBox.selected();
 
-        if (editingWereForm && workingRace.enableWereRace) {
+        if (editingWereForm) {
             if (heightScaleBox != null) {
                 try { workingRace.wereHeightScale = Float.parseFloat(heightScaleBox.getValue()); } catch (Exception ignored) {}
             }
@@ -1202,6 +1245,9 @@ public class RaceCreatorScreen extends Screen {
             }
         }
 
+        if (flyAnimBox != null) workingRace.flyAnim = flyAnimBox.getValue();
+        if (swimAnimBox != null) workingRace.swimAnim = swimAnimBox.getValue();
+
         if (ambientSoundBox != null) workingRace.ambientSound = ambientSoundBox.getValue();
         if (hurtSoundBox != null) workingRace.hurtSound = hurtSoundBox.getValue();
         if (deathSoundBox != null) workingRace.deathSound = deathSoundBox.getValue();
@@ -1219,6 +1265,7 @@ public class RaceCreatorScreen extends Screen {
         if (minionProjectileBox != null) workingRace.minionProjectile = minionProjectileBox.getValue();
 
         if (enableWereBox != null) workingRace.enableWereRace = enableWereBox.selected();
+        if (isWereFlyingRaceBox != null) workingRace.isWereFlyingRace = isWereFlyingRaceBox.selected();
         if (wereConditionBox != null) workingRace.wereTriggerCondition = wereConditionBox.getValue();
         if (wereModelBox != null) workingRace.wereModelPath = wereModelBox.getValue();
         if (wereTextureBox != null) workingRace.wereTexturePath = wereTextureBox.getValue();
@@ -1226,6 +1273,8 @@ public class RaceCreatorScreen extends Screen {
         if (wereIdleAnimBox != null) workingRace.wereIdleAnim = wereIdleAnimBox.getValue();
         if (wereWalkAnimBox != null) workingRace.wereWalkAnim = wereWalkAnimBox.getValue();
         if (wereAttackAnimBox != null) workingRace.wereAttackAnim = wereAttackAnimBox.getValue();
+        if (wereFlyAnimBox != null) workingRace.wereFlyAnim = wereFlyAnimBox.getValue();
+        if (wereSwimAnimBox != null) workingRace.wereSwimAnim = wereSwimAnimBox.getValue();
 
         if (wereTransformSoundBox != null) workingRace.wereTransformSound = wereTransformSoundBox.getValue();
         if (wereHowlSoundBox != null) workingRace.wereHowlSound = wereHowlSoundBox.getValue();
@@ -1648,9 +1697,11 @@ public class RaceCreatorScreen extends Screen {
                     source = RaceRegistry.CACHED_WERE_ANIMS;
                 } else if (box == wereConditionBox) {
                     source = RaceRegistry.CACHED_TRIGGERS;
-                } else if (box == wereIdleAnimBox || box == wereWalkAnimBox || box == wereAttackAnimBox) {
+                } else if (box == wereIdleAnimBox || box == wereWalkAnimBox || box == wereAttackAnimBox || box == wereFlyAnimBox || box == wereSwimAnimBox) {
                     String animPath = (wereAnimFileBox != null && !wereAnimFileBox.getValue().trim().isEmpty()) ? wereAnimFileBox.getValue().trim() : workingRace.wereAnimationPath;
                     source = RaceRegistry.parseAnimationKeysFromFile(animPath);
+                } else if (box == flyAnimBox || box == swimAnimBox) {
+                    source = RaceRegistry.parseAnimationKeysFromFile(workingRace.wereAnimationPath);
                 } else if (box == nativeSpellBox) {
                     source = ddraig.net.customraces.integration.IronSpellsHandler.ALL_SPELLS;
                 } else if (box == heightScaleBox || box == widthScaleBox || box == healthBox || box == speedBox || box == difficultyBox || box == minionCountBox || box == minionScaleBox) {

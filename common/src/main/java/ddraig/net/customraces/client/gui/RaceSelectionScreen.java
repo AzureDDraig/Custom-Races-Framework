@@ -251,7 +251,9 @@ public class RaceSelectionScreen extends Screen {
             } else {
                 // Passives Summary (Standard)
                 int passY = loreY + 58;
-                guiGraphics.drawString(this.font, "§a§lPASSIVE ABILITIES (" + selectedRace.passiveAbilities.size() + "):", centerLeft + 12, passY, 0xFFFFFF);
+                boolean isFly = (previewWereForm && selectedRace.enableWereRace) ? selectedRace.isWereFlyingRace : selectedRace.isFlyingRace;
+                String passTitle = "§a§lPASSIVE ABILITIES (" + selectedRace.passiveAbilities.size() + ")" + (isFly ? " §b[🕊️ FLYING RACE]" : "") + ":";
+                guiGraphics.drawString(this.font, passTitle, centerLeft + 12, passY, 0xFFFFFF);
                 int passItemY = passY + 14;
                 for (String passive : selectedRace.passiveAbilities) {
                     if (passItemY < passY + 70) {
