@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b072a] - 2026-07-23
+
+### 💡 Race Selection Screen Ability Hover Tooltips & Explanations
+- **Interactive Ability Hover Explanations (`RaceSelectionScreen.java`)**:
+  - Hovering over passive abilities, active skills, native spells, or drawbacks in the race selection details panel renders floating tooltip cards explaining each ability's effects.
+- **Dynamic Ability Tooltip Formatting (`RaceSelectionScreen.java`)**:
+  - Implemented `getAbilityTooltipComponent` helper that formats titles and descriptions for passives (green), active skills (crimson), drawbacks (gold), and native spells (violet).
+- **Hover Highlight Colors (`RaceSelectionScreen.java`)**:
+  - Hovered ability names dynamically highlight in bright white/green/yellow for visual feedback.
+
+---
+
 ## [1.0.0-b071a] - 2026-07-23
 
 ### 🔮 Iron's Spells Spell Power, Mana Regeneration & Attribute Integration

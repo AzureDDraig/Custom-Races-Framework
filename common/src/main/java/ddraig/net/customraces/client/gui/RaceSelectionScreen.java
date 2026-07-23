@@ -112,6 +112,7 @@ public class RaceSelectionScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        Component hoveredAbilityTooltip = null;
         // 1. Futuristic Translucent Obsidian Background Canvas
         this.renderBackground(guiGraphics);
         guiGraphics.fill(0, 0, this.width, this.height, 0xF50B0D12);
@@ -225,7 +226,10 @@ public class RaceSelectionScreen extends Screen {
                 if (selectedRace.werePassiveAbilities != null && !selectedRace.werePassiveAbilities.isEmpty()) {
                     for (String passive : selectedRace.werePassiveAbilities) {
                         if (passItemY < passY + 70) {
-                            guiGraphics.drawString(this.font, " §8• §c" + passive.replace("_", " "), centerLeft + 18, passItemY, 0xFFDDDD);
+                            boolean isHovered = mouseX >= centerLeft + 15 && mouseX <= centerLeft + centerWidth - 15 && mouseY >= passItemY && mouseY < passItemY + 12;
+                            int textColor = isHovered ? 0xFFFFFF : 0xFFDDDD;
+                            if (isHovered) hoveredAbilityTooltip = getAbilityTooltipComponent(passive, "passive");
+                            guiGraphics.drawString(this.font, " §8• §c" + passive.replace("_", " "), centerLeft + 18, passItemY, textColor);
                             passItemY += 12;
                         }
                     }
@@ -242,9 +246,13 @@ public class RaceSelectionScreen extends Screen {
                     if (actName == null || actName.isEmpty() || "none".equalsIgnoreCase(actName)) {
                         actName = selectedRace.activeAbilities.getOrDefault(slot, "None");
                         if (actName == null || actName.isEmpty()) actName = "None";
-                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §7" + actName.replace("_", " ") + " §8(Base)", centerLeft + 18, actItemY, 0x888888);
+                        boolean isHovered = mouseX >= centerLeft + 15 && mouseX <= centerLeft + centerWidth - 15 && mouseY >= actItemY && mouseY < actItemY + 12;
+                        if (isHovered) hoveredAbilityTooltip = getAbilityTooltipComponent(actName, "active");
+                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §7" + actName.replace("_", " ") + " §8(Base)", centerLeft + 18, actItemY, isHovered ? 0xFFFFFF : 0x888888);
                     } else {
-                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §c" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xFFDDDD);
+                        boolean isHovered = mouseX >= centerLeft + 15 && mouseX <= centerLeft + centerWidth - 15 && mouseY >= actItemY && mouseY < actItemY + 12;
+                        if (isHovered) hoveredAbilityTooltip = getAbilityTooltipComponent(actName, "active");
+                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §c" + actName.replace("_", " "), centerLeft + 18, actItemY, isHovered ? 0xFFFFFF : 0xFFDDDD);
                     }
                     actItemY += 12;
                 }
@@ -257,7 +265,9 @@ public class RaceSelectionScreen extends Screen {
                 int passItemY = passY + 14;
                 for (String passive : selectedRace.passiveAbilities) {
                     if (passItemY < passY + 70) {
-                        guiGraphics.drawString(this.font, " §8• §f" + passive.replace("_", " "), centerLeft + 18, passItemY, 0xDDDDDD);
+                        boolean isHovered = mouseX >= centerLeft + 15 && mouseX <= centerLeft + centerWidth - 15 && mouseY >= passItemY && mouseY < passItemY + 12;
+                        if (isHovered) hoveredAbilityTooltip = getAbilityTooltipComponent(passive, "passive");
+                        guiGraphics.drawString(this.font, " §8• §f" + passive.replace("_", " "), centerLeft + 18, passItemY, isHovered ? 0x55FF55 : 0xDDDDDD);
                         passItemY += 12;
                     }
                 }
@@ -269,7 +279,9 @@ public class RaceSelectionScreen extends Screen {
                 for (int slot = 1; slot <= 5; slot++) {
                     String actName = selectedRace.activeAbilities.getOrDefault(slot, "None");
                     if (actName == null || actName.isEmpty()) actName = "None";
-                    guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §e" + actName.replace("_", " "), centerLeft + 18, actItemY, 0xDDDDDD);
+                    boolean isHovered = mouseX >= centerLeft + 15 && mouseX <= centerLeft + centerWidth - 15 && mouseY >= actItemY && mouseY < actItemY + 12;
+                    if (isHovered) hoveredAbilityTooltip = getAbilityTooltipComponent(actName, "active");
+                    guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §e" + actName.replace("_", " "), centerLeft + 18, actItemY, isHovered ? 0xFFFF55 : 0xDDDDDD);
                     actItemY += 12;
                 }
 
@@ -281,7 +293,13 @@ public class RaceSelectionScreen extends Screen {
                         boolean isWild = selectedRace.getWildMagic(slot, false);
                         int lvl = selectedRace.getNativeSpellLevel(slot, false);
                         String spellName = isWild ? "✨ Wild Magic" : (spellId != null ? spellId.replace("irons_spellbooks:", "").replace("totweaks:", "").replace("_", " ") : "None");
-                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §d" + spellName + " §8(Lvl " + lvl + ")", centerLeft + 18, spellY, 0xEEAAFF);
+                        boolean isHovered = mouseX >= centerLeft + 15 && mouseX <= centerLeft + centerWidth - 15 && mouseY >= spellY && mouseY < spellY + 12;
+                        if (isHovered) {
+                            String desc = isWild ? "Wild Magic: Casts a random spell from any school as an innate racial power."
+                                                 : "Native Spell Slot " + slot + ": Casts " + spellName + " (Lvl " + lvl + ").";
+                            hoveredAbilityTooltip = Component.literal("§d§l" + spellName.toUpperCase() + "\n§7" + desc);
+                        }
+                        guiGraphics.drawString(this.font, " §8[Slot " + slot + "] §d" + spellName + " §8(Lvl " + lvl + ")", centerLeft + 18, spellY, isHovered ? 0xFFFFFF : 0xEEAAFF);
                         spellY += 12;
                     }
                 }
@@ -364,6 +382,63 @@ public class RaceSelectionScreen extends Screen {
                 }
             }
         }
+
+        if (hoveredAbilityTooltip != null) {
+            guiGraphics.renderTooltip(this.font, hoveredAbilityTooltip, mouseX, mouseY);
+        }
+    }
+
+    private Component getAbilityTooltipComponent(String id, String category) {
+        if (id == null || id.isEmpty() || "none".equalsIgnoreCase(id)) return null;
+        String cleanId = id.trim().toLowerCase();
+        String formattedName = id.replace("_", " ");
+
+        String desc = switch (cleanId) {
+            case "gills", "aquatic", "water_breathing" -> "Allows breathing underwater and increases swim speed.";
+            case "flight", "wings", "elytra_wings" -> "Grants creative-style flight in survival mode.";
+            case "fireproof_scales", "fire_resistance", "magma_blood" -> "Grants complete immunity to fire and lava damage.";
+            case "night_vision" -> "Grants permanent vision in complete darkness.";
+            case "lava_walker", "lava_swimming" -> "Grants speed and fire resistance while submerged in lava.";
+            case "sunlight_regeneration" -> "Restores health automatically under direct sunlight.";
+            case "moonlight_regeneration" -> "Restores health automatically under the night sky.";
+            case "arcane_overflow" -> "Increases maximum mana capacity by +150.";
+            case "mana_fountain" -> "Increases mana regeneration rate by +40%.";
+            case "arcane_amplification" -> "Increases overall spell power by +25%.";
+            case "spell_ward" -> "Grants +25% resistance against all magic damage.";
+            case "fire_spell_mastery" -> "Increases Fire Spell Power by +25%.";
+            case "ice_spell_mastery" -> "Increases Ice Spell Power by +25%.";
+            case "lightning_spell_mastery" -> "Increases Lightning Spell Power by +25%.";
+            case "holy_spell_mastery" -> "Increases Holy Spell Power by +25%.";
+            case "ender_spell_mastery" -> "Increases Ender Spell Power by +25%.";
+            case "blood_spell_mastery" -> "Increases Blood Spell Power by +25%.";
+            case "evocation_spell_mastery" -> "Increases Evocation Spell Power by +25%.";
+            case "eldritch_spell_mastery" -> "Increases Eldritch Spell Power by +25%.";
+
+            case "flame_breath" -> "Emits a continuous cone of fiery particles dealing fire damage.";
+            case "fireball_volley" -> "Launches a rapid volley of explosive fireballs forward.";
+            case "web_trap_throw" -> "Launches sticky cobwebs that entangle nearby enemies.";
+            case "shadow_step", "dash_teleport" -> "Instantly teleports forward through blocks.";
+            case "were_howl" -> "Emits a 360-degree sonic boom pushing back enemies and inflicting weakness.";
+            case "wolf_pack_summon", "minion_summon" -> "Summons loyal spectral minions to fight by your side.";
+            case "healing_surge", "divine_heal" -> "Instantly restores 50% max health and cures negative effects.";
+
+            case "hydrophobia" -> "Takes damage when coming into contact with water or rain.";
+            case "photosensitivity", "sun_burn" -> "Burns and takes fire damage in direct sunlight.";
+            case "heavy_armor_restriction" -> "Cannot equip heavy netherite or diamond armor.";
+            case "fragile_frame" -> "Reduces maximum health by -20%.";
+
+            default -> "Racial " + category + " ability: " + formattedName;
+        };
+
+        String colorPrefix = switch (category) {
+            case "passive" -> "§a§l";
+            case "active" -> "§c§l";
+            case "drawback" -> "§e§l";
+            case "native_spell" -> "§d§l";
+            default -> "§b§l";
+        };
+
+        return Component.literal(colorPrefix + formattedName.toUpperCase() + "\n§7" + desc);
     }
 
     @Override
