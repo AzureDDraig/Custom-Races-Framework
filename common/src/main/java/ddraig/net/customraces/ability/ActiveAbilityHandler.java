@@ -66,6 +66,12 @@ public class ActiveAbilityHandler {
         player.sendSystemMessage(Component.literal("§aUsed Ability: §e" + abilityId.replace("_", " ")), true);
 
         switch (abilityId.toLowerCase()) {
+            case "native_spell":
+            case "native spell":
+                boolean isWere = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+                ddraig.net.customraces.integration.IronSpellsHandler.castNativeSpell(player, race, isWere);
+                break;
+
             case "flame_breath":
             case "flame breath":
                 for (int i = 0; i < 15; i++) {

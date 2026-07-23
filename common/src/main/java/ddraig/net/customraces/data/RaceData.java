@@ -117,6 +117,21 @@ public class RaceData {
     public boolean minionIsRanged = false;
     public String minionProjectile = "minecraft:arrow";
 
+    // Native Spell Integration (Iron's Spells 'n Spellbooks & T.O Tweaks)
+    public boolean enableNativeSpells = false;
+    public String nativeSpellId = "irons_spellbooks:fireball";
+    public boolean wildMagic = false;
+    public int nativeSpellLevel = 1;
+    public int nativeSpellCooldown = 100;
+    public int nativeSpellManaCost = 25;
+
+    public boolean enableWereNativeSpells = false;
+    public String wereNativeSpellId = "irons_spellbooks:blood_slash";
+    public boolean wereWildMagic = false;
+    public int wereNativeSpellLevel = 2;
+    public int wereNativeSpellCooldown = 60;
+    public int wereNativeSpellManaCost = 20;
+
     public RaceData() {
         initDefaults();
     }

@@ -284,7 +284,7 @@ public class RaceCreatorScreen extends Screen {
             "gui.customraces.tab.basics", "gui.customraces.tab.model", "gui.customraces.tab.positions",
             "gui.customraces.tab.passives", "gui.customraces.tab.actives", "gui.customraces.tab.sounds",
             "gui.customraces.tab.advanced", "gui.customraces.tab.alliances", "gui.customraces.tab.were_model",
-            "gui.customraces.tab.were_sounds", "gui.customraces.tab.drawbacks"
+            "gui.customraces.tab.were_sounds", "gui.customraces.tab.drawbacks", "gui.customraces.tab.native_spells"
         };
 
         for (int i = 0; i < tabKeys.length; i++) {
@@ -803,6 +803,75 @@ public class RaceCreatorScreen extends Screen {
                 cb.setTooltip(Tooltip.create(Component.literal("⚠️ " + rawName.toUpperCase())));
                 this.addRenderableWidget(cb);
             }
+        } else if (activeTab == 11) { // Native Spells
+            boolean isWere = editingWereForm && workingRace.enableWereRace;
+            boolean enabled = isWere ? workingRace.enableWereNativeSpells : workingRace.enableNativeSpells;
+            boolean isWild = isWere ? workingRace.wereWildMagic : workingRace.wildMagic;
+            String currentSpell = isWere ? workingRace.wereNativeSpellId : workingRace.nativeSpellId;
+            int level = isWere ? workingRace.wereNativeSpellLevel : workingRace.nativeSpellLevel;
+
+            Checkbox enableNativeCb = new Checkbox(contentLeft, contentTop + 20, 180, 18, Component.literal("Enable Native Spells"), enabled) {
+                @Override
+                public void onPress() {
+                    super.onPress();
+                    if (isWere) workingRace.enableWereNativeSpells = this.selected();
+                    else workingRace.enableNativeSpells = this.selected();
+                    autoSaveWorkingRace();
+                }
+            };
+            enableNativeCb.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.native_spells")));
+            this.addRenderableWidget(enableNativeCb);
+
+            Checkbox wildMagicCb = new Checkbox(contentLeft + 190, contentTop + 20, 140, 18, Component.literal("✨ Wild Magic"), isWild) {
+                @Override
+                public void onPress() {
+                    super.onPress();
+                    if (isWere) workingRace.wereWildMagic = this.selected();
+                    else workingRace.wildMagic = this.selected();
+                    autoSaveWorkingRace();
+                }
+            };
+            wildMagicCb.setTooltip(Tooltip.create(Component.literal("Wild Magic: Spawns a random spell from any school as if the player cast it.")));
+            this.addRenderableWidget(wildMagicCb);
+
+            EditBox spellBox = new EditBox(this.font, contentLeft + 135, contentTop + 50, 190, 18, Component.literal("Native Spell ID"));
+            spellBox.setMaxLength(2048);
+            spellBox.setValue(currentSpell);
+            spellBox.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.native_spells")));
+            spellBox.setResponder(val -> {
+                if (isWere) workingRace.wereNativeSpellId = val;
+                else workingRace.nativeSpellId = val;
+            });
+            this.addRenderableWidget(spellBox);
+
+            // Cycle Spell Button
+            Button spellCycleBtn = Button.builder(Component.literal("▶ Cycle Spell"), b -> {
+                List<String> spells = ddraig.net.customraces.integration.IronSpellsHandler.ALL_SPELLS;
+                int idx = 0;
+                String cur = spellBox.getValue();
+                for (int i = 0; i < spells.size(); i++) {
+                    if (spells.get(i).equalsIgnoreCase(cur)) { idx = (i + 1) % spells.size(); break; }
+                }
+                String nextSpell = spells.get(idx);
+                spellBox.setValue(nextSpell);
+                if (isWere) workingRace.wereNativeSpellId = nextSpell;
+                else workingRace.nativeSpellId = nextSpell;
+            }).bounds(contentLeft + 330, contentTop + 50, 95, 18).build();
+            spellCycleBtn.setTooltip(Tooltip.create(Component.literal("Cycle through all Iron's Spells & T.O Tweaks registered spells.")));
+            this.addRenderableWidget(spellCycleBtn);
+
+            EditBox lvlBox = new EditBox(this.font, contentLeft + 135, contentTop + 75, 60, 18, Component.literal("Spell Level"));
+            lvlBox.setMaxLength(2048);
+            lvlBox.setValue(String.valueOf(level));
+            lvlBox.setTooltip(Tooltip.create(Component.literal("Level multiplier for cast spell (1 to 10).")));
+            lvlBox.setResponder(val -> {
+                try {
+                    int l = Integer.parseInt(val);
+                    if (isWere) workingRace.wereNativeSpellLevel = l;
+                    else workingRace.nativeSpellLevel = l;
+                } catch (Exception ignored) {}
+            });
+            this.addRenderableWidget(lvlBox);
         }
     }
 
@@ -1017,7 +1086,7 @@ public class RaceCreatorScreen extends Screen {
             "gui.customraces.tab.basics", "gui.customraces.tab.model", "gui.customraces.tab.positions",
             "gui.customraces.tab.passives", "gui.customraces.tab.actives", "gui.customraces.tab.sounds",
             "gui.customraces.tab.advanced", "gui.customraces.tab.alliances", "gui.customraces.tab.were_model",
-            "gui.customraces.tab.were_sounds", "gui.customraces.tab.drawbacks"
+            "gui.customraces.tab.were_sounds", "gui.customraces.tab.drawbacks", "gui.customraces.tab.native_spells"
         };
         for (int i = 0; i < tabKeys.length; i++) {
             if (i == 2 && !"Custom".equalsIgnoreCase(workingRace.modelType)) continue;
@@ -1098,6 +1167,10 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, "§c❖ Death Sound:", contentLeft, contentTop + 104, 0xFFFFFF);
         } else if (activeTab == 10) {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were-Form Race Drawbacks & Weaknesses:" : "§c❖ Race Drawbacks & Weaknesses:", contentLeft, contentTop + 4, 0xFFFFFF);
+        } else if (activeTab == 11) {
+            guiGraphics.drawString(this.font, "§d❖ Native Spells (Iron's Spells & T.O Tweaks):", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Selected Spell ID:", contentLeft, contentTop + 54, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§d❖ Spell Power Level:", contentLeft, contentTop + 79, 0xFFFFFF);
         }
 
         // 5. Right Panel: 3D Holographic Showcase Viewport
