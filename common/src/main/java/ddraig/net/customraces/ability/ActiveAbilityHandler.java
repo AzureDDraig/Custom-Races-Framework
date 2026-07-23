@@ -105,8 +105,8 @@ public class ActiveAbilityHandler {
 
             case "teleport_dash":
             case "teleport dash":
-                Vec3 tpTarget = pos.add(look.scale(12.0));
-                player.teleportTo(tpTarget.x, tpTarget.y, tpTarget.z);
+                Vec3 safeTp = getSafeTeleportTarget(level, player, 12.0);
+                player.teleportTo(safeTp.x, safeTp.y, safeTp.z);
                 level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0f, 1.0f);
                 level.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
                 break;
@@ -463,5 +463,29 @@ public class ActiveAbilityHandler {
                 level.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.5, 0.5, 0.5, 0.1);
                 break;
         }
+    }
+
+    public static Vec3 getSafeTeleportTarget(ServerLevel level, net.minecraft.world.entity.player.Player player, double distance) {
+        Vec3 eyePos = player.getEyePosition();
+        Vec3 look = player.getLookAngle();
+        Vec3 targetEnd = eyePos.add(look.scale(distance));
+
+        net.minecraft.world.level.ClipContext ctx = new net.minecraft.world.level.ClipContext(
+                eyePos, targetEnd,
+                net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE,
+                player
+        );
+        net.minecraft.world.phys.BlockHitResult hit = level.clip(ctx);
+
+        Vec3 safePos = hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK
+                ? hit.getLocation().subtract(look.scale(0.6))
+                : targetEnd;
+
+        net.minecraft.core.BlockPos bPos = net.minecraft.core.BlockPos.containing(safePos);
+        while (level.getBlockState(bPos).isSolid() && bPos.getY() < level.getMaxBuildHeight() - 1) {
+            bPos = bPos.above();
+        }
+        return Vec3.atBottomCenterOf(bPos);
     }
 }

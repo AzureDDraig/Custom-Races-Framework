@@ -58,6 +58,10 @@ public class IronSpellsHandler {
         "totweaks:dimensional_slash", "totweaks:chronos_warp", "totweaks:aether_shield"
     );
 
+    public static boolean isIronSpellsLoaded() {
+        return dev.architectury.platform.Platform.isModLoaded("irons_spellbooks");
+    }
+
     public static void castNativeSpell(Player player, RaceData race, boolean isWereForm) {
         castNativeSpell(player, race, isWereForm, 1);
     }
@@ -78,17 +82,12 @@ public class IronSpellsHandler {
             player.sendSystemMessage(Component.literal("§d✨ [Wild Magic] §fCasting random spell: §e" + spellId.replace("irons_spellbooks:", "").replace("totweaks:", "")));
         }
 
-        try {
-            Class<?> spellRegistryClass = null;
-            try {
-                spellRegistryClass = Class.forName("io.github.elytra.irons_spellbooks.api.registry.SpellRegistry");
-            } catch (ClassNotFoundException e) {
-                try {
-                    spellRegistryClass = Class.forName("com.io.github.elytra.irons_spellbooks.api.registry.SpellRegistry");
-                } catch (Exception ignored) {}
-            }
+        if (spellId == null || spellId.trim().isEmpty() || spellId.equalsIgnoreCase("none")) return;
 
+        try {
+            Class<?> spellRegistryClass = getSpellRegistryClass();
             Object spellObj = null;
+
             if (spellRegistryClass != null) {
                 try {
                     Method getSpellStr = spellRegistryClass.getMethod("getSpell", String.class);
@@ -104,11 +103,15 @@ public class IronSpellsHandler {
             if (spellObj != null) {
                 Object castSource = getCastSourceEnum();
                 for (Method m : spellObj.getClass().getMethods()) {
-                    if (m.getName().toLowerCase().contains("cast")) {
+                    String mName = m.getName().toLowerCase();
+                    if (mName.contains("cast") || mName.contains("oncast") || mName.contains("initiate")) {
                         try {
                             m.setAccessible(true);
                             Class<?>[] params = m.getParameterTypes();
-                            if (params.length == 4) {
+                            if (params.length == 5) {
+                                m.invoke(spellObj, player.level(), spellLevel, player, castSource, null);
+                                return;
+                            } else if (params.length == 4) {
                                 m.invoke(spellObj, player.level(), spellLevel, player, castSource);
                                 return;
                             } else if (params.length == 3) {
@@ -121,19 +124,42 @@ public class IronSpellsHandler {
             }
         } catch (Exception ignored) {}
 
-        // Vanilla Fallback FX when Iron's Spells is not installed
+        // Fallback FX if Iron's Spells mod is not loaded
         if (!isWildMagic) {
-            player.sendSystemMessage(Component.literal("§c[Native Spell] §f" + spellId + " (Requires Iron's Spells mod to render true spell FX)"));
+            player.sendSystemMessage(Component.literal("§c[Native Spell " + slot + "] §f" + spellId + " §7(Requires Iron's Spells mod installed)"));
         }
-        player.level().addParticle(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH, player.getX(), player.getY() + 1.0, player.getZ(), 0.1, 0.1, 0.1);
+        if (player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
+            sLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.DRAGON_BREATH, player.getX(), player.getY() + 1.0, player.getZ(), 20, 0.4, 0.4, 0.4, 0.05);
+            sLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.WITCH, player.getX(), player.getY() + 1.0, player.getZ(), 15, 0.3, 0.3, 0.3, 0.05);
+        }
+    }
+
+    private static Class<?> getSpellRegistryClass() {
+        String[] classPaths = {
+            "net.ironsspellbooks.api.registry.SpellRegistry",
+            "io.github.elytra.irons_spellbooks.api.registry.SpellRegistry",
+            "com.io.github.elytra.irons_spellbooks.api.registry.SpellRegistry"
+        };
+        for (String cp : classPaths) {
+            try {
+                return Class.forName(cp);
+            } catch (ClassNotFoundException ignored) {}
+        }
+        return null;
     }
 
     private static Class<?> CastSourceClass() throws ClassNotFoundException {
-        try {
-            return Class.forName("io.github.elytra.irons_spellbooks.api.spells.CastSource");
-        } catch (ClassNotFoundException e) {
-            return Class.forName("com.io.github.elytra.irons_spellbooks.api.spells.CastSource");
+        String[] classPaths = {
+            "net.ironsspellbooks.api.spells.CastSource",
+            "io.github.elytra.irons_spellbooks.api.spells.CastSource",
+            "com.io.github.elytra.irons_spellbooks.api.spells.CastSource"
+        };
+        for (String cp : classPaths) {
+            try {
+                return Class.forName(cp);
+            } catch (ClassNotFoundException ignored) {}
         }
+        throw new ClassNotFoundException("CastSource class not found");
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -142,6 +168,10 @@ public class IronSpellsHandler {
             Class clazz = CastSourceClass();
             return Enum.valueOf(clazz, "SPELLBOOK");
         } catch (Exception e) {
+            try {
+                Class clazz = CastSourceClass();
+                return Enum.valueOf(clazz, "INNATE");
+            } catch (Exception ignored) {}
             return null;
         }
     }

@@ -4,6 +4,21 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b053a] - 2026-07-22
+
+### 🔮 Iron's Spells Reflection Fix & Raycast Safe Teleportation
+- **Official Iron's Spells API Package Resolution (`IronSpellsHandler.java`)**:
+  - Updated multi-tier reflection resolution chain to include `net.ironsspellbooks.api.registry.SpellRegistry`, `net.ironsspellbooks.api.spells.CastSource`, and `net.ironsspellbooks.api.magic.MagicData`.
+  - Fixes Iron's Spells spell casting failure when Iron's Spells 'n Spellbooks mod is installed on 1.20.1.
+- **Active Skills Autocomplete Dropdown Integration (`RaceCreatorScreen.java`)**:
+  - Added `native_spell_1`, `native_spell_2`, `native_spell_3`, `native_spell_4`, and `native_spell_5` to the `ALL_ACTIVES` catalogue.
+  - Native Spells can now be assigned to any hotbar active skill keybind via autocomplete and dropdowns.
+- **Raycast Safe Teleportation (`ActiveAbilityHandler.java`)**:
+  - Added `getSafeTeleportTarget(...)` raycast collision checking to `teleport_dash`, `blink_teleport`, and `shadow_step`.
+  - Teleportation now traces block colliders and automatically steps upward if destination blocks are solid, guaranteeing players never get stuck or suffocate inside blocks.
+
+---
+
 ## [1.0.0-b052a] - 2026-07-22
 
 ### 🔍 System-Wide Audit & Race Selection 3D Showcase Sync

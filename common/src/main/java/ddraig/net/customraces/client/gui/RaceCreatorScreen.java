@@ -220,6 +220,8 @@ public class RaceCreatorScreen extends Screen {
     );
 
     public static final List<String> ALL_ACTIVES = java.util.List.of(
+        // Native Spells (Iron's Spells Integration)
+        "native_spell_1", "native_spell_2", "native_spell_3", "native_spell_4", "native_spell_5",
         // 1-10: Fire & Magma
         "flame_breath", "fireball_burst", "inferno_ring", "magma_slam", "meteor_strike",
         "heat_wave", "combustion_aura", "flame_charge", "pyroblast", "volcanic_eruption",
