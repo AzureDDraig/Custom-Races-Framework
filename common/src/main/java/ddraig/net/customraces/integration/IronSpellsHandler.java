@@ -74,19 +74,47 @@ public class IronSpellsHandler {
         }
 
         try {
-            // Attempt soft reflection execution via Iron's Spells API
-            Class<?> spellRegistryClass = Class.forName("io.github.elytra.irons_spellbooks.api.registry.SpellRegistry");
-            Method getSpellMethod = spellRegistryClass.getMethod("getSpell", String.class);
-            Object spellObj = getSpellMethod.invoke(null, spellId);
+            Class<?> spellRegistryClass = null;
+            try {
+                spellRegistryClass = Class.forName("io.github.elytra.irons_spellbooks.api.registry.SpellRegistry");
+            } catch (ClassNotFoundException e) {
+                try {
+                    spellRegistryClass = Class.forName("com.io.github.elytra.irons_spellbooks.api.registry.SpellRegistry");
+                } catch (Exception ignored) {}
+            }
+
+            Object spellObj = null;
+            if (spellRegistryClass != null) {
+                try {
+                    Method getSpellStr = spellRegistryClass.getMethod("getSpell", String.class);
+                    spellObj = getSpellStr.invoke(null, spellId);
+                } catch (Exception e1) {
+                    try {
+                        Method getSpellRes = spellRegistryClass.getMethod("getSpell", net.minecraft.resources.ResourceLocation.class);
+                        spellObj = getSpellRes.invoke(null, new net.minecraft.resources.ResourceLocation(spellId));
+                    } catch (Exception ignored) {}
+                }
+            }
 
             if (spellObj != null) {
-                Method castMethod = spellObj.getClass().getMethod("castSpell", net.minecraft.world.level.Level.class, int.class, Player.class, CastSourceClass());
-                castMethod.invoke(spellObj, player.level(), spellLevel, player, getCastSourceEnum());
-                return;
+                Object castSource = getCastSourceEnum();
+                for (Method m : spellObj.getClass().getMethods()) {
+                    if (m.getName().toLowerCase().contains("cast")) {
+                        try {
+                            m.setAccessible(true);
+                            Class<?>[] params = m.getParameterTypes();
+                            if (params.length == 4) {
+                                m.invoke(spellObj, player.level(), spellLevel, player, castSource);
+                                return;
+                            } else if (params.length == 3) {
+                                m.invoke(spellObj, player.level(), spellLevel, player);
+                                return;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
             }
-        } catch (Exception ignored) {
-            // Fallback if Iron's Spells mod is not loaded or API signature differs
-        }
+        } catch (Exception ignored) {}
 
         // Vanilla Fallback FX when Iron's Spells is not installed
         if (!isWildMagic) {

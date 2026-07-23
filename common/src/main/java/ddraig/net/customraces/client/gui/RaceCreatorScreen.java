@@ -83,6 +83,19 @@ public class RaceCreatorScreen extends Screen {
     private String searchActivesQuery = "";
     private String searchDrawbacksQuery = "";
 
+    // Drawbacks Scrollbar & Single Column State
+    private double drawbacksScrollAmount = 0;
+    private boolean isDraggingDrawbacksScrollbar = false;
+    private int matchingDrawbacksCount = 0;
+
+    private int getContentLeft() {
+        return 156;
+    }
+
+    private int getContentTop() {
+        return 54;
+    }
+
     private String getPassiveDescription(String passive) {
         switch (passive.toLowerCase()) {
             case "night_vision": return "Grants clear vision in pitch black darkness.";
@@ -813,11 +826,11 @@ public class RaceCreatorScreen extends Screen {
 
             Button pDt = Button.builder(Component.literal("▶ Play"), b -> playPreviewSound(this.wereDeathSoundBox.getValue())).bounds(contentLeft + 325, contentTop + 100, 50, 18).build();
             this.addRenderableWidget(pDt);
-        } else if (activeTab == 10) { // Drawbacks
-            EditBox dSearch = new EditBox(this.font, contentLeft + 230, contentTop, 130, 16, Component.literal("Search Drawbacks"));
+        } else if (activeTab == 10) { // Drawbacks (Single Column Scrollable List)
+            EditBox dSearch = new EditBox(this.font, contentLeft + 200, contentTop, 160, 16, Component.literal("Search Drawbacks"));
             dSearch.setMaxLength(2048);
             dSearch.setValue(searchDrawbacksQuery);
-            dSearch.setHint(Component.literal("🔍 Search..."));
+            dSearch.setHint(Component.literal("🔍 Search drawbacks..."));
             dSearch.setResponder(val -> {
                 searchDrawbacksQuery = val;
                 this.init();
@@ -831,11 +844,9 @@ public class RaceCreatorScreen extends Screen {
                 else workingRace.drawbacks = activeList;
             }
 
-            int gridX = contentLeft;
-            int gridY = contentTop + 24;
-            int colWidth = 120;
-            int rowHeight = 20;
-            int cols = 3;
+            int visibleTop = contentTop + 24;
+            int visibleBottom = this.height - 20;
+            int visibleHeight = visibleBottom - visibleTop;
 
             String q = searchDrawbacksQuery.toLowerCase().trim();
             List<String> matchingDrawbacks = new ArrayList<>();
@@ -847,22 +858,28 @@ public class RaceCreatorScreen extends Screen {
                 }
             }
 
+            this.matchingDrawbacksCount = matchingDrawbacks.size();
+            int totalContentH = matchingDrawbacks.size() * 20;
+            float maxScrollDrawbacks = Math.max(0, totalContentH - visibleHeight);
+            drawbacksScrollAmount = Math.max(0, Math.min(drawbacksScrollAmount, maxScrollDrawbacks));
+
+            int cbX = contentLeft;
+            int cbWidth = 320;
+            int rowHeight = 20;
+
             for (int i = 0; i < matchingDrawbacks.size(); i++) {
                 String drawbackId = matchingDrawbacks.get(i);
-                int c = i % cols;
-                int r = i / cols;
-                int cbX = gridX + (c * colWidth);
-                int cbY = gridY + (r * rowHeight);
+                int cbY = visibleTop + (i * rowHeight) - (int) drawbacksScrollAmount;
+
+                // Render only checkboxes that fit inside the visible scroll viewport
+                if (cbY < visibleTop - rowHeight || cbY > visibleBottom) continue;
 
                 boolean selected = activeList.contains(drawbackId);
                 final List<String> targetList = activeList;
-                String rawName = drawbackId.replace("_", " ");
-                String formattedLabel = "⚠️ " + rawName;
-                if (this.font.width(formattedLabel) > colWidth - 10) {
-                    formattedLabel = "⚠️ " + this.font.plainSubstrByWidth(rawName, colWidth - 28) + "..";
-                }
+                String rawName = drawbackId.replace("_", " ").toUpperCase();
+                String desc = getDrawbackDescription(drawbackId);
 
-                Checkbox cb = new Checkbox(cbX, cbY, colWidth - 5, 18, Component.literal(formattedLabel), selected) {
+                Checkbox cb = new Checkbox(cbX, cbY, cbWidth, 18, Component.literal("⚠️ " + rawName), selected) {
                     @Override
                     public void onPress() {
                         super.onPress();
@@ -874,7 +891,7 @@ public class RaceCreatorScreen extends Screen {
                         autoSaveWorkingRace();
                     }
                 };
-                cb.setTooltip(Tooltip.create(Component.literal("⚠️ " + rawName.toUpperCase())));
+                cb.setTooltip(Tooltip.create(Component.literal("⚠️ " + rawName + "\n" + desc)));
                 this.addRenderableWidget(cb);
             }
         } else if (activeTab == 11) { // Native Spells
@@ -1241,6 +1258,32 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, "§c❖ Death Sound:", contentLeft, contentTop + 104, 0xFFFFFF);
         } else if (activeTab == 10) {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were-Form Race Drawbacks & Weaknesses:" : "§c❖ Race Drawbacks & Weaknesses:", contentLeft, contentTop + 4, 0xFFFFFF);
+
+            // Render Drawbacks Vertical Scrollbar Track & Thumb
+            int visibleTop = contentTop + 24;
+            int visibleBottom = this.height - 20;
+            int visibleHeight = visibleBottom - visibleTop;
+            int totalContentH = matchingDrawbacksCount * 20;
+
+            if (totalContentH > visibleHeight && visibleHeight > 0) {
+                int trackX = contentLeft + 330;
+                int trackY = visibleTop;
+                int trackW = 6;
+                int trackH = visibleHeight;
+
+                // Track Background
+                guiGraphics.fill(trackX, trackY, trackX + trackW, trackY + trackH, 0xFF191F30);
+                guiGraphics.fill(trackX + 1, trackY + 1, trackX + trackW - 1, trackY + trackH - 1, 0xEE101422);
+
+                // Scrollbar Thumb
+                int thumbH = Math.max(16, (visibleHeight * visibleHeight) / totalContentH);
+                float maxScroll = totalContentH - visibleHeight;
+                int thumbY = trackY + (int) ((trackH - thumbH) * (drawbacksScrollAmount / maxScroll));
+                thumbY = Math.max(trackY, Math.min(trackY + trackH - thumbH, thumbY));
+
+                int thumbColor = isDraggingDrawbacksScrollbar ? 0xFFFF5555 : 0xFFCC3333;
+                guiGraphics.fill(trackX, thumbY, trackX + trackW, thumbY + thumbH, thumbColor);
+            }
         } else if (activeTab == 11) {
             guiGraphics.drawString(this.font, "§d❖ Native Spells (Iron's Spells & T.O Tweaks):", contentLeft, contentTop + 4, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§d❖ Selected Spell ID:", contentLeft, contentTop + 54, 0xFFFFFF);
@@ -1452,11 +1495,41 @@ public class RaceCreatorScreen extends Screen {
             return true;
         }
 
+        // Tab 10 Drawbacks Single Column Mouse Wheel Scroll
+        if (activeTab == 10) {
+            int visibleTop = getContentTop() + 24;
+            int visibleBottom = this.height - 20;
+            int visibleHeight = visibleBottom - visibleTop;
+            int totalContentH = matchingDrawbacksCount * 20;
+            float maxScroll = Math.max(0, totalContentH - visibleHeight);
+
+            if (mouseX >= getContentLeft() && mouseX <= getContentLeft() + 340 && mouseY >= visibleTop && mouseY <= visibleBottom) {
+                if (delta < 0) {
+                    drawbacksScrollAmount = Math.min(maxScroll, drawbacksScrollAmount + 20);
+                } else if (delta > 0) {
+                    drawbacksScrollAmount = Math.max(0, drawbacksScrollAmount - 20);
+                }
+                this.init();
+                return true;
+            }
+        }
+
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (activeTab == 10) {
+            int visibleTop = getContentTop() + 24;
+            int visibleBottom = this.height - 20;
+            int trackX = getContentLeft() + 330;
+            if (mouseX >= trackX - 2 && mouseX <= trackX + 10 && mouseY >= visibleTop && mouseY <= visibleBottom) {
+                isDraggingDrawbacksScrollbar = true;
+                updateDrawbacksScrollFromMouse(mouseY);
+                return true;
+            }
+        }
+
         if (showSuggestions && !activeSuggestions.isEmpty() && activeField != null) {
             int dropX = activeField.getX();
             int dropY = activeField.getY() + activeField.getHeight() + 2;
@@ -1480,6 +1553,33 @@ public class RaceCreatorScreen extends Screen {
         activeSuggestions.clear();
         activeField = null;
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (isDraggingDrawbacksScrollbar) {
+            updateDrawbacksScrollFromMouse(mouseY);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        isDraggingDrawbacksScrollbar = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    private void updateDrawbacksScrollFromMouse(double mouseY) {
+        int visibleTop = getContentTop() + 24;
+        int visibleBottom = this.height - 20;
+        int visibleHeight = visibleBottom - visibleTop;
+        int totalContentH = matchingDrawbacksCount * 20;
+        float maxScroll = Math.max(1, totalContentH - visibleHeight);
+
+        float ratio = (float) (mouseY - visibleTop) / (float) visibleHeight;
+        drawbacksScrollAmount = Math.max(0, Math.min(ratio * maxScroll, maxScroll));
+        this.init();
     }
 
     @Override

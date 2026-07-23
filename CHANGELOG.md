@@ -4,6 +4,18 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b046a] - 2026-07-22
+
+### 📜 Single-Column Scrollable Drawbacks Tab & Interactive Scrollbar
+- **1 Column Drawbacks List (`RaceCreatorScreen.java`)**:
+  - Converted **Tab 10: Drawbacks** into 1 single wide column (`320px` width) displaying full drawback names, warning icons (`⚠️`), and complete description tooltips without text truncation across all 150 drawbacks.
+- **Interactive Scrollbar & Dragable Thumb**:
+  - Implemented vertical scrollbar track at `contentLeft + 330` with dynamic red warning thumb (`0xFFCC3333` / `0xFFFF5555`).
+  - Added support for mouse wheel scrolling and mouse dragging of the scrollbar thumb.
+  - Added viewport scissor bounds checking so checkboxes outside the scroll region are cleanly hidden.
+
+---
+
 ## [1.0.0-b045a] - 2026-07-22
 
 ### 🔍 Spells System & Deep Search Audit
