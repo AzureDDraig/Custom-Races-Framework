@@ -4,6 +4,15 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b057a] - 2026-07-23
+
+### 🌐 Full 10-Language Localization Sync & UI Polishing
+- **Complete 10-Language Localization Alignment (`assets/customraces/lang/`)**:
+  - Updated all 10 supported language files (`en_us`, `de_de`, `es_es`, `fr_fr`, `it_it`, `ja_jp`, `ko_kr`, `pt_br`, `ru_ru`, `zh_cn`) with full localized labels, tooltips, and headers for `fly_anim`, `swim_anim`, `is_flying_race`, and `is_were_flying_race`.
+  - Guarantees zero un-translated text or raw key fallback strings across all supported language configurations.
+
+---
+
 ## [1.0.0-b056a] - 2026-07-23
 
 ### 🛡️ Flight Fall Damage Safety & Race Duplication Copy Audit
