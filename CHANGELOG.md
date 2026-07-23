@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b076a] - 2026-07-23
+
+### 🔮 Removal of Hardcoded Native Spell Fallbacks
+- **Cleaned Native Spell Field Defaults (`RaceData.java`)**:
+  - Replaced hardcoded default spell IDs (e.g. `irons_spellbooks:blood_slash`, `irons_spellbooks:fire_breath`, `irons_spellbooks:fireball`) with empty string defaults (`""`), ensuring unconfigured spell slots never force default spells onto players.
+- **Pure Dynamic Spell Lookup (`RaceData.java` & `IronSpellsHandler.java`)**:
+  - Removed fallback string fallbacks in `getNativeSpellId`, allowing empty spell slots to gracefully skip casting without firing unexpected spells like `blood_slash`.
+
+---
+
 ## [1.0.0-b075a] - 2026-07-23
 
 ### 🛡️ Minion Attacker Memory, Orb Cooldown Feedback & Flying Protection

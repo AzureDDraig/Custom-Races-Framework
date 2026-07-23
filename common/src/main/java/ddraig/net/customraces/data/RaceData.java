@@ -128,75 +128,75 @@ public class RaceData {
     // Native Spell Integration (Iron's Spells 'n Spellbooks & T.O Tweaks)
     // Native Spell Integration (Iron's Spells 'n Spellbooks & T.O Tweaks) - Slots 1 to 5
     public boolean enableNativeSpells = false;
-    public String nativeSpellId = "irons_spellbooks:fireball";
+    public String nativeSpellId = "";
     public boolean wildMagic = false;
     public int nativeSpellLevel = 1;
     public int nativeSpellCooldown = 100;
     public int nativeSpellManaCost = 25;
 
-    public String nativeSpellId1 = "irons_spellbooks:fireball";
+    public String nativeSpellId1 = "";
     public boolean wildMagic1 = false;
     public int nativeSpellLevel1 = 1;
 
-    public String nativeSpellId2 = "irons_spellbooks:lightning_lance";
+    public String nativeSpellId2 = "";
     public boolean wildMagic2 = false;
     public int nativeSpellLevel2 = 1;
 
-    public String nativeSpellId3 = "irons_spellbooks:frostbite";
+    public String nativeSpellId3 = "";
     public boolean wildMagic3 = false;
     public int nativeSpellLevel3 = 1;
 
-    public String nativeSpellId4 = "irons_spellbooks:starfall";
+    public String nativeSpellId4 = "";
     public boolean wildMagic4 = false;
     public int nativeSpellLevel4 = 1;
 
-    public String nativeSpellId5 = "totweaks:time_stop";
+    public String nativeSpellId5 = "";
     public boolean wildMagic5 = false;
     public int nativeSpellLevel5 = 1;
 
     public boolean enableWereNativeSpells = false;
-    public String wereNativeSpellId = "irons_spellbooks:blood_slash";
+    public String wereNativeSpellId = "";
     public boolean wereWildMagic = false;
     public int wereNativeSpellLevel = 2;
     public int wereNativeSpellCooldown = 60;
     public int wereNativeSpellManaCost = 20;
 
-    public String wereNativeSpellId1 = "irons_spellbooks:blood_slash";
+    public String wereNativeSpellId1 = "";
     public boolean wereWildMagic1 = false;
     public int wereNativeSpellLevel1 = 2;
 
-    public String wereNativeSpellId2 = "irons_spellbooks:fire_breath";
+    public String wereNativeSpellId2 = "";
     public boolean wereWildMagic2 = false;
     public int wereNativeSpellLevel2 = 2;
 
-    public String wereNativeSpellId3 = "irons_spellbooks:icicle";
+    public String wereNativeSpellId3 = "";
     public boolean wereWildMagic3 = false;
     public int wereNativeSpellLevel3 = 2;
 
-    public String wereNativeSpellId4 = "irons_spellbooks:black_hole";
+    public String wereNativeSpellId4 = "";
     public boolean wereWildMagic4 = false;
     public int wereNativeSpellLevel4 = 2;
 
-    public String wereNativeSpellId5 = "totweaks:spatial_rend";
+    public String wereNativeSpellId5 = "";
     public boolean wereWildMagic5 = false;
     public int wereNativeSpellLevel5 = 2;
 
     public String getNativeSpellId(int slot, boolean isWere) {
         if (isWere) {
             switch (slot) {
-                case 2: return (wereNativeSpellId2 != null && !wereNativeSpellId2.isEmpty()) ? wereNativeSpellId2 : "irons_spellbooks:fire_breath";
-                case 3: return (wereNativeSpellId3 != null && !wereNativeSpellId3.isEmpty()) ? wereNativeSpellId3 : "irons_spellbooks:icicle";
-                case 4: return (wereNativeSpellId4 != null && !wereNativeSpellId4.isEmpty()) ? wereNativeSpellId4 : "irons_spellbooks:black_hole";
-                case 5: return (wereNativeSpellId5 != null && !wereNativeSpellId5.isEmpty()) ? wereNativeSpellId5 : "totweaks:spatial_rend";
-                default: return (wereNativeSpellId1 != null && !wereNativeSpellId1.isEmpty()) ? wereNativeSpellId1 : (wereNativeSpellId != null ? wereNativeSpellId : "irons_spellbooks:blood_slash");
+                case 2: return wereNativeSpellId2 != null ? wereNativeSpellId2 : "";
+                case 3: return wereNativeSpellId3 != null ? wereNativeSpellId3 : "";
+                case 4: return wereNativeSpellId4 != null ? wereNativeSpellId4 : "";
+                case 5: return wereNativeSpellId5 != null ? wereNativeSpellId5 : "";
+                default: return (wereNativeSpellId1 != null && !wereNativeSpellId1.isEmpty()) ? wereNativeSpellId1 : (wereNativeSpellId != null ? wereNativeSpellId : "");
             }
         } else {
             switch (slot) {
-                case 2: return (nativeSpellId2 != null && !nativeSpellId2.isEmpty()) ? nativeSpellId2 : "irons_spellbooks:lightning_lance";
-                case 3: return (nativeSpellId3 != null && !nativeSpellId3.isEmpty()) ? nativeSpellId3 : "irons_spellbooks:frostbite";
-                case 4: return (nativeSpellId4 != null && !nativeSpellId4.isEmpty()) ? nativeSpellId4 : "irons_spellbooks:starfall";
-                case 5: return (nativeSpellId5 != null && !nativeSpellId5.isEmpty()) ? nativeSpellId5 : "totweaks:time_stop";
-                default: return (nativeSpellId1 != null && !nativeSpellId1.isEmpty()) ? nativeSpellId1 : (nativeSpellId != null ? nativeSpellId : "irons_spellbooks:fireball");
+                case 2: return nativeSpellId2 != null ? nativeSpellId2 : "";
+                case 3: return nativeSpellId3 != null ? nativeSpellId3 : "";
+                case 4: return nativeSpellId4 != null ? nativeSpellId4 : "";
+                case 5: return nativeSpellId5 != null ? nativeSpellId5 : "";
+                default: return (nativeSpellId1 != null && !nativeSpellId1.isEmpty()) ? nativeSpellId1 : (nativeSpellId != null ? nativeSpellId : "");
             }
         }
     }
