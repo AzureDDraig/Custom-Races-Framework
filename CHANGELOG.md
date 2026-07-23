@@ -4,6 +4,15 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b061a] - 2026-07-23
+
+### 🤝 Mob Alliance In-Game Targeting Interceptor
+- **Mob AI Targeting Listener (`MobAllianceHandler.java`)**:
+  - Implemented `MobAllianceHandler.java` to dynamically check nearby mob AI targets (`mob.getTarget() == player`).
+  - Automatically clears mob aggression (`mob.setTarget(null)`) for mobs configured with `"friendly"`, `"neutral"`, or `"allied"` stances in **Tab 7 (Mob Alliances)**.
+
+---
+
 ## [1.0.0-b060a] - 2026-07-23
 
 ### 🔊 Custom Race & Were-Form In-Game Sound FX Engine
