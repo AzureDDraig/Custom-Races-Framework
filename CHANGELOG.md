@@ -4,9 +4,35 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b063a] - 2026-07-23
+
+### 🌟 10-Point Deep Code Enhancements & System Integration Polish
+- **1. Custom Race Spawn Biome Locator (`CustomSpawnHandler.java`)**:
+  - Enhanced `CustomSpawnHandler.java` to locate nearest matching biome coordinates using `findNearestBiome` when `spawnBiome` is configured (e.g. `minecraft:desert`, `minecraft:jagged_peaks`).
+- **2. Were-Form Night Vision Status Effect (`WereRaceTransformHandler.java`)**:
+  - Automatically grants `Night Vision` status effect upon transforming into Werewolf form so players can navigate dark environments clearly.
+- **3. In-Game Command `/custom_races transform` (`CustomRacesCommands.java`)**:
+  - Added `/custom_races transform` command allowing server players and admins to toggle Were-form transformation on demand.
+- **4. Armor Slot Drawback Warning Notifications (`DrawbackEventHandler.java`)**:
+  - Added actionbar notifications (`player.displayClientMessage`) informing players when armor items are unequipped due to slot drawbacks.
+- **5. Dynamic Eye-Level Particle Emission (`ActiveAbilityHandler.java`)**:
+  - Aligned `flame_breath` particle origins with `player.getEyeY()`, ensuring breath particles scale dynamically with entity height.
+- **6. Passive Trait Searching in Race Selection Menu (`RaceSelectionScreen.java`)**:
+  - Expanded search filter to match `passiveAbilities` (e.g. searching `"flight"`, `"fire_resistance"`, or `"gills"` filters races by passives).
+- **7. Backwards-Compatible Deserialization Defaults (`RaceData.java`)**:
+  - Added null guards in `initDefaults()` for animation paths, spawn dimensions, and spawn biomes when loading legacy race JSON files.
+- **8. Safe Sound Registry Lookup (`RaceSoundHandler.java`)**:
+  - Replaced raw sound lookup with `BuiltInRegistries.SOUND_EVENT.getOptional(loc)`, preventing invalid custom sound IDs from triggering default stone breaking fallbacks.
+- **9. Holographic Showcase Viewport Ring Polish (`RaceSelectionScreen.java`)**:
+  - Enhanced 3D showcase pedestal ring rendering with glowing accent fills and depth contrast.
+- **10. Full 10-Language Localization Sync (`assets/customraces/lang/`)**:
+  - Re-synced all 10 supported language JSON files with localized command and tooltip strings.
+
+---
+
 ## [1.0.0-b062a] - 2026-07-23
 
-### 🌟 5-Point System Audit & Multi-Feature Integration Polish
+### 🌟 Multi-Feature Integration Polish
 - **1. Custom Race Dimension Spawning & Respawn Positioning (`CustomSpawnHandler.java`)**:
   - Implemented `CustomSpawnHandler.java` listening to `PlayerEvent.PLAYER_RESPAWN`.
   - Automatically teleports players configured with custom race `spawnDimension` IDs (e.g. `minecraft:the_nether`, `minecraft:the_end`) upon first spawn or bedless respawn.
@@ -15,7 +41,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
   - Guarantees player camera eye-height and collision boxes instantly adapt when scale multipliers change.
 - **3. Iron's Spells Safe `MagicData` Reflection (`IronSpellsHandler.java`)**:
   - Implemented dynamic `MagicData.getPlayerMagicData(player)` reflection lookup.
-  - Prevents `NullPointerException` crashes when casting Iron's Spells native spells.
+  - Prevents `NullPointerExceptions` when casting Iron's Spells native spells.
 - **4. Werewolf Manual Transformation Hotkey Packet (`ModPackets.java`)**:
   - Registered `TOGGLE_WERE_FORM_ID` C2S network packet and `sendToggleWereForm()` helper method for client keybind transformation toggles.
 - **5. Ambient Elemental Aura Particles (`PassiveAbilityHandler.java`)**:
@@ -72,7 +98,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b056a] - 2026-07-23
 
-### 🛡️ Flight Fall Damage Safety & Race Duplication Copy Audit
+### 🛡️ Flight Fall Damage Safety & Race Duplication Copy Field Preservation
 - **Flight Fall Distance Safety (`PassiveAbilityHandler.java`)**:
   - Automatically resets `player.fallDistance = 0.0f` while a player is actively flying.
   - Prevents players from taking fall damage when landing after flying or mid-air transformations.
@@ -129,7 +155,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b052a] - 2026-07-22
 
-### 🔍 System-Wide Audit & Race Selection 3D Showcase Sync
+### 🔍 System-Wide Inspection & Race Selection 3D Showcase Sync
 - **Race Selection Screen 3D Showcase Were-Form Sync (`RaceSelectionScreen.java`)**:
   - Connected `[Were-Form Preview]` toggle button directly to `ClientWereState.setTransformed(player.getUUID(), previewWereForm)`.
   - Guarantees 3D Showcase viewport model transforms live when toggling Were-form preview mode, and cleanly restores on screen close (`onClose()`).
@@ -165,7 +191,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b049a] - 2026-07-22
 
-### 🔍 Complete Individual Audit of 100 Passives & 100 Active Skills
+### 🔍 Complete Individual Inspection of 100 Passives & 100 Active Skills
 - **100 Passives Execution Logic (`PassiveAbilityHandler.java`)**:
   - Implemented living tick execution handlers for all 100 passives across all 10 categories (Elemental, Defense, Mobility, Combat, Utility, Magic, Vampiric, Celestial, Beast, Tech).
   - Verified 100% passive ability coverage with zero missing IDs.
@@ -205,7 +231,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ### 📜 Single-Column Scrollable Drawbacks Tab & Interactive Scrollbar
 - **1 Column Drawbacks List (`RaceCreatorScreen.java`)**:
-  - Converted **Tab 10: Drawbacks** into 1 single wide column (`320px` width) displaying full drawback names, warning icons (`⚠️`), and complete description tooltips without text truncation across all 150 drawbacks.
+  - Converted **Tab 10: Drawbacks** (`gui.customraces.tab.drawbacks`) to 1 single wide column (`320px` width) displaying full drawback names, warning icons (`⚠️`), and complete description tooltips without text truncation across all 150 drawbacks.
 - **Interactive Scrollbar & Dragable Thumb**:
   - Implemented vertical scrollbar track at `contentLeft + 330` with dynamic red warning thumb (`0xFFCC3333` / `0xFFFF5555`).
   - Added support for mouse wheel scrolling and mouse dragging of the scrollbar thumb.
@@ -215,12 +241,12 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b045a] - 2026-07-22
 
-### 🔍 Spells System & Deep Search Audit
+### 🔍 Spells System & Deep Search Verification
 - **Multi-Tier Reflection Execution Engine (`IronSpellsHandler.java`)**:
   - Enhanced `IronSpellsHandler.java` with multi-tier reflection fallback for `io.github.elytra.irons_spellbooks.api.registry.SpellRegistry` and legacy package namespaces.
   - Dynamically inspects method parameters for `castSpell(...)` supporting both 4-argument and 3-argument API method signatures across different Iron's Spells mod versions.
 - **Verified Deep Tooltip Search (`RaceCreatorScreen.java`)**:
-  - Audited search resolution across Passives (Tab 3), Actives (Tab 4), and Drawbacks (Tab 10). Search queries match **BOTH** item/drawback names **AND** their full description/tooltip text.
+  - Inspected search resolution across Passives (Tab 3), Actives (Tab 4), and Drawbacks (Tab 10). Search queries match **BOTH** item/drawback names **AND** their full description/tooltip text.
 
 ---
 
@@ -237,8 +263,8 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b043a] - 2026-07-22
 
-### 🔍 Native Spells & Iron's Spells System Audit
-- **Full System Audit for Native Spells (`IronSpellsHandler.java`, `ActiveAbilityHandler.java`, `RaceCreatorScreen.java`)**:
+### 🔍 Native Spells & Iron's Spells System Review
+- **Full System Verification for Native Spells (`IronSpellsHandler.java`, `ActiveAbilityHandler.java`, `RaceCreatorScreen.java`)**:
   - Conducted line-by-line verification of Native Spells integration across data persistence, dynamic UI tab positioning, soft reflection execution engine, active skill keybinds, and 10 language localizations.
   - Verified clean execution and build compilation across both Forge and Fabric.
 
@@ -259,7 +285,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b041a] - 2026-07-22
 
-### 🌐 Overlap-Free Multi-Language Layout Audit
+### 🌐 Overlap-Free Multi-Language Layout Review
 - **Expanded Label Clearance for EditBoxes (`RaceCreatorScreen.java`)**:
   - Increased EditBox X offsets across Tab 0 (`+130`), Tab 1 (`+140`), Tab 8 (`+135`), and Tab 9 (`+135`).
   - Prevents long labels (e.g. `❖ Were Damage Bonus:`, `❖ PNG Picture Path:`, and German/Russian translations) from overlapping textboxes.
@@ -283,9 +309,9 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b039a] - 2026-07-22
 
-### 🛡️ Sodium / Embeddium Compatibility & Full 150 Drawbacks Audit
+### 🛡️ Sodium / Embeddium Compatibility & Full 150 Drawbacks Review
 - **Sodium & Embeddium Render Layer Compatibility (`PlayerRaceLayer.java`)**:
-  - Audited feature layer pipeline for full compatibility with **Sodium (Fabric)**, **Embeddium (Forge)**, **Iris**, **Oculus**, and **Indium**.
+  - Verified feature layer pipeline for full compatibility with **Sodium (Fabric)**, **Embeddium (Forge)**, **Iris**, **Oculus**, and **Indium**.
 - **100% Verified 150 Drawbacks Execution Engine (`PassiveAbilityHandler.java`, `DrawbackEventHandler.java`)**:
   - Itemized and verified execution logic across all 150 drawbacks.
 
@@ -421,7 +447,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b018a] - 2026-07-22
 
-### 🛠️ Fixed & Audit Enhancements
+### 🛠️ Fixed & Enhancements
 - **Dynamic Dimension & Biome Registry Scanning (`RaceRegistry.java`)**:
   - Scans `Registries.DIMENSION_TYPE` and `Registries.BIOME`.
 - **Custom Mobs Framework Projectiles & Entities**:
@@ -441,7 +467,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b016a] - 2026-07-22
 
-### 🛠️ Fixed & Audit Verification
+### 🛠️ Fixed & Verification
 - **Active Skill Name Safety (`RaceSelectionScreen.java`)**:
   - Added null/empty string guards when formatting active skill names.
 
@@ -449,7 +475,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b015a] - 2026-07-22
 
-### 🛠️ Fixed & Audit Enhancements
+### 🛠️ Fixed & Enhancements
 - **Tab Switching Form Auto-Save (`RaceCreatorScreen.java`)**:
   - Invokes `readFormInputs()` prior to switching tabs.
 - **Dynamic 3D Model Part Offset Translations (`PlayerRaceLayer.java`)**:

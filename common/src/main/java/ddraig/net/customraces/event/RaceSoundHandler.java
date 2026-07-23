@@ -61,9 +61,9 @@ public class RaceSoundHandler {
         if (soundId == null || soundId.trim().isEmpty() || !(player.level() instanceof ServerLevel level)) return;
         try {
             ResourceLocation loc = new ResourceLocation(soundId.trim());
-            SoundEvent sound = BuiltInRegistries.SOUND_EVENT.get(loc);
-            if (sound != null) {
-                level.playSound(null, player.blockPosition(), sound, SoundSource.PLAYERS, volume, pitch);
+            java.util.Optional<SoundEvent> opt = BuiltInRegistries.SOUND_EVENT.getOptional(loc);
+            if (opt.isPresent()) {
+                level.playSound(null, player.blockPosition(), opt.get(), SoundSource.PLAYERS, volume, pitch);
             }
         } catch (Exception ignored) {}
     }

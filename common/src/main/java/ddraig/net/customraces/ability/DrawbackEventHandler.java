@@ -171,6 +171,9 @@ public class DrawbackEventHandler {
             if (!player.getInventory().add(stack)) {
                 player.drop(stack, false);
             }
+            if (player.tickCount % 60 == 0) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c[!] Your race cannot equip this item!"), true);
+            }
         }
     }
 

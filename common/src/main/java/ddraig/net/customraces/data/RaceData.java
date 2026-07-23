@@ -267,6 +267,13 @@ public class RaceData {
         if (!partTransforms.containsKey("halo")) partTransforms.put("halo", new PartTransformData());
         if (!partTransforms.containsKey("legs")) partTransforms.put("legs", new PartTransformData());
         if (!partTransforms.containsKey("custom")) partTransforms.put("custom", new PartTransformData());
+
+        if (flyAnim == null) flyAnim = "animation.model.fly";
+        if (swimAnim == null) swimAnim = "animation.model.swim";
+        if (wereFlyAnim == null) wereFlyAnim = "animation.were.fly";
+        if (wereSwimAnim == null) wereSwimAnim = "animation.were.swim";
+        if (spawnDimension == null) spawnDimension = "";
+        if (spawnBiome == null) spawnBiome = "";
     }
 
     public PartTransformData getTransform(String partKey) {

@@ -37,8 +37,30 @@ public class CustomSpawnHandler {
             ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimLoc);
             ServerLevel targetLevel = player.getServer().getLevel(dimKey);
 
-            if (targetLevel != null && targetLevel != player.serverLevel()) {
+            if (targetLevel != null) {
                 BlockPos spawnPos = targetLevel.getSharedSpawnPos();
+
+                if (race.spawnBiome != null && !race.spawnBiome.trim().isEmpty()) {
+                    try {
+                        ResourceLocation biomeLoc = new ResourceLocation(race.spawnBiome.trim());
+                        for (java.lang.reflect.Method m : targetLevel.getClass().getMethods()) {
+                            if (m.getName().toLowerCase().contains("findnearestbiome")) {
+                                try {
+                                    m.setAccessible(true);
+                                    java.util.function.Predicate<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> pred = b -> b.unwrapKey().map(k -> k.location().equals(biomeLoc)).orElse(false);
+                                    Object res = m.invoke(targetLevel, pred, spawnPos, 6400, 32, 64);
+                                    if (res instanceof com.mojang.datafixers.util.Pair<?, ?> pair) {
+                                        if (pair.getFirst() instanceof BlockPos bp) {
+                                            spawnPos = targetLevel.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bp);
+                                            break;
+                                        }
+                                    }
+                                } catch (Exception ignored) {}
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+
                 player.teleportTo(targetLevel, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());
             }
         } catch (Exception e) {

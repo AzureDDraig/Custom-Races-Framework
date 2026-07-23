@@ -106,7 +106,7 @@ public class RaceSelectionScreen extends Screen {
         String query = searchBox != null ? searchBox.getValue().toLowerCase().trim() : "";
         filteredRaces = RaceRegistry.loadedRaces.values().stream()
                 .filter(r -> r != null && !r.id.toLowerCase().startsWith("new_race") && !r.name.equalsIgnoreCase("New Race"))
-                .filter(r -> query.isEmpty() || r.name.toLowerCase().contains(query) || r.lore.toLowerCase().contains(query))
+                .filter(r -> query.isEmpty() || r.name.toLowerCase().contains(query) || r.lore.toLowerCase().contains(query) || (r.passiveAbilities != null && r.passiveAbilities.stream().anyMatch(p -> p.toLowerCase().contains(query))))
                 .collect(Collectors.toList());
     }
 
@@ -317,8 +317,9 @@ public class RaceSelectionScreen extends Screen {
             guiGraphics.enableScissor(rightLeft + 2, topY + 21, rightRight - 2, bottomY - 2);
 
             // Render Holographic Pedestal Ring
-            guiGraphics.fill(previewX - 40, previewY - 5, previewX + 40, previewY + 5, (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x40FF0000 : 0x3000CEC9);
-            guiGraphics.fill(previewX - 30, previewY - 3, previewX + 30, previewY + 3, (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x80880000 : 0x606C5CE7);
+            int pedColor = (previewWereForm && selectedRace != null && selectedRace.enableWereRace) ? 0x60FF2222 : 0x5000CEC9;
+            guiGraphics.fill(previewX - 45, previewY - 4, previewX + 45, previewY + 4, pedColor);
+            guiGraphics.fill(previewX - 35, previewY - 2, previewX + 35, previewY + 2, 0x80121520);
 
             InventoryScreen.renderEntityInInventoryFollowsMouse(
                     guiGraphics, previewX, previewY, scale,

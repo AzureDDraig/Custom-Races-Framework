@@ -115,6 +115,7 @@ public class WereRaceTransformHandler {
 
         // Apply Were-Form Attribute Modifiers
         clearWereModifiers(player);
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.NIGHT_VISION, 12000, 0, false, false, true));
         if (race != null) {
             AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
             if (healthAttr != null && race.wereHealthBonus > 0) {

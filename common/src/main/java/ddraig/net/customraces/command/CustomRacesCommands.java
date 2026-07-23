@@ -59,6 +59,14 @@ public class CustomRacesCommands {
                             return 1;
                         })
                 )
+                // Player command: /custom_races transform
+                .then(Commands.literal("transform")
+                        .executes(context -> {
+                            ServerPlayer player = context.getSource().getPlayerOrException();
+                            ddraig.net.customraces.event.WereRaceTransformHandler.toggleManualWereForm(player);
+                            return 1;
+                        })
+                )
                 // Player command: /custom_races codex
                 .then(Commands.literal("codex")
                         .executes(context -> {
