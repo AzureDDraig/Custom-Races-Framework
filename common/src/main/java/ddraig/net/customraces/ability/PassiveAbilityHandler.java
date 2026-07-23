@@ -3,6 +3,8 @@ package ddraig.net.customraces.ability;
 import ddraig.net.customraces.data.RaceData;
 import ddraig.net.customraces.data.RaceRegistry;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -94,6 +96,25 @@ public class PassiveAbilityHandler {
         }
         if (passives.contains("thermal_immunity")) {
             player.setTicksFrozen(0);
+        }
+
+        // Ambient Elemental Aura Particles
+        if (player.level() instanceof ServerLevel sLevel && player.tickCount % 10 == 0) {
+            if (passives.contains("fire_aura") || passives.contains("fireproof_scales")) {
+                sLevel.sendParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 0.5, player.getZ(), 3, 0.3, 0.5, 0.3, 0.02);
+            }
+            if (passives.contains("ice_aura") || passives.contains("frost_immunity")) {
+                sLevel.sendParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getY() + 0.5, player.getZ(), 3, 0.3, 0.5, 0.3, 0.02);
+            }
+            if (passives.contains("lightning_aura") || passives.contains("shock_immunity")) {
+                sLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getY() + 0.5, player.getZ(), 3, 0.3, 0.5, 0.3, 0.02);
+            }
+            if (passives.contains("holy_aura") || passives.contains("divine_shield")) {
+                sLevel.sendParticles(ParticleTypes.INSTANT_EFFECT, player.getX(), player.getY() + 0.5, player.getZ(), 3, 0.3, 0.5, 0.3, 0.02);
+            }
+            if (passives.contains("shadow_aura") || passives.contains("void_aura")) {
+                sLevel.sendParticles(ParticleTypes.SMOKE, player.getX(), player.getY() + 0.5, player.getZ(), 3, 0.3, 0.5, 0.3, 0.02);
+            }
         }
 
         // 3. Movement & Physics

@@ -102,6 +102,7 @@ public class IronSpellsHandler {
 
             if (spellObj != null) {
                 Object castSource = getCastSourceEnum();
+                Object magicData = getPlayerMagicData(player);
                 for (Method m : spellObj.getClass().getMethods()) {
                     String mName = m.getName().toLowerCase();
                     if (mName.contains("cast") || mName.contains("oncast") || mName.contains("initiate")) {
@@ -109,7 +110,7 @@ public class IronSpellsHandler {
                             m.setAccessible(true);
                             Class<?>[] params = m.getParameterTypes();
                             if (params.length == 5) {
-                                m.invoke(spellObj, player.level(), spellLevel, player, castSource, null);
+                                m.invoke(spellObj, player.level(), spellLevel, player, castSource, magicData);
                                 return;
                             } else if (params.length == 4) {
                                 m.invoke(spellObj, player.level(), spellLevel, player, castSource);
@@ -174,5 +175,27 @@ public class IronSpellsHandler {
             } catch (Exception ignored) {}
             return null;
         }
+    }
+
+    private static Object getPlayerMagicData(Player player) {
+        if (player == null) return null;
+        String[] classPaths = {
+            "net.ironsspellbooks.api.magic.MagicData",
+            "io.github.elytra.irons_spellbooks.api.magic.MagicData"
+        };
+        for (String cp : classPaths) {
+            try {
+                Class<?> clazz = Class.forName(cp);
+                Method getMethod = clazz.getMethod("getPlayerMagicData", Player.class);
+                return getMethod.invoke(null, player);
+            } catch (Exception e1) {
+                try {
+                    Class<?> clazz = Class.forName(cp);
+                    Method getMethod = clazz.getMethod("get", Player.class);
+                    return getMethod.invoke(null, player);
+                } catch (Exception ignored) {}
+            }
+        }
+        return null;
     }
 }

@@ -4,6 +4,25 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b062a] - 2026-07-23
+
+### 🌟 5-Point System Audit & Multi-Feature Integration Polish
+- **1. Custom Race Dimension Spawning & Respawn Positioning (`CustomSpawnHandler.java`)**:
+  - Implemented `CustomSpawnHandler.java` listening to `PlayerEvent.PLAYER_RESPAWN`.
+  - Automatically teleports players configured with custom race `spawnDimension` IDs (e.g. `minecraft:the_nether`, `minecraft:the_end`) upon first spawn or bedless respawn.
+- **2. Pehkui Eye-Height & Collision Box Dimensions Refresh (`PehkuiIntegration.java`)**:
+  - Added `player.refreshDimensions()` calls to `applyRaceScales` and `resetPlayerScales`.
+  - Guarantees player camera eye-height and collision boxes instantly adapt when scale multipliers change.
+- **3. Iron's Spells Safe `MagicData` Reflection (`IronSpellsHandler.java`)**:
+  - Implemented dynamic `MagicData.getPlayerMagicData(player)` reflection lookup.
+  - Prevents `NullPointerException` crashes when casting Iron's Spells native spells.
+- **4. Werewolf Manual Transformation Hotkey Packet (`ModPackets.java`)**:
+  - Registered `TOGGLE_WERE_FORM_ID` C2S network packet and `sendToggleWereForm()` helper method for client keybind transformation toggles.
+- **5. Ambient Elemental Aura Particles (`PassiveAbilityHandler.java`)**:
+  - Implemented 3D ambient particle rendering around players with elemental passives (`fire_aura`, `ice_aura`, `lightning_aura`, `holy_aura`, `shadow_aura`).
+
+---
+
 ## [1.0.0-b061a] - 2026-07-23
 
 ### 🤝 Mob Alliance In-Game Targeting Interceptor

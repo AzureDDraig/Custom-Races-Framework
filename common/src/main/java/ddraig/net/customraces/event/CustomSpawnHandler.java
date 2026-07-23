@@ -1,0 +1,48 @@
+package ddraig.net.customraces.event;
+
+import ddraig.net.customraces.data.RaceData;
+import ddraig.net.customraces.data.RaceRegistry;
+import dev.architectury.event.events.common.PlayerEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+
+/**
+ * Handles custom race dimension spawning and respawn positioning.
+ */
+public class CustomSpawnHandler {
+
+    public static void init() {
+        PlayerEvent.PLAYER_RESPAWN.register((newPlayer, conqueredEnd) -> {
+            if (newPlayer != null) {
+                // If player has no bed/anchor spawn, use race spawn dimension
+                if (newPlayer.getRespawnPosition() == null) {
+                    teleportToRaceSpawnDimension(newPlayer);
+                }
+            }
+        });
+    }
+
+    public static void teleportToRaceSpawnDimension(ServerPlayer player) {
+        if (player == null || player.getServer() == null) return;
+        RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
+        if (race == null || race.spawnDimension == null || race.spawnDimension.trim().isEmpty()) return;
+
+        try {
+            ResourceLocation dimLoc = new ResourceLocation(race.spawnDimension.trim());
+            ResourceKey<Level> dimKey = ResourceKey.create(Registries.DIMENSION, dimLoc);
+            ServerLevel targetLevel = player.getServer().getLevel(dimKey);
+
+            if (targetLevel != null && targetLevel != player.serverLevel()) {
+                BlockPos spawnPos = targetLevel.getSharedSpawnPos();
+                player.teleportTo(targetLevel, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());
+            }
+        } catch (Exception e) {
+            System.err.println("[CustomRaces] Failed to teleport to race spawn dimension: " + e.getMessage());
+        }
+    }
+}

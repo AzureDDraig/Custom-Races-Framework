@@ -121,6 +121,9 @@ public class PehkuiIntegration {
                 } catch (Exception ignored) {}
             } catch (Exception ignored) {}
         }
+        try {
+            player.refreshDimensions();
+        } catch (Exception ignored) {}
     }
 
     public static void resetPlayerScales(Player player) {
@@ -158,6 +161,9 @@ public class PehkuiIntegration {
                 if (mData != null) { setTargetScaleMethod.invoke(mData, 1.0f); setScaleMethod.invoke(mData, 1.0f); }
             } catch (Exception ignored) {}
         }
+        try {
+            player.refreshDimensions();
+        } catch (Exception ignored) {}
     }
 
     private static void applyVanillaAttributes(Player player, RaceData race) {

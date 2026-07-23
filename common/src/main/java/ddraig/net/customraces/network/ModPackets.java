@@ -34,6 +34,7 @@ public class ModPackets {
     public static final ResourceLocation OPEN_SELECTION_ID = new ResourceLocation("customraces", "open_selection");
     public static final ResourceLocation OPEN_CREATOR_ID = new ResourceLocation("customraces", "open_creator");
     public static final ResourceLocation SYNC_WERE_STATE_ID = new ResourceLocation("customraces", "sync_were_state");
+    public static final ResourceLocation TOGGLE_WERE_FORM_ID = new ResourceLocation("customraces", "toggle_were_form");
 
     public static void register() {
         // Register Client-Bound (S2C)
@@ -141,6 +142,13 @@ public class ModPackets {
                 ActiveAbilityHandler.triggerAbility(player, slot);
             });
         });
+
+        NetworkManager.registerReceiver(NetworkManager.Side.C2S, TOGGLE_WERE_FORM_ID, (buf, context) -> {
+            ServerPlayer player = (ServerPlayer) context.getPlayer();
+            context.queue(() -> {
+                ddraig.net.customraces.event.WereRaceTransformHandler.toggleManualWereForm(player);
+            });
+        });
     }
 
     public static void syncRacesToAll(net.minecraft.server.MinecraftServer server) {
@@ -187,6 +195,11 @@ public class ModPackets {
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         buf.writeInt(slot);
         NetworkManager.sendToServer(TRIGGER_ABILITY_ID, buf);
+    }
+
+    public static void sendToggleWereForm() {
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        NetworkManager.sendToServer(TOGGLE_WERE_FORM_ID, buf);
     }
 
     public static void openRaceSelection(ServerPlayer player) {
