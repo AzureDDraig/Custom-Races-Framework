@@ -2,7 +2,7 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
-## [1.0.0-b090a] - 2026-07-23
+## [1.0.0-b092a] - 2026-07-23
 
 ### 🔮 Core Reflection Bridge & Iron's Spells Integration Engine
 - **Multi-Tiered Dynamic Candidate Method Selection (`IronSpellsHandler.java`)**:
