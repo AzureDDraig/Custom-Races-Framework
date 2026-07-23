@@ -4,120 +4,19 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ---
 
+## [1.0.0-b044a] - 2026-07-22
+
+### 🔍 Real-Time Deep Search Across Passives, Actives, and Drawbacks
+- **GUI Search Boxes (`RaceCreatorScreen.java`)**:
+  - Added dedicated search input bars at `contentTop` for **Tab 3 (Passives)**, **Tab 4 (Actives)**, and **Tab 10 (Drawbacks)**.
+  - Shifted grid and checkbox layouts cleanly to `contentTop + 24`, guaranteeing zero overlap over headers or search inputs.
+- **Deep Tooltip & Description Searching**:
+  - Search queries match **BOTH** item/drawback names **AND** their full description/tooltip text (e.g. searching *"fire"*, *"armor"*, *"speed"*, *"iron"*, *"damage"*, *"slowness"* instantly isolates all matching traits and drawbacks).
+
+---
+
 ## [1.0.0-b043a] - 2026-07-22
 
 ### 🔍 Native Spells & Iron's Spells System Audit
 - **Full System Audit for Native Spells (`IronSpellsHandler.java`, `ActiveAbilityHandler.java`, `RaceCreatorScreen.java`)**:
   - Conducted line-by-line verification of Native Spells integration across data persistence, dynamic UI tab positioning, soft reflection execution engine, active skill keybinds, and 10 language localizations.
-  - Verified clean execution and build compilation across both Forge and Fabric.
-
----
-
-## [1.0.0-b042a] - 2026-07-22
-
-### 🔮 Iron's Spells 'n Spellbooks & T.O Tweaks Integration
-- **Native Spell Ability & Dynamic Tab (`RaceCreatorScreen.java`, `IronSpellsHandler.java`)**:
-  - Added `"Native Spell"` capability and dedicated **Native Spells** tab (`gui.customraces.tab.native_spells`).
-  - **Spell Dropdown & Cycle Selector**: Populated with all 50+ spells from **Iron's Spells 'n Spellbooks** and **T.O Tweaks** (`irons_spellbooks:fireball`, `irons_spellbooks:lightning_lance`, `irons_spellbooks:blood_slash`, `totweaks:time_stop`, `totweaks:spatial_rend`, etc.).
-  - **Wild Magic Checkbox**: Checkbox to enable Wild Magic, casting a random spell from any school as if the player cast it.
-  - **10 Language Localizations**: Added translated tooltips and headers for `en_us`, `de_de`, `es_es`, `fr_fr`, `it_it`, `ja_jp`, `ko_kr`, `pt_br`, `ru_ru`, `zh_cn` stating: *"Requires Iron's Spells 'n Spellbooks mod to function."*
-- **Soft Reflection Execution Engine (`IronSpellsHandler.java`)**:
-  - Soft-reflection execution allows seamless compilation and execution with or without Iron's Spells loaded.
-
----
-
-## [1.0.0-b041a] - 2026-07-22
-
-### 🌐 Overlap-Free Multi-Language Layout Audit
-- **Expanded Label Clearance for EditBoxes (`RaceCreatorScreen.java`)**:
-  - Increased EditBox X offsets across Tab 0 (`+130`), Tab 1 (`+140`), Tab 8 (`+135`), and Tab 9 (`+135`).
-  - Prevents long labels (e.g. `❖ Were Damage Bonus:`, `❖ PNG Picture Path:`, and German/Russian translations) from overlapping textboxes.
-- **Smart Checkbox Truncation & Hover Tooltips**:
-  - Added dynamic font width truncation (`font.plainSubstrByWidth(rawName, colWidth - 28) + ".."`) and full hover tooltips for multi-column Checkbox grids in Tab 3 (Passives) and Tab 10 (Drawbacks).
-  - Guarantees 100% overlap-free checkbox grids across all 9 supported languages.
-
----
-
-## [1.0.0-b040a] - 2026-07-22
-
-### 📐 Fixed GUI Text & Tab Overlaps
-- **Dynamic Content Top Calculation (`RaceCreatorScreen.java`)**:
-  - Replaced hardcoded `contentTop = 50` and negative offsets (`contentTop - 12`) with dynamic offset calculation (`lastTabY + tabHeight + 14`).
-  - Guarantees section titles and content cards ALWAYS sit safely below the bottom row of tab buttons regardless of row count or screen resolution.
-- **Auto-Sizing Tab Buttons Across All Languages**:
-  - Replaced fixed `62px` tab widths with dynamic font width measurement (`Math.max(52, font.width(tabText) + 10)`).
-  - Eliminates tab text overflow and truncation across all 9 supported languages.
-
----
-
-## [1.0.0-b039a] - 2026-07-22
-
-### 🛡️ Sodium / Embeddium Compatibility & Full 150 Drawbacks Audit
-- **Sodium & Embeddium Render Layer Compatibility (`PlayerRaceLayer.java`)**:
-  - Audited feature layer pipeline for full compatibility with **Sodium (Fabric)**, **Embeddium (Forge)**, **Iris**, **Oculus**, and **Indium**.
-- **100% Verified 150 Drawbacks Execution Engine (`PassiveAbilityHandler.java`, `DrawbackEventHandler.java`)**:
-  - Itemized and verified execution logic across all 150 drawbacks.
-
----
-
-## [1.0.0-b038a] - 2026-07-22
-
-### 🌟 150 Total Race Drawbacks & Weaknesses Catalogue
-- **Full 150 Drawbacks System Expansion (`RaceCreatorScreen.java`, `DrawbackEventHandler.java`)**:
-  - Expanded **Tab 10: Drawbacks** (`gui.customraces.tab.drawbacks`) to include **150 unique drawbacks & weaknesses** across 9 categories.
-  - Implemented execution mechanics in `DrawbackEventHandler.java` for all 90 new drawbacks.
-
----
-
-## [1.0.0-b037a] - 2026-07-22
-
-### ⚡ Drawback Event Handler & Complete Verification
-- **Event-Driven Drawbacks Engine (`DrawbackEventHandler.java`)**:
-  - Implemented `DrawbackEventHandler.java` to handle event-driven mechanics for drawbacks.
-
----
-
-## [1.0.0-b036a] - 2026-07-22
-
-### ⚠️ Dedicated Tab 10: Drawbacks UI
-- **Tab 10: Drawbacks UI (`RaceCreatorScreen.java`)**:
-  - Added standalone Tab 10 for selecting drawbacks with red warning borders and Were-Form support.
-
----
-
-## [1.0.0-b035a] - 2026-07-22
-
-### 🎨 In-World & 3D GUI Player Model Preset Parts Rendering Fix
-- **Player Feature Renderer Registration**:
-  - Registered `PlayerRaceLayer` for player entity renderers via `LivingEntityFeatureRendererRegistrationCallback` on Fabric and `EntityRenderersEvent.AddLayers` on Forge.
-  - Preset body parts (Ears, Horns, Wings, Tail, Halo) now render live in-world and on 3D GUI player previews.
-
----
-
-## [1.0.0-b034a] - 2026-07-22
-
-### 🎬 Dynamic GeckoLib Animation JSON Parsing
-- **Direct Animation Key Extraction (`RaceRegistry.java`)**:
-  - Added `RaceRegistry.parseAnimationKeysFromFile(animPath)` to read GeckoLib animation JSON files directly from disk or Minecraft assets, populating autocomplete with actual animation names (`animation.elvenmage.idle`, etc.).
-
----
-
-## [1.0.0-b033a] - 2026-07-22
-
-### 🔄 Real-Time Auto-Save & Client Were-Form State Sync
-- **Real-Time Auto-Save (`RaceCreatorScreen.java`)**:
-  - Implemented `autoSaveWorkingRace()` so focus loss, keystrokes, tab clicks, and race switches instantly save race data to server/config.
-- **Were-Form Client State Sync (`ModPackets.java`, `WereRaceTransformHandler.java`)**:
-  - Registered `SYNC_WERE_STATE_ID` S2C packet to broadcast transformation states to `ClientWereState.java`.
-
----
-
-## [1.0.0-b026a] - 2026-07-22
-
-### 🐺 Fixed Playtester Reported Issues (GeckoLib Autocomplete, Sound Preview & Preset Parts 3D Render)
-- **Recursive GeckoLib Model & File Autocomplete (`RaceRegistry.java`)**:
-  - Implemented `scanFilesRecursively` helper method to scan model/texture/animation directories recursively.
-- **Client GUI Sound Preview Playback Fix (`RaceCreatorScreen.java`)**:
-  - Replaced player sound dispatch with `SimpleSoundInstance` played directly via `Minecraft.getInstance().getSoundManager().play()`.
-- **Real-Time Preset Body Parts 3D GUI Rendering (`RaceCreatorScreen.java`)**:
-  - Forces `PlayerRaceLayer` to render selected preset body parts, RGB colors, offsets, and scales live on 3D GUI player preview.

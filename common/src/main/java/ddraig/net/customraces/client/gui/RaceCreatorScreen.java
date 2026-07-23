@@ -78,6 +78,33 @@ public class RaceCreatorScreen extends Screen {
     // Form Mode Toggle (Base Form vs Were-Form)
     private boolean editingWereForm = false;
 
+    // Search Query State for Passives, Actives, and Drawbacks
+    private String searchPassivesQuery = "";
+    private String searchActivesQuery = "";
+    private String searchDrawbacksQuery = "";
+
+    private String getPassiveDescription(String passive) {
+        switch (passive.toLowerCase()) {
+            case "night_vision": return "Grants clear vision in pitch black darkness.";
+            case "water_breathing": return "Allows underwater breathing indefinitely.";
+            case "fire_resistance": return "Provides complete immunity to fire and lava.";
+            case "flight": return "Unlocks creative-style flying capability.";
+            case "slow_falling": return "Prevents fall damage and grants gentle gliding.";
+            case "regeneration": return "Constantly restores player health over time.";
+            case "wither_immunity": return "Immunity to Wither decay and damage.";
+            case "fall_damage_immunity": return "Immunity to all impact and fall damage.";
+            case "lava_swimming": return "Allows rapid swimming through lava.";
+            case "climbing": return "Allows climbing vertical wall surfaces.";
+            case "native_spell": return "Casts native spell or Wild Magic. Requires Iron's Spells mod.";
+            default: return passive.replace("_", " ");
+        }
+    }
+
+    private String getDrawbackDescription(String drawbackId) {
+        String name = drawbackId.replace("_", " ").toLowerCase();
+        return name + " weakness drawback penalty restriction curse vulnerability damage slowness debuff intolerance inability";
+    }
+
     public static final List<String> ALL_DRAWBACKS = java.util.List.of(
         // 1-10: Environmental & Elemental
         "water_vulnerability", "sunlight_burn", "sunlight_slowness", "cold_vulnerability", "fire_vulnerability",
@@ -503,17 +530,34 @@ public class RaceCreatorScreen extends Screen {
             }
 
         } else if (activeTab == 3) { // Passives
-            int py = contentTop + 18;
+            EditBox pSearch = new EditBox(this.font, contentLeft + 230, contentTop, 130, 16, Component.literal("Search"));
+            pSearch.setMaxLength(2048);
+            pSearch.setValue(searchPassivesQuery);
+            pSearch.setHint(Component.literal("🔍 Search..."));
+            pSearch.setResponder(val -> {
+                searchPassivesQuery = val;
+                this.init();
+            });
+            this.addRenderableWidget(pSearch);
+
+            int py = contentTop + 24;
             String[] allPassives = {
                 "night_vision", "water_breathing", "fire_resistance", "flight", "slow_falling",
-                "regeneration", "wither_immunity", "fall_damage_immunity", "lava_swimming", "climbing"
+                "regeneration", "wither_immunity", "fall_damage_immunity", "lava_swimming", "climbing", "native_spell"
             };
 
             List<String> targetList = (editingWereForm && workingRace.enableWereRace) ? workingRace.werePassiveAbilities : workingRace.passiveAbilities;
+            String q = searchPassivesQuery.toLowerCase().trim();
 
             for (String passive : allPassives) {
+                String raw = passive.replace("_", " ");
+                String desc = getPassiveDescription(passive);
+                if (!q.isEmpty() && !raw.toLowerCase().contains(q) && !desc.toLowerCase().contains(q)) {
+                    continue; // Skip items that don't match query or tooltip description
+                }
+
                 boolean active = targetList.contains(passive);
-                Checkbox pBox = new Checkbox(contentLeft, py, 180, 20, Component.literal(passive.replace("_", " ").toUpperCase()), active) {
+                Checkbox pBox = new Checkbox(contentLeft, py, 200, 20, Component.literal(raw.toUpperCase()), active) {
                     @Override
                     public void onPress() {
                         super.onPress();
@@ -524,13 +568,23 @@ public class RaceCreatorScreen extends Screen {
                         }
                     }
                 };
-                pBox.setTooltip(Tooltip.create(Component.literal("Toggle passive ability: " + passive)));
+                pBox.setTooltip(Tooltip.create(Component.literal(raw.toUpperCase() + ": " + desc)));
                 this.addRenderableWidget(pBox);
                 py += 21;
             }
 
         } else if (activeTab == 4) { // Actives
-            int py = contentTop + 18;
+            EditBox aSearch = new EditBox(this.font, contentLeft + 230, contentTop, 130, 16, Component.literal("Search Actives"));
+            aSearch.setMaxLength(2048);
+            aSearch.setValue(searchActivesQuery);
+            aSearch.setHint(Component.literal("🔍 Search skills..."));
+            aSearch.setResponder(val -> {
+                searchActivesQuery = val;
+                this.init();
+            });
+            this.addRenderableWidget(aSearch);
+
+            int py = contentTop + 24;
             Map<Integer, String> targetMap = (editingWereForm && workingRace.enableWereRace) ? workingRace.wereActiveAbilities : workingRace.activeAbilities;
 
             for (int slot = 1; slot <= 5; slot++) {
@@ -540,7 +594,7 @@ public class RaceCreatorScreen extends Screen {
                 EditBox slotBox = new EditBox(this.font, contentLeft + 60, py, 200, 18, Component.literal("Slot " + slot));
                 slotBox.setMaxLength(2048);
                 slotBox.setValue(currentSkill);
-                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + " (e.g. flame_breath, teleport_dash, transform_were, summon_minions).")));
+                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + " (e.g. flame_breath, teleport_dash, native_spell, transform_were, summon_minions).")));
                 slotBox.setResponder(val -> targetMap.put(currentSlot, val));
                 this.addRenderableWidget(slotBox);
 
@@ -760,6 +814,16 @@ public class RaceCreatorScreen extends Screen {
             Button pDt = Button.builder(Component.literal("▶ Play"), b -> playPreviewSound(this.wereDeathSoundBox.getValue())).bounds(contentLeft + 325, contentTop + 100, 50, 18).build();
             this.addRenderableWidget(pDt);
         } else if (activeTab == 10) { // Drawbacks
+            EditBox dSearch = new EditBox(this.font, contentLeft + 230, contentTop, 130, 16, Component.literal("Search Drawbacks"));
+            dSearch.setMaxLength(2048);
+            dSearch.setValue(searchDrawbacksQuery);
+            dSearch.setHint(Component.literal("🔍 Search..."));
+            dSearch.setResponder(val -> {
+                searchDrawbacksQuery = val;
+                this.init();
+            });
+            this.addRenderableWidget(dSearch);
+
             List<String> activeList = editingWereForm ? workingRace.wereDrawbacks : workingRace.drawbacks;
             if (activeList == null) {
                 activeList = new java.util.ArrayList<>();
@@ -768,13 +832,23 @@ public class RaceCreatorScreen extends Screen {
             }
 
             int gridX = contentLeft;
-            int gridY = contentTop + 18;
+            int gridY = contentTop + 24;
             int colWidth = 120;
             int rowHeight = 20;
             int cols = 3;
 
-            for (int i = 0; i < ALL_DRAWBACKS.size(); i++) {
-                String drawbackId = ALL_DRAWBACKS.get(i);
+            String q = searchDrawbacksQuery.toLowerCase().trim();
+            List<String> matchingDrawbacks = new ArrayList<>();
+            for (String drawbackId : ALL_DRAWBACKS) {
+                String rawName = drawbackId.replace("_", " ");
+                String desc = getDrawbackDescription(drawbackId);
+                if (q.isEmpty() || rawName.toLowerCase().contains(q) || desc.toLowerCase().contains(q)) {
+                    matchingDrawbacks.add(drawbackId);
+                }
+            }
+
+            for (int i = 0; i < matchingDrawbacks.size(); i++) {
+                String drawbackId = matchingDrawbacks.get(i);
                 int c = i % cols;
                 int r = i / cols;
                 int cbX = gridX + (c * colWidth);
