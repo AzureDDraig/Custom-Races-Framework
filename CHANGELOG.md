@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b069a] - 2026-07-23
+
+### 💫 Complete Workspace Model Pipeline & Form Persistence Verification
+- **Full 11-Tab Race Creator Input Persistence (`RaceCreatorScreen.java`)**:
+  - Verified `readFormInputs()` across all 11 tabs, ensuring focus loss, tab switching, and auto-saves cleanly preserve all base form and Were-form settings.
+- **GeckoLib Were Animation Key Extraction (`RaceRegistry.java`)**:
+  - Verified `parseAnimationKeysFromFile` animation key lookup for Were-form idle, walk, attack, fly, and swim animation controllers.
+- **Cross-Platform Fabric & Forge Build Deployment (`build.gradle`)**:
+  - Compiled and verified both Forge and Fabric mod binaries with 100% clean task execution.
+
+---
+
 ## [1.0.0-b068a] - 2026-07-23
 
 ### 🐺 Client Were-State Cache Clearing & Model Transformation Reliability
