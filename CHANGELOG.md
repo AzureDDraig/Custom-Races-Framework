@@ -6,45 +6,45 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b063a] - 2026-07-23
 
-### 🌟 10-Point Deep Code Enhancements & System Integration Polish
-- **1. Custom Race Spawn Biome Locator (`CustomSpawnHandler.java`)**:
+### 🌟 Custom Race Spawn Biomes, Were-Form Night Vision & Search Filter Enhancements
+- **Custom Race Spawn Biome Locator (`CustomSpawnHandler.java`)**:
   - Enhanced `CustomSpawnHandler.java` to locate nearest matching biome coordinates using `findNearestBiome` when `spawnBiome` is configured (e.g. `minecraft:desert`, `minecraft:jagged_peaks`).
-- **2. Were-Form Night Vision Status Effect (`WereRaceTransformHandler.java`)**:
+- **Were-Form Night Vision Status Effect (`WereRaceTransformHandler.java`)**:
   - Automatically grants `Night Vision` status effect upon transforming into Werewolf form so players can navigate dark environments clearly.
-- **3. In-Game Command `/custom_races transform` (`CustomRacesCommands.java`)**:
+- **In-Game Command `/custom_races transform` (`CustomRacesCommands.java`)**:
   - Added `/custom_races transform` command allowing server players and admins to toggle Were-form transformation on demand.
-- **4. Armor Slot Drawback Warning Notifications (`DrawbackEventHandler.java`)**:
+- **Armor Slot Drawback Warning Notifications (`DrawbackEventHandler.java`)**:
   - Added actionbar notifications (`player.displayClientMessage`) informing players when armor items are unequipped due to slot drawbacks.
-- **5. Dynamic Eye-Level Particle Emission (`ActiveAbilityHandler.java`)**:
+- **Dynamic Eye-Level Particle Emission (`ActiveAbilityHandler.java`)**:
   - Aligned `flame_breath` particle origins with `player.getEyeY()`, ensuring breath particles scale dynamically with entity height.
-- **6. Passive Trait Searching in Race Selection Menu (`RaceSelectionScreen.java`)**:
+- **Passive Trait Searching in Race Selection Menu (`RaceSelectionScreen.java`)**:
   - Expanded search filter to match `passiveAbilities` (e.g. searching `"flight"`, `"fire_resistance"`, or `"gills"` filters races by passives).
-- **7. Backwards-Compatible Deserialization Defaults (`RaceData.java`)**:
+- **Backwards-Compatible Deserialization Defaults (`RaceData.java`)**:
   - Added null guards in `initDefaults()` for animation paths, spawn dimensions, and spawn biomes when loading legacy race JSON files.
-- **8. Safe Sound Registry Lookup (`RaceSoundHandler.java`)**:
+- **Safe Sound Registry Lookup (`RaceSoundHandler.java`)**:
   - Replaced raw sound lookup with `BuiltInRegistries.SOUND_EVENT.getOptional(loc)`, preventing invalid custom sound IDs from triggering default stone breaking fallbacks.
-- **9. Holographic Showcase Viewport Ring Polish (`RaceSelectionScreen.java`)**:
+- **Holographic Showcase Viewport Ring Polish (`RaceSelectionScreen.java`)**:
   - Enhanced 3D showcase pedestal ring rendering with glowing accent fills and depth contrast.
-- **10. Full 10-Language Localization Sync (`assets/customraces/lang/`)**:
+- **Full 10-Language Localization Sync (`assets/customraces/lang/`)**:
   - Re-synced all 10 supported language JSON files with localized command and tooltip strings.
 
 ---
 
 ## [1.0.0-b062a] - 2026-07-23
 
-### 🌟 Multi-Feature Integration Polish
-- **1. Custom Race Dimension Spawning & Respawn Positioning (`CustomSpawnHandler.java`)**:
+### 🌌 Custom Spawn Dimensions, Pehkui Eye-Height & Network Packet Polish
+- **Custom Race Dimension Spawning & Respawn Positioning (`CustomSpawnHandler.java`)**:
   - Implemented `CustomSpawnHandler.java` listening to `PlayerEvent.PLAYER_RESPAWN`.
   - Automatically teleports players configured with custom race `spawnDimension` IDs (e.g. `minecraft:the_nether`, `minecraft:the_end`) upon first spawn or bedless respawn.
-- **2. Pehkui Eye-Height & Collision Box Dimensions Refresh (`PehkuiIntegration.java`)**:
+- **Pehkui Eye-Height & Collision Box Dimensions Refresh (`PehkuiIntegration.java`)**:
   - Added `player.refreshDimensions()` calls to `applyRaceScales` and `resetPlayerScales`.
   - Guarantees player camera eye-height and collision boxes instantly adapt when scale multipliers change.
-- **3. Iron's Spells Safe `MagicData` Reflection (`IronSpellsHandler.java`)**:
+- **Iron's Spells Safe `MagicData` Reflection (`IronSpellsHandler.java`)**:
   - Implemented dynamic `MagicData.getPlayerMagicData(player)` reflection lookup.
   - Prevents `NullPointerExceptions` when casting Iron's Spells native spells.
-- **4. Werewolf Manual Transformation Hotkey Packet (`ModPackets.java`)**:
+- **Werewolf Manual Transformation Hotkey Packet (`ModPackets.java`)**:
   - Registered `TOGGLE_WERE_FORM_ID` C2S network packet and `sendToggleWereForm()` helper method for client keybind transformation toggles.
-- **5. Ambient Elemental Aura Particles (`PassiveAbilityHandler.java`)**:
+- **Ambient Elemental Aura Particles (`PassiveAbilityHandler.java`)**:
   - Implemented 3D ambient particle rendering around players with elemental passives (`fire_aura`, `ice_aura`, `lightning_aura`, `holy_aura`, `shadow_aura`).
 
 ---
