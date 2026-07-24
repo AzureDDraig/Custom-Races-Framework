@@ -316,8 +316,57 @@ public class RaceData {
         if (tag == null) tag = new net.minecraft.nbt.CompoundTag();
         tag.putString("id", id != null ? id : "human");
         tag.putString("name", name != null ? name : "Human");
+        tag.putString("lore", lore != null ? lore : "");
+        tag.putString("modelType", modelType != null ? modelType : "Default");
+        tag.putFloat("heightScale", heightScale);
+        tag.putFloat("widthScale", widthScale);
+        tag.putFloat("baseScale", baseScale);
+        tag.putFloat("reachScale", reachScale);
+        tag.putFloat("stepHeightScale", stepHeightScale);
+        tag.putFloat("maxHealth", maxHealth);
+        tag.putFloat("movementSpeed", movementSpeed);
+        tag.putFloat("armor", armor);
+        tag.putFloat("attackDamage", attackDamage);
+        tag.putBoolean("isFlyingRace", isFlyingRace);
         tag.putInt("particleCount", getParticleCount());
         tag.putInt("wereParticleCount", getWereParticleCount());
+
+        tag.putBoolean("enableWereRace", enableWereRace);
+        tag.putBoolean("isWereFlyingRace", isWereFlyingRace);
+        tag.putString("wereTriggerCondition", wereTriggerCondition != null ? wereTriggerCondition : "FULL_MOON");
+        tag.putString("wereModelPath", wereModelPath != null ? wereModelPath : "");
+        tag.putString("wereTexturePath", wereTexturePath != null ? wereTexturePath : "");
+        tag.putString("wereAnimationPath", wereAnimationPath != null ? wereAnimationPath : "");
+        tag.putFloat("wereHeightScale", wereHeightScale);
+        tag.putFloat("wereWidthScale", wereWidthScale);
+        tag.putFloat("wereHealthBonus", wereHealthBonus);
+        tag.putFloat("wereSpeedBonus", wereSpeedBonus);
+        tag.putFloat("wereDamageBonus", wereDamageBonus);
+        tag.putString("wereTransformSound", wereTransformSound != null ? wereTransformSound : "");
+        tag.putString("wereHowlSound", wereHowlSound != null ? wereHowlSound : "");
+        tag.putString("wereAmbientSound", wereAmbientSound != null ? wereAmbientSound : "");
+        tag.putString("wereHurtSound", wereHurtSound != null ? wereHurtSound : "");
+        tag.putString("wereDeathSound", wereDeathSound != null ? wereDeathSound : "");
+        tag.putString("CustomDeathSound", CustomDeathSound != null ? CustomDeathSound : "");
+
+        tag.putBoolean("enableNativeSpells", enableNativeSpells);
+        tag.putString("nativeSpellId", nativeSpellId != null ? nativeSpellId : "");
+        tag.putString("nativeSpellId1", nativeSpellId1 != null ? nativeSpellId1 : "");
+        tag.putString("nativeSpellId2", nativeSpellId2 != null ? nativeSpellId2 : "");
+        tag.putString("nativeSpellId3", nativeSpellId3 != null ? nativeSpellId3 : "");
+        tag.putString("nativeSpellId4", nativeSpellId4 != null ? nativeSpellId4 : "");
+        tag.putString("nativeSpellId5", nativeSpellId5 != null ? nativeSpellId5 : "");
+
+        tag.putBoolean("enableWereNativeSpells", enableWereNativeSpells);
+        tag.putString("wereNativeSpellId", wereNativeSpellId != null ? wereNativeSpellId : "");
+        tag.putString("wereNativeSpellId1", wereNativeSpellId1 != null ? wereNativeSpellId1 : "");
+        tag.putString("wereNativeSpellId2", wereNativeSpellId2 != null ? wereNativeSpellId2 : "");
+        tag.putString("wereNativeSpellId3", wereNativeSpellId3 != null ? wereNativeSpellId3 : "");
+        tag.putString("wereNativeSpellId4", wereNativeSpellId4 != null ? wereNativeSpellId4 : "");
+        tag.putString("wereNativeSpellId5", wereNativeSpellId5 != null ? wereNativeSpellId5 : "");
+
+        tag.putString("minionMobType", minionMobType != null ? minionMobType : "minecraft:zombie");
+        tag.putInt("minionCount", minionCount);
         return tag;
     }
 
@@ -325,8 +374,57 @@ public class RaceData {
         if (tag == null) return;
         if (tag.contains("id")) this.id = tag.getString("id");
         if (tag.contains("name")) this.name = tag.getString("name");
+        if (tag.contains("lore")) this.lore = tag.getString("lore");
+        if (tag.contains("modelType")) this.modelType = tag.getString("modelType");
+        if (tag.contains("heightScale")) this.heightScale = tag.getFloat("heightScale");
+        if (tag.contains("widthScale")) this.widthScale = tag.getFloat("widthScale");
+        if (tag.contains("baseScale")) this.baseScale = tag.getFloat("baseScale");
+        if (tag.contains("reachScale")) this.reachScale = tag.getFloat("reachScale");
+        if (tag.contains("stepHeightScale")) this.stepHeightScale = tag.getFloat("stepHeightScale");
+        if (tag.contains("maxHealth")) this.maxHealth = tag.getFloat("maxHealth");
+        if (tag.contains("movementSpeed")) this.movementSpeed = tag.getFloat("movementSpeed");
+        if (tag.contains("armor")) this.armor = tag.getFloat("armor");
+        if (tag.contains("attackDamage")) this.attackDamage = tag.getFloat("attackDamage");
+        if (tag.contains("isFlyingRace")) this.isFlyingRace = tag.getBoolean("isFlyingRace");
         if (tag.contains("particleCount")) this.particleCount = tag.getInt("particleCount");
         if (tag.contains("wereParticleCount")) this.wereParticleCount = tag.getInt("wereParticleCount");
+
+        if (tag.contains("enableWereRace")) this.enableWereRace = tag.getBoolean("enableWereRace");
+        if (tag.contains("isWereFlyingRace")) this.isWereFlyingRace = tag.getBoolean("isWereFlyingRace");
+        if (tag.contains("wereTriggerCondition")) this.wereTriggerCondition = tag.getString("wereTriggerCondition");
+        if (tag.contains("wereModelPath")) this.wereModelPath = tag.getString("wereModelPath");
+        if (tag.contains("wereTexturePath")) this.wereTexturePath = tag.getString("wereTexturePath");
+        if (tag.contains("wereAnimationPath")) this.wereAnimationPath = tag.getString("wereAnimationPath");
+        if (tag.contains("wereHeightScale")) this.wereHeightScale = tag.getFloat("wereHeightScale");
+        if (tag.contains("wereWidthScale")) this.wereWidthScale = tag.getFloat("wereWidthScale");
+        if (tag.contains("wereHealthBonus")) this.wereHealthBonus = tag.getFloat("wereHealthBonus");
+        if (tag.contains("wereSpeedBonus")) this.wereSpeedBonus = tag.getFloat("wereSpeedBonus");
+        if (tag.contains("wereDamageBonus")) this.wereDamageBonus = tag.getFloat("wereDamageBonus");
+        if (tag.contains("wereTransformSound")) this.wereTransformSound = tag.getString("wereTransformSound");
+        if (tag.contains("wereHowlSound")) this.wereHowlSound = tag.getString("wereHowlSound");
+        if (tag.contains("wereAmbientSound")) this.wereAmbientSound = tag.getString("wereAmbientSound");
+        if (tag.contains("wereHurtSound")) this.wereHurtSound = tag.getString("wereHurtSound");
+        if (tag.contains("wereDeathSound")) this.wereDeathSound = tag.getString("wereDeathSound");
+        if (tag.contains("CustomDeathSound")) this.CustomDeathSound = tag.getString("CustomDeathSound");
+
+        if (tag.contains("enableNativeSpells")) this.enableNativeSpells = tag.getBoolean("enableNativeSpells");
+        if (tag.contains("nativeSpellId")) this.nativeSpellId = tag.getString("nativeSpellId");
+        if (tag.contains("nativeSpellId1")) this.nativeSpellId1 = tag.getString("nativeSpellId1");
+        if (tag.contains("nativeSpellId2")) this.nativeSpellId2 = tag.getString("nativeSpellId2");
+        if (tag.contains("nativeSpellId3")) this.nativeSpellId3 = tag.getString("nativeSpellId3");
+        if (tag.contains("nativeSpellId4")) this.nativeSpellId4 = tag.getString("nativeSpellId4");
+        if (tag.contains("nativeSpellId5")) this.nativeSpellId5 = tag.getString("nativeSpellId5");
+
+        if (tag.contains("enableWereNativeSpells")) this.enableWereNativeSpells = tag.getBoolean("enableWereNativeSpells");
+        if (tag.contains("wereNativeSpellId")) this.wereNativeSpellId = tag.getString("wereNativeSpellId");
+        if (tag.contains("wereNativeSpellId1")) this.wereNativeSpellId1 = tag.getString("wereNativeSpellId1");
+        if (tag.contains("wereNativeSpellId2")) this.wereNativeSpellId2 = tag.getString("wereNativeSpellId2");
+        if (tag.contains("wereNativeSpellId3")) this.wereNativeSpellId3 = tag.getString("wereNativeSpellId3");
+        if (tag.contains("wereNativeSpellId4")) this.wereNativeSpellId4 = tag.getString("wereNativeSpellId4");
+        if (tag.contains("wereNativeSpellId5")) this.wereNativeSpellId5 = tag.getString("wereNativeSpellId5");
+
+        if (tag.contains("minionMobType")) this.minionMobType = tag.getString("minionMobType");
+        if (tag.contains("minionCount")) this.minionCount = tag.getInt("minionCount");
         initDefaults();
     }
 }

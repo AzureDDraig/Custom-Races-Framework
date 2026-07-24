@@ -2,6 +2,20 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b110a] - 2026-07-24
+
+### 📦 Comprehensive System Verification & Multi-Phase Stability Enhancements
+- **Complete NBT Race Data Serialization (`RaceData.java`)**:
+  - Expanded `toNBT` and `fromNBT` in `RaceData.java` to serialize and restore all 60+ race fields (scales, stats, Were model assets, custom sounds, animations, native spells, and minion settings) during NBT operations, preventing tag data loss.
+- **Minion Despawn Lifespan & Entity Cleanup (`ActiveAbilityHandler.java`)**:
+  - Tagged summoned minions with automatic lifespan tracking tags (`cr_minion_despawn`) to prevent indefinite entity accumulation on long-running servers.
+- **Attribute Modifier Stacking Protection (`PassiveAbilityHandler.java`)**:
+  - Reinforced passive attribute modifier application logic to prevent duplicate UUID collisions when toggling passive effects or transforming into Were-form.
+- **Race Creator EditBox Sync & Persistence (`RaceCreatorScreen.java`)**:
+  - Verified and synchronized all 11 tabs in `RaceCreatorScreen.java` to parse, validate, and serialize native spells and particle settings cleanly.
+
+---
+
 ## [1.0.0-b096a] - 2026-07-23
 
 ### 🐺 Were-Race Custom Model Transformation Rendering Fixes
