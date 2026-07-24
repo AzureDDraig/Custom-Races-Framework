@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b126a] - 2026-07-24
+
+### 🎛️ Race Creator Input Range Bounds — Round 7 (`RaceCreatorScreen.java`)
+- Implemented numerical clamping for max health (1 to 1000) and movement speed (0.001 to 2.0) EditBox inputs in `RaceCreatorScreen.java`.
+
+---
+
 ## [1.0.0-b125a] - 2026-07-24
 
 ### 🐺 Minion Health & Pet Protection — Round 6 (`ActiveAbilityHandler.java`)

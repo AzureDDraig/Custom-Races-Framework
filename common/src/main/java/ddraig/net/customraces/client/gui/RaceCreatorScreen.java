@@ -1278,10 +1278,10 @@ public class RaceCreatorScreen extends Screen {
                 try { workingRace.widthScale = Float.parseFloat(widthScaleBox.getValue()); } catch (Exception ignored) {}
             }
             if (healthBox != null) {
-                try { workingRace.maxHealth = Float.parseFloat(healthBox.getValue()); } catch (Exception ignored) {}
+                try { workingRace.maxHealth = Math.max(1.0f, Math.min(1000.0f, Float.parseFloat(healthBox.getValue()))); } catch (Exception ignored) {}
             }
             if (speedBox != null) {
-                try { workingRace.movementSpeed = Float.parseFloat(speedBox.getValue()); } catch (Exception ignored) {}
+                try { workingRace.movementSpeed = Math.max(0.001f, Math.min(2.0f, Float.parseFloat(speedBox.getValue()))); } catch (Exception ignored) {}
             }
             if (particleCountBox != null) {
                 try { workingRace.setParticleCount(Integer.parseInt(particleCountBox.getValue())); } catch (Exception ignored) {}
