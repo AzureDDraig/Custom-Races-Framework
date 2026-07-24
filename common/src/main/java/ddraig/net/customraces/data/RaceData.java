@@ -340,6 +340,22 @@ public class RaceData {
         return (wereAttackAnim != null && !wereAttackAnim.isEmpty()) ? wereAttackAnim : "animation.were.attack";
     }
 
+    public String getSafeHurtSound() {
+        return hurtSound != null ? hurtSound.trim() : "";
+    }
+
+    public String getSafeDeathSound() {
+        return deathSound != null ? deathSound.trim() : "";
+    }
+
+    public String getSafeWereHurtSound() {
+        return wereHurtSound != null ? wereHurtSound.trim() : "";
+    }
+
+    public String getSafeWereDeathSound() {
+        return wereDeathSound != null ? wereDeathSound.trim() : "";
+    }
+
     public net.minecraft.nbt.CompoundTag toNBT(net.minecraft.nbt.CompoundTag tag) {
         if (tag == null) tag = new net.minecraft.nbt.CompoundTag();
         tag.putString("id", id != null ? id : "human");

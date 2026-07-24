@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b122a] - 2026-07-24
+
+### 🎵 Safe Sound Resource Getters — Round 3 (`RaceData.java`)
+- Added `getSafeHurtSound()`, `getSafeDeathSound()`, `getSafeWereHurtSound()`, and `getSafeWereDeathSound()` helper methods returning clean trimmed sound strings.
+- Prevents null sound resource locations from causing audio subsystem warnings.
+
+---
+
 ## [1.0.0-b121a] - 2026-07-24
 
 ### 📡 Network & State Memory Safety — Round 2 (`ModPackets.java`, `ClientWereState.java`)
