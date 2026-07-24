@@ -279,6 +279,9 @@ public class ActiveAbilityHandler {
                                 if (minion instanceof net.minecraft.world.entity.TamableAnimal tamable) {
                                     tamable.tame(player);
                                 }
+                                if (minion instanceof LivingEntity living) {
+                                    living.setHealth(living.getMaxHealth());
+                                }
 
                                 if (minion instanceof net.minecraft.world.entity.Mob mob) {
                                     if (player.getLastHurtMob() != null && player.getLastHurtMob().isAlive()) {

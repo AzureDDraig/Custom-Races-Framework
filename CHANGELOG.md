@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b125a] - 2026-07-24
+
+### 🐺 Minion Health & Pet Protection — Round 6 (`ActiveAbilityHandler.java`)
+- Guaranteed full health initialization for summoned minions (`living.setHealth(living.getMaxHealth())`) upon active skill invocation.
+
+---
+
 ## [1.0.0-b124a] - 2026-07-24
 
 ### 🧪 Status Effect Immunity Handlers — Round 5 (`PassiveAbilityHandler.java`)
