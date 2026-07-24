@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b119a] - 2026-07-24
+
+### 🔄 Client State & Race Cache Reset Engine (`RaceRegistry.java`)
+- Implemented `clearClientStateCache()` in `RaceRegistry.java` to purge player race assignments and active Were transformation states upon server disconnect or world rejoin, preventing stale race cache persistence across different worlds.
+
+---
+
 ## [1.0.0-b118a] - 2026-07-24
 
 ### ⌨️ Race Creator Native Spell EditBox Synchronization (`RaceCreatorScreen.java`)

@@ -234,6 +234,11 @@ public class RaceRegistry {
         } catch (Exception ignored) {}
     }
 
+    public static void clearClientStateCache() {
+        playerRaces.clear();
+        ddraig.net.customraces.client.ClientWereState.clear();
+    }
+
     /**
      * Dynamically reads and parses the actual animation keys from a GeckoLib animation JSON file.
      */
