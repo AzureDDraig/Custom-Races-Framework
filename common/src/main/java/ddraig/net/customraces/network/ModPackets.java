@@ -222,7 +222,7 @@ public class ModPackets {
     }
 
     public static void sendWereStateToPlayer(ServerPlayer recipient, UUID playerUuid, boolean isTransformed) {
-        if (recipient == null || playerUuid == null) return;
+        if (recipient == null || playerUuid == null || recipient.connection == null) return;
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         buf.writeUUID(playerUuid);
         buf.writeBoolean(isTransformed);

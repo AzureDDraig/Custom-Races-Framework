@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b121a] - 2026-07-24
+
+### 📡 Network & State Memory Safety — Round 2 (`ModPackets.java`, `ClientWereState.java`)
+- **Recipient Connection Guard (`ModPackets.java`)**: Added `recipient.connection != null` check before Netty ByteBuf allocation during `sendWereStateToPlayer` dispatches, preventing buffer leaks during disconnection transitions.
+- **Client Were-State Memory Safety (`ClientWereState.java`)**: Verified concurrent map operations across multi-threaded client entity render calls.
+
+---
+
 ## [1.0.0-b120a] - 2026-07-24
 
 ### 🏹 Multi-System Deep Refinements — Round 1 (`ActiveAbilityHandler.java`, `RaceData.java`, `DrawbackEventHandler.java`)
