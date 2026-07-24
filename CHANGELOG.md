@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b114a] - 2026-07-24
+
+### 🐺 Were-Form Cooldown Feedback Formatting (`WereRaceTransformHandler.java`)
+- Formatted transformation cooldown actionbar feedback to display exact remaining cooldown time (e.g. `§c[!] Transformation on cooldown (0.8s remaining).`) when players attempt to re-transform too quickly.
+
+---
+
 ## [1.0.0-b113a] - 2026-07-24
 
 ### 🌟 Particle Aura Bounds & Safety Guards (`ParticleAuraData.java` & `PlayerRaceLayer.java`)

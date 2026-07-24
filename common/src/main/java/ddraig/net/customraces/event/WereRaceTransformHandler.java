@@ -109,7 +109,8 @@ public class WereRaceTransformHandler {
         long now = System.currentTimeMillis();
         long last = TRANSFORM_COOLDOWNS.getOrDefault(player.getUUID(), 0L);
         if (now - last < 1000L) {
-            player.displayClientMessage(Component.literal("§c[!] Transformation is on cooldown."), true);
+            float remainingSec = (1000L - (now - last)) / 1000.0f;
+            player.displayClientMessage(Component.literal(String.format("§c[!] Transformation on cooldown (%.1fs remaining).", remainingSec)), true);
             return;
         }
         TRANSFORM_COOLDOWNS.put(player.getUUID(), now);
