@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b124a] - 2026-07-24
+
+### 🧪 Status Effect Immunity Handlers — Round 5 (`PassiveAbilityHandler.java`)
+- Added real-time status effect clearing for `poison_immunity` and `wither_immunity` passives in `PassiveAbilityHandler.java`.
+
+---
+
 ## [1.0.0-b123a] - 2026-07-24
 
 ### 📐 Part Transform Scale Bounds — Round 4 (`PartTransformData.java`)

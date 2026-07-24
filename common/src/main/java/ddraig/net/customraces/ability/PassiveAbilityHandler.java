@@ -98,6 +98,12 @@ public class PassiveAbilityHandler {
         if (passives.contains("thermal_immunity")) {
             player.setTicksFrozen(0);
         }
+        if (passives.contains("poison_immunity")) {
+            player.removeEffect(MobEffects.POISON);
+        }
+        if (passives.contains("wither_immunity")) {
+            player.removeEffect(MobEffects.WITHER);
+        }
 
         // Ambient Elemental Aura Particles
         if (player.level() instanceof ServerLevel sLevel && player.tickCount % 10 == 0) {
