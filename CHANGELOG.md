@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b127a] - 2026-07-24
+
+### 🛡️ Alliance Stance & Faction Safety — Round 8 (`MobAllianceData.java`)
+- Added `getValidMobId()` and `getValidStance()` safe getters in `MobAllianceData.java` preventing empty or unformatted mob ID strings from breaking faction neutrality logic.
+
+---
+
 ## [1.0.0-b126a] - 2026-07-24
 
 ### 🎛️ Race Creator Input Range Bounds — Round 7 (`RaceCreatorScreen.java`)

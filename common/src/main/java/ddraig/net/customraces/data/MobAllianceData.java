@@ -13,4 +13,12 @@ public class MobAllianceData {
         this.mobId = mobId;
         this.stance = stance;
     }
+
+    public String getValidMobId() {
+        return mobId != null ? mobId.trim() : "";
+    }
+
+    public String getValidStance() {
+        return stance != null ? stance.trim().toLowerCase() : "neutral";
+    }
 }
