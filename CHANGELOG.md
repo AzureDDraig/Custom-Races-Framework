@@ -4,35 +4,35 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b127a] - 2026-07-24
 
-### 🛡️ Alliance Stance & Faction Safety — Round 8 (`MobAllianceData.java`)
+### 🛡️ Alliance Stance & Faction Safety (`MobAllianceData.java`)
 - Added `getValidMobId()` and `getValidStance()` safe getters in `MobAllianceData.java` preventing empty or unformatted mob ID strings from breaking faction neutrality logic.
 
 ---
 
 ## [1.0.0-b126a] - 2026-07-24
 
-### 🎛️ Race Creator Input Range Bounds — Round 7 (`RaceCreatorScreen.java`)
+### 🎛️ Race Creator Input Range Bounds (`RaceCreatorScreen.java`)
 - Implemented numerical clamping for max health (1 to 1000) and movement speed (0.001 to 2.0) EditBox inputs in `RaceCreatorScreen.java`.
 
 ---
 
 ## [1.0.0-b125a] - 2026-07-24
 
-### 🐺 Minion Health & Pet Protection — Round 6 (`ActiveAbilityHandler.java`)
+### 🐺 Minion Health & Pet Protection (`ActiveAbilityHandler.java`)
 - Guaranteed full health initialization for summoned minions (`living.setHealth(living.getMaxHealth())`) upon active skill invocation.
 
 ---
 
 ## [1.0.0-b124a] - 2026-07-24
 
-### 🧪 Status Effect Immunity Handlers — Round 5 (`PassiveAbilityHandler.java`)
+### 🧪 Status Effect Immunity Handlers (`PassiveAbilityHandler.java`)
 - Added real-time status effect clearing for `poison_immunity` and `wither_immunity` passives in `PassiveAbilityHandler.java`.
 
 ---
 
 ## [1.0.0-b123a] - 2026-07-24
 
-### 📐 Part Transform Scale Bounds — Round 4 (`PartTransformData.java`)
+### 📐 Part Transform Scale Bounds (`PartTransformData.java`)
 - Added `getSafeScaleX()`, `getSafeScaleY()`, and `getSafeScaleZ()` bounds (0.01f to 5.0f) in `PartTransformData.java`.
 - Prevents invalid or zero scale multipliers from causing model rendering errors.
 
@@ -40,7 +40,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b122a] - 2026-07-24
 
-### 🎵 Safe Sound Resource Getters — Round 3 (`RaceData.java`)
+### 🎵 Safe Sound Resource Getters (`RaceData.java`)
 - Added `getSafeHurtSound()`, `getSafeDeathSound()`, `getSafeWereHurtSound()`, and `getSafeWereDeathSound()` helper methods returning clean trimmed sound strings.
 - Prevents null sound resource locations from causing audio subsystem warnings.
 
@@ -48,7 +48,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b121a] - 2026-07-24
 
-### 📡 Network & State Memory Safety — Round 2 (`ModPackets.java`, `ClientWereState.java`)
+### 📡 Network & State Memory Safety (`ModPackets.java`, `ClientWereState.java`)
 - **Recipient Connection Guard (`ModPackets.java`)**: Added `recipient.connection != null` check before Netty ByteBuf allocation during `sendWereStateToPlayer` dispatches, preventing buffer leaks during disconnection transitions.
 - **Client Were-State Memory Safety (`ClientWereState.java`)**: Verified concurrent map operations across multi-threaded client entity render calls.
 
@@ -56,7 +56,7 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b120a] - 2026-07-24
 
-### 🏹 Multi-System Deep Refinements — Round 1 (`ActiveAbilityHandler.java`, `RaceData.java`, `DrawbackEventHandler.java`)
+### 🏹 Multi-System Deep Refinements (`ActiveAbilityHandler.java`, `RaceData.java`, `DrawbackEventHandler.java`)
 - **Safe Reach & Step Height Bounds (`RaceData.java`)**: Added `getSafeReachScale()` and `getSafeStepHeightScale()` bounds preventing invalid or negative scale values from corrupting Pehkui transformations.
 - **Null Safety in Event Handlers (`DrawbackEventHandler.java`)**: Reinforced null-pointer protection across player tick and hurt listeners during dimension/world transitions.
 
