@@ -278,6 +278,7 @@ public class RaceData {
         if (wereSwimAnim == null) wereSwimAnim = "animation.were.swim";
         if (spawnDimension == null) spawnDimension = "";
         if (spawnBiome == null) spawnBiome = "";
+        if (permissionLock == null) permissionLock = "";
         if (particleCount <= 0) particleCount = 5;
         if (wereParticleCount <= 0) wereParticleCount = 10;
         enableNativeSpells = true;
@@ -411,6 +412,45 @@ public class RaceData {
 
         tag.putString("minionMobType", minionMobType != null ? minionMobType : "minecraft:zombie");
         tag.putInt("minionCount", minionCount);
+        tag.putString("permissionLock", permissionLock != null ? permissionLock : "");
+
+        tag.putString("earType", earType != null ? earType : "none");
+        tag.putString("wingType", wingType != null ? wingType : "none");
+        tag.putString("tailType", tailType != null ? tailType : "none");
+        tag.putString("hornType", hornType != null ? hornType : "none");
+        tag.putString("haloType", haloType != null ? haloType : "none");
+        tag.putString("legType", legType != null ? legType : "human");
+        tag.putInt("legCount", legCount);
+        tag.putString("customPartId", customPartId != null ? customPartId : "none");
+
+        net.minecraft.nbt.CompoundTag colorsTag = new net.minecraft.nbt.CompoundTag();
+        if (bodyPartColors != null) {
+            bodyPartColors.forEach((key, val) -> {
+                if (key != null && val != null) colorsTag.putString(key, val);
+            });
+        }
+        tag.put("bodyPartColors", colorsTag);
+
+        net.minecraft.nbt.CompoundTag transformsTag = new net.minecraft.nbt.CompoundTag();
+        if (partTransforms != null) {
+            partTransforms.forEach((key, pt) -> {
+                if (key != null && pt != null) {
+                    net.minecraft.nbt.CompoundTag ptTag = new net.minecraft.nbt.CompoundTag();
+                    ptTag.putFloat("posX", pt.posX);
+                    ptTag.putFloat("posY", pt.posY);
+                    ptTag.putFloat("posZ", pt.posZ);
+                    ptTag.putFloat("rotPitch", pt.rotPitch);
+                    ptTag.putFloat("rotYaw", pt.rotYaw);
+                    ptTag.putFloat("rotRoll", pt.rotRoll);
+                    ptTag.putFloat("scaleX", pt.scaleX);
+                    ptTag.putFloat("scaleY", pt.scaleY);
+                    ptTag.putFloat("scaleZ", pt.scaleZ);
+                    transformsTag.put(key, ptTag);
+                }
+            });
+        }
+        tag.put("partTransforms", transformsTag);
+
         return tag;
     }
 
@@ -469,6 +509,41 @@ public class RaceData {
 
         if (tag.contains("minionMobType")) this.minionMobType = tag.getString("minionMobType");
         if (tag.contains("minionCount")) this.minionCount = tag.getInt("minionCount");
+        if (tag.contains("permissionLock")) this.permissionLock = tag.getString("permissionLock");
+
+        if (tag.contains("earType")) this.earType = tag.getString("earType");
+        if (tag.contains("wingType")) this.wingType = tag.getString("wingType");
+        if (tag.contains("tailType")) this.tailType = tag.getString("tailType");
+        if (tag.contains("hornType")) this.hornType = tag.getString("hornType");
+        if (tag.contains("haloType")) this.haloType = tag.getString("haloType");
+        if (tag.contains("legType")) this.legType = tag.getString("legType");
+        if (tag.contains("legCount")) this.legCount = tag.getInt("legCount");
+        if (tag.contains("customPartId")) this.customPartId = tag.getString("customPartId");
+
+        if (tag.contains("bodyPartColors")) {
+            net.minecraft.nbt.CompoundTag colorsTag = tag.getCompound("bodyPartColors");
+            for (String key : colorsTag.getAllKeys()) {
+                this.bodyPartColors.put(key, colorsTag.getString(key));
+            }
+        }
+
+        if (tag.contains("partTransforms")) {
+            net.minecraft.nbt.CompoundTag transformsTag = tag.getCompound("partTransforms");
+            for (String key : transformsTag.getAllKeys()) {
+                net.minecraft.nbt.CompoundTag ptTag = transformsTag.getCompound(key);
+                PartTransformData pt = this.partTransforms.computeIfAbsent(key, k -> new PartTransformData());
+                if (ptTag.contains("posX")) pt.posX = ptTag.getFloat("posX");
+                if (ptTag.contains("posY")) pt.posY = ptTag.getFloat("posY");
+                if (ptTag.contains("posZ")) pt.posZ = ptTag.getFloat("posZ");
+                if (ptTag.contains("rotPitch")) pt.rotPitch = ptTag.getFloat("rotPitch");
+                if (ptTag.contains("rotYaw")) pt.rotYaw = ptTag.getFloat("rotYaw");
+                if (ptTag.contains("rotRoll")) pt.rotRoll = ptTag.getFloat("rotRoll");
+                if (ptTag.contains("scaleX")) pt.scaleX = ptTag.getFloat("scaleX");
+                if (ptTag.contains("scaleY")) pt.scaleY = ptTag.getFloat("scaleY");
+                if (ptTag.contains("scaleZ")) pt.scaleZ = ptTag.getFloat("scaleZ");
+            }
+        }
+
         initDefaults();
     }
 }

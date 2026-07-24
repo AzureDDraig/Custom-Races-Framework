@@ -29,14 +29,17 @@ public class PartTransformData {
     }
 
     public float getSafeScaleX() {
-        return Math.max(0.01f, Math.min(5.0f, scaleX <= 0 ? 1.0f : scaleX));
+        if (Float.isNaN(scaleX) || scaleX <= 0.0f) return 1.0f;
+        return Math.max(0.01f, Math.min(5.0f, scaleX));
     }
 
     public float getSafeScaleY() {
-        return Math.max(0.01f, Math.min(5.0f, scaleY <= 0 ? 1.0f : scaleY));
+        if (Float.isNaN(scaleY) || scaleY <= 0.0f) return 1.0f;
+        return Math.max(0.01f, Math.min(5.0f, scaleY));
     }
 
     public float getSafeScaleZ() {
-        return Math.max(0.01f, Math.min(5.0f, scaleZ <= 0 ? 1.0f : scaleZ));
+        if (Float.isNaN(scaleZ) || scaleZ <= 0.0f) return 1.0f;
+        return Math.max(0.01f, Math.min(5.0f, scaleZ));
     }
 }

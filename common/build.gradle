@@ -17,3 +17,53 @@ task runM3Tests(type: JavaExec) {
     mainClass = 'ddraig.net.customraces.client.render.M3ParticleConfigVerificationTest'
 }
 
+task runM2Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M2StressVerificationTest'
+}
+
+task runWereTextureEdgeCaseTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.WereTextureLocationEdgeCaseTest'
+}
+
+task runWereTextureAdversarialTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.WereTextureAdversarialTest'
+}
+task runM3VIPAndConfigTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.data.M3VIPAndConfigVerificationTest'
+}
+task runM3AdversarialR2R3Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.data.M3AdversarialR2R3Test'
+}
+
+task runM3NetworkAndGUITests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.network.M3AdversarialNetworkAndGUITest'
+}
+
+task runM4PresetAuditTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.data.M4PresetAuditVerificationTest'
+}
+
+task runM4Challenger1Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.data.M4Challenger1AdversarialTest'
+}
+
+task runM4Challenger2Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M4PoseStackHygieneTest'
+}
+
+test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests
+
+
+
+
+
+

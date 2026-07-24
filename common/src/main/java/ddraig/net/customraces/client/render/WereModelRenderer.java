@@ -58,19 +58,90 @@ public class WereModelRenderer {
         return loc;
     }
 
-    public static ResourceLocation getValidWereTextureLocation(RaceData race) {
+    public static ResourceLocation getValidWereTextureLocation(AbstractClientPlayer player, RaceData race) {
         if (race == null || race.wereTexturePath == null || race.wereTexturePath.trim().isEmpty() || "none".equalsIgnoreCase(race.wereTexturePath.trim())) {
-            return DEFAULT_WERE_TEXTURE;
+            return getSafeDefaultTexture(player);
         }
+
         String path = race.wereTexturePath.trim();
-        ResourceLocation loc = ResourceLocation.tryParse(path);
-        if (loc == null) {
-            if (LOGGED_WARNINGS.add("texture:" + path)) {
-                System.err.println("[CustomRaces] Invalid Were texture path '" + path + "', falling back to default: " + DEFAULT_WERE_TEXTURE);
+        String lowerPath = path.toLowerCase(java.util.Locale.ROOT);
+
+        // Intercept "skin" and "player" keywords (case-insensitive, trimmed)
+        if ("skin".equals(lowerPath) || "player".equals(lowerPath) || "player_skin".equals(lowerPath) || "skin_texture".equals(lowerPath)) {
+            if (player != null) {
+                ResourceLocation skinLoc = player.getSkinTextureLocation();
+                if (skinLoc != null) {
+                    return skinLoc;
+                }
             }
+            return getSafeDefaultTexture(player);
+        }
+
+        // Path & extension normalization (default namespace customraces, prefix textures/, suffix .png if missing)
+        String namespace;
+        String relativePath;
+        int colonIndex = path.indexOf(':');
+        if (colonIndex >= 0) {
+            namespace = path.substring(0, colonIndex);
+            relativePath = path.substring(colonIndex + 1);
+        } else {
+            namespace = "customraces";
+            relativePath = path;
+        }
+
+        if (!relativePath.startsWith("textures/")) {
+            relativePath = "textures/" + relativePath;
+        }
+        if (!relativePath.endsWith(".png")) {
+            relativePath = relativePath + ".png";
+        }
+
+        ResourceLocation loc = ResourceLocation.tryParse(namespace + ":" + relativePath);
+        if (loc == null) {
+            if (LOGGED_WARNINGS.add("texture_syntax:" + path)) {
+                System.err.println("[CustomRaces] Invalid Were texture path syntax '" + path + "', falling back to default: " + DEFAULT_WERE_TEXTURE);
+            }
+            return getSafeDefaultTexture(player);
+        }
+
+        // Client-side ResourceManager existence validation & safe fallback ladder
+        if (isResourcePresentOnClient(loc)) {
+            return loc;
+        } else {
+            if (LOGGED_WARNINGS.add("texture_missing:" + loc)) {
+                System.err.println("[CustomRaces] Were texture asset missing on disk: '" + loc + "', falling back to default: " + DEFAULT_WERE_TEXTURE);
+            }
+            return getSafeDefaultTexture(player);
+        }
+    }
+
+    public static ResourceLocation getValidWereTextureLocation(RaceData race) {
+        return getValidWereTextureLocation(null, race);
+    }
+
+    public static boolean isResourcePresentOnClient(ResourceLocation loc) {
+        if (loc == null) return false;
+        try {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc != null && mc.getResourceManager() != null) {
+                return mc.getResourceManager().getResource(loc).isPresent();
+            }
+        } catch (Throwable ignored) {
+        }
+        return true;
+    }
+
+    private static ResourceLocation getSafeDefaultTexture(AbstractClientPlayer player) {
+        if (isResourcePresentOnClient(DEFAULT_WERE_TEXTURE)) {
             return DEFAULT_WERE_TEXTURE;
         }
-        return loc;
+        if (player != null) {
+            ResourceLocation skinLoc = player.getSkinTextureLocation();
+            if (skinLoc != null) {
+                return skinLoc;
+            }
+        }
+        return DEFAULT_WERE_TEXTURE;
     }
 
     public static ResourceLocation getValidWereAnimationLocation(RaceData race) {
@@ -114,7 +185,7 @@ public class WereModelRenderer {
             // Hide human player model mesh so skin doesn't bleed through
             setBaseModelVisible(parentModel, false);
 
-            ResourceLocation textureLoc = getValidWereTextureLocation(race);
+            ResourceLocation textureLoc = getValidWereTextureLocation(player, race);
             renderCustomWereMesh(poseStack, buffer, packedLight, player, parentModel, textureLoc, netHeadYaw, headPitch);
             return true;
         } else {
@@ -128,45 +199,64 @@ public class WereModelRenderer {
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(textureLoc));
 
         poseStack.pushPose();
+        try {
+            // Render Werebeast Head Overlay
+            poseStack.pushPose();
+            try {
+                parentModel.head.translateAndRotate(poseStack);
+                renderBox(poseStack, vc, packedLight, -0.45f, -0.80f, -0.45f, 0.45f, 0.10f, 0.45f);
+                // Snout
+                renderBox(poseStack, vc, packedLight, -0.20f, -0.30f, -0.75f, 0.20f, -0.05f, -0.45f);
+                // Ears
+                renderBox(poseStack, vc, packedLight, -0.42f, -1.05f, -0.10f, -0.22f, -0.75f, 0.10f);
+                renderBox(poseStack, vc, packedLight, 0.22f, -1.05f, -0.10f, 0.42f, -0.75f, 0.10f);
+            } finally {
+                poseStack.popPose();
+            }
 
-        // Render Werebeast Head Overlay
-        poseStack.pushPose();
-        parentModel.head.translateAndRotate(poseStack);
-        renderBox(poseStack, vc, packedLight, -0.45f, -0.80f, -0.45f, 0.45f, 0.10f, 0.45f);
-        // Snout
-        renderBox(poseStack, vc, packedLight, -0.20f, -0.30f, -0.75f, 0.20f, -0.05f, -0.45f);
-        // Ears
-        renderBox(poseStack, vc, packedLight, -0.42f, -1.05f, -0.10f, -0.22f, -0.75f, 0.10f);
-        renderBox(poseStack, vc, packedLight, 0.22f, -1.05f, -0.10f, 0.42f, -0.75f, 0.10f);
-        poseStack.popPose();
+            // Werebeast Body & Limbs Overlay
+            poseStack.pushPose();
+            try {
+                parentModel.body.translateAndRotate(poseStack);
+                renderBox(poseStack, vc, packedLight, -0.45f, 0.0f, -0.30f, 0.45f, 1.25f, 0.30f);
+            } finally {
+                poseStack.popPose();
+            }
 
-        // Werebeast Body & Limbs Overlay
-        poseStack.pushPose();
-        parentModel.body.translateAndRotate(poseStack);
-        renderBox(poseStack, vc, packedLight, -0.45f, 0.0f, -0.30f, 0.45f, 1.25f, 0.30f);
-        poseStack.popPose();
+            poseStack.pushPose();
+            try {
+                parentModel.rightArm.translateAndRotate(poseStack);
+                renderBox(poseStack, vc, packedLight, -0.30f, -0.20f, -0.25f, 0.15f, 1.25f, 0.25f);
+            } finally {
+                poseStack.popPose();
+            }
 
-        poseStack.pushPose();
-        parentModel.rightArm.translateAndRotate(poseStack);
-        renderBox(poseStack, vc, packedLight, -0.30f, -0.20f, -0.25f, 0.15f, 1.25f, 0.25f);
-        poseStack.popPose();
+            poseStack.pushPose();
+            try {
+                parentModel.leftArm.translateAndRotate(poseStack);
+                renderBox(poseStack, vc, packedLight, -0.15f, -0.20f, -0.25f, 0.30f, 1.25f, 0.25f);
+            } finally {
+                poseStack.popPose();
+            }
 
-        poseStack.pushPose();
-        parentModel.leftArm.translateAndRotate(poseStack);
-        renderBox(poseStack, vc, packedLight, -0.15f, -0.20f, -0.25f, 0.30f, 1.25f, 0.25f);
-        poseStack.popPose();
+            poseStack.pushPose();
+            try {
+                parentModel.rightLeg.translateAndRotate(poseStack);
+                renderBox(poseStack, vc, packedLight, -0.25f, 0.0f, -0.25f, 0.25f, 1.25f, 0.25f);
+            } finally {
+                poseStack.popPose();
+            }
 
-        poseStack.pushPose();
-        parentModel.rightLeg.translateAndRotate(poseStack);
-        renderBox(poseStack, vc, packedLight, -0.25f, 0.0f, -0.25f, 0.25f, 1.25f, 0.25f);
-        poseStack.popPose();
-
-        poseStack.pushPose();
-        parentModel.leftLeg.translateAndRotate(poseStack);
-        renderBox(poseStack, vc, packedLight, -0.25f, 0.0f, -0.25f, 0.25f, 1.25f, 0.25f);
-        poseStack.popPose();
-
-        poseStack.popPose();
+            poseStack.pushPose();
+            try {
+                parentModel.leftLeg.translateAndRotate(poseStack);
+                renderBox(poseStack, vc, packedLight, -0.25f, 0.0f, -0.25f, 0.25f, 1.25f, 0.25f);
+            } finally {
+                poseStack.popPose();
+            }
+        } finally {
+            poseStack.popPose();
+        }
     }
 
     private static void renderBox(PoseStack poseStack, VertexConsumer builder, int packedLight, float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {

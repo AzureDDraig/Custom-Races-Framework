@@ -19,6 +19,7 @@ public class WereTransformEdgeCaseTest {
             testRapidTransformationToggling();
             testNullSafetyInTransformHandlers();
             testClientWereStateConcurrencyAndClear();
+            testTextureKeywordAndNormalization();
             System.out.println("=== ALL EMPIRICAL EDGE CASE TESTS PASSED SUCCESSFULLY ===");
         } catch (Throwable t) {
             System.err.println("!!! TEST FAILURE !!!");
@@ -193,5 +194,31 @@ public class WereTransformEdgeCaseTest {
         assert !ClientWereState.isTransformed(u2) : "clear() should wipe transformed state map";
 
         System.out.println("  PASSED: ClientWereState correctly adds, removes, and clears player states.");
+    }
+
+    public static void testTextureKeywordAndNormalization() {
+        System.out.println("\n[Test 8] Texture Keyword Intercept & Path Normalization");
+        RaceData race = new RaceData();
+
+        // 1. Keyword check with null player (falls back to DEFAULT_WERE_TEXTURE)
+        race.wereTexturePath = "skin";
+        assert WereModelRenderer.getValidWereTextureLocation(null, race).equals(WereModelRenderer.DEFAULT_WERE_TEXTURE) : "Failed: 'skin' keyword with null player fallback";
+        race.wereTexturePath = "PLAYER";
+        assert WereModelRenderer.getValidWereTextureLocation(null, race).equals(WereModelRenderer.DEFAULT_WERE_TEXTURE) : "Failed: 'PLAYER' keyword with null player fallback";
+
+        // 2. Relative path normalization
+        race.wereTexturePath = "dark_werewolf";
+        ResourceLocation loc1 = WereModelRenderer.getValidWereTextureLocation(null, race);
+        assert loc1.toString().equals("customraces:textures/dark_werewolf.png") : "Failed: shorthand 'dark_werewolf' normalization (got " + loc1 + ")";
+
+        race.wereTexturePath = "were/dark_werewolf.png";
+        ResourceLocation loc2 = WereModelRenderer.getValidWereTextureLocation(null, race);
+        assert loc2.toString().equals("customraces:textures/were/dark_werewolf.png") : "Failed: shorthand 'were/dark_werewolf.png' normalization (got " + loc2 + ")";
+
+        race.wereTexturePath = "customraces:were/dark_werewolf";
+        ResourceLocation loc3 = WereModelRenderer.getValidWereTextureLocation(null, race);
+        assert loc3.toString().equals("customraces:textures/were/dark_werewolf.png") : "Failed: namespace 'customraces:were/dark_werewolf' normalization (got " + loc3 + ")";
+
+        System.out.println("  PASSED: Keywords 'skin'/'player' intercepted cleanly and relative texture paths normalized.");
     }
 }

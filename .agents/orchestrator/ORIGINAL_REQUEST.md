@@ -33,3 +33,42 @@ Add customizable particle count fields to `RaceData.java`, `RaceCreatorScreen` (
 - [ ] Were-form transformation successfully swaps player rendering from default model to custom defined Were-form model.
 - [ ] Ambient particle count is fully configurable per-race and properly controls particle density in-game.
 - [ ] Rolling changelog in `CHANGELOG.md` is preserved and updated with new additions.
+
+## Follow-up — 2026-07-24T18:50:02Z
+
+# Teamwork Project — Custom Races Framework Full Implementation
+
+Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework
+Integrity mode: development
+
+## Requirements
+
+### R1. Were-Form Model & Texture Rendering Fix
+- Ensure default_werewolf.png dark fur texture asset exists in assets/customraces/textures/were/default_werewolf.png.
+- Refine WereModelRenderer.java texture location resolution:
+  - Support "skin" and "player" keywords in wereTexturePath to bind player skin textures directly.
+  - Parse relative texture file strings cleanly.
+  - Fall back safely to player.getSkinTextureLocation() if custom texture is unresolvable, preventing missing purple/black checkerboard textures.
+
+### R2. VIP / Permission-Locked Races (permissionLock)
+- Implement permissionLock checking in RaceRegistry.java and RaceData.java.
+- If a race has a non-empty permissionLock string, evaluate if player possesses permission node before allowing selection.
+- Render "🔒 VIP / LOCKED" badge in RaceSelectionScreen.java with tooltip "§cRequires Permission: §e" + permissionLock. Disable select button for locked races.
+
+### R3. Configurable First-Join Selection GUI Toggle (autoOpenSelectionOnJoin)
+- Implement autoOpenSelectionOnJoin (boolean, default: true) in RaceRegistry.java and config JSON.
+- Check setting in FirstJoinHandler.java on player join: automatically open RaceSelectionScreen only if enabled.
+
+### R4. Dynamic Body Part Model Preset Audit & Verification
+- Audit PlayerRaceLayer.java, CustomRaceModelRenderer.java, and PartTransformData.java for all 6 body part presets (ears, horns, tail, wings, halo, extra legs).
+- Verify position, rotation, color tint, and scale transforms render dynamically and cleanly per race without matrix stack leakage or visual corruption.
+
+## Acceptance Criteria
+
+### Verification & Build Integrity
+- [ ] ./gradlew build -x test builds cleanly with 0 errors across Fabric and Forge.
+- [ ] Were-form transformation renders clean dark werewolf texture without purple/black missing texture grid.
+- [ ] Permission-locked VIP races render lock badge & disabled selection button for unauthorized players.
+- [ ] autoOpenSelectionOnJoin configuration option functions as intended on first join.
+- [ ] All 6 body part attachments apply dynamically per race definition.
+

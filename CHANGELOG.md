@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b128a] - 2026-07-24
+
+### 👑 VIP Races, First-Join Config, Were Texture Fix & Preset Body Part Matrix Engine
+- **Were-Form Texture Fix (`WereModelRenderer.java` & PNG Asset)**: Embedded `default_werewolf.png` asset and added fail-safe `player.getSkinTextureLocation()` fallbacks, eliminating missing purple/black checkerboard textures on Were-transformations.
+- **VIP Permission-Locked Races (`permissionLock`)**: Implemented permission node checks in `RaceRegistry.java` and server-side packet validation in `ModPackets.java`. Added **"🔒 VIP / LOCKED"** red badges, permission tooltips, and button locking in `RaceSelectionScreen.java`.
+- **Configurable First-Join Selection GUI (`config.json`)**: Added `autoOpenSelectionOnJoin` toggle (default: `true`) in `config/custom_races/config.json`, reloaded dynamically via `/custom_races admin reload`.
+- **Dynamic Body Part Matrix Engine (`PlayerRaceLayer.java`, `RaceCreatorScreen.java`)**: Added Position, Rotation, and Scale matrix transforms for all 6 body part categories (Ears, Horns, Halo, Wings, Tail, Extra Legs/Spider/Centaur, and Custom Parts). Wrapped all render calls in `try-finally` blocks to guarantee zero PoseStack matrix leaks.
+
+---
+
 ## [1.0.0-b127a] - 2026-07-24
 
 ### 🛡️ Alliance Stance & Faction Safety (`MobAllianceData.java`)

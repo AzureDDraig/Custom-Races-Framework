@@ -112,23 +112,40 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE));
 
         poseStack.pushPose();
-        this.getParentModel().getHead().translateAndRotate(poseStack);
+        try {
+            this.getParentModel().getHead().translateAndRotate(poseStack);
 
-        // Werewolf ears (Crimson & Dark Fur)
-        renderColoredBox(poseStack, vc, packedLight, -0.40f, -0.75f, -0.05f, -0.25f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
-        renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.75f, -0.05f, 0.40f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
+            // Werewolf ears (Crimson & Dark Fur)
+            renderColoredBox(poseStack, vc, packedLight, -0.40f, -0.75f, -0.05f, -0.25f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.75f, -0.05f, 0.40f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
 
-        // Werewolf snout
-        renderColoredBox(poseStack, vc, packedLight, -0.15f, -0.25f, -0.55f, 0.15f, -0.05f, -0.25f, 0.15f, 0.04f, 0.04f, 1.0f);
+            // Werewolf snout
+            renderColoredBox(poseStack, vc, packedLight, -0.15f, -0.25f, -0.55f, 0.15f, -0.05f, -0.25f, 0.15f, 0.04f, 0.04f, 1.0f);
 
-        // Glowing Crimson Eyes Overlay
-        renderColoredBox(poseStack, vc, packedLight, -0.25f, -0.42f, -0.32f, -0.08f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
-        renderColoredBox(poseStack, vc, packedLight, 0.08f, -0.42f, -0.32f, 0.25f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
-
-        poseStack.popPose();
+            // Glowing Crimson Eyes Overlay
+            renderColoredBox(poseStack, vc, packedLight, -0.25f, -0.42f, -0.32f, -0.08f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.08f, -0.42f, -0.32f, 0.25f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
+        } finally {
+            poseStack.popPose();
+        }
     }
 
     private static final ResourceLocation WHITE_TEXTURE = new ResourceLocation("minecraft", "textures/misc/white.png");
+
+    private void applyPartTransforms(PoseStack poseStack, PartTransformData pt) {
+        if (pt == null) return;
+        poseStack.translate(pt.posX, pt.posY, pt.posZ);
+        if (pt.rotPitch != 0.0f) {
+            poseStack.mulPose(com.mojang.math.Axis.XP.rotation((float) Math.toRadians(pt.rotPitch)));
+        }
+        if (pt.rotYaw != 0.0f) {
+            poseStack.mulPose(com.mojang.math.Axis.YP.rotation((float) Math.toRadians(pt.rotYaw)));
+        }
+        if (pt.rotRoll != 0.0f) {
+            poseStack.mulPose(com.mojang.math.Axis.ZP.rotation((float) Math.toRadians(pt.rotRoll)));
+        }
+        poseStack.scale(pt.getSafeScaleX(), pt.getSafeScaleY(), pt.getSafeScaleZ());
+    }
 
     private void renderPresetParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
         VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE));
@@ -136,83 +153,288 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         // 1. Head Attachments (Ears, Horns, Halo)
         if (!"none".equalsIgnoreCase(race.earType) || !"none".equalsIgnoreCase(race.hornType) || !"none".equalsIgnoreCase(race.haloType)) {
             poseStack.pushPose();
-            this.getParentModel().getHead().translateAndRotate(poseStack);
+            try {
+                this.getParentModel().getHead().translateAndRotate(poseStack);
 
-            // Render Ears
-            if (!"none".equalsIgnoreCase(race.earType)) {
-                float[] rgb = parseRGB(race.getColor("ears"));
-                PartTransformData pt = race.partTransforms.get("ears");
-                poseStack.pushPose();
-                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                // Left & Right Ear Cuboids
-                renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.65f, -0.05f, -0.22f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-                renderColoredBox(poseStack, vc, packedLight, 0.22f, -0.65f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+                // Render Ears
+                if (!"none".equalsIgnoreCase(race.earType)) {
+                    float[] rgb = parseRGB(race.getColor("ears"));
+                    PartTransformData pt = race.partTransforms.get("ears");
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        renderEarsGeometry(poseStack, vc, packedLight, race.earType, rgb);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+
+                // Render Horns
+                if (!"none".equalsIgnoreCase(race.hornType)) {
+                    float[] rgb = parseRGB(race.getColor("horns"));
+                    PartTransformData pt = race.partTransforms.get("horns");
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        renderHornsGeometry(poseStack, vc, packedLight, race.hornType, rgb);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+
+                // Render Halo
+                if (!"none".equalsIgnoreCase(race.haloType)) {
+                    float[] rgb = parseRGB(race.getColor("halo"));
+                    PartTransformData pt = race.partTransforms.get("halo");
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        renderHaloGeometry(poseStack, vc, packedLight, race.haloType, rgb);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+            } finally {
                 poseStack.popPose();
             }
-
-            // Render Horns
-            if (!"none".equalsIgnoreCase(race.hornType)) {
-                float[] rgb = parseRGB(race.getColor("horns"));
-                PartTransformData pt = race.partTransforms.get("horns");
-                poseStack.pushPose();
-                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.70f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-                renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.70f, -0.15f, 0.20f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-                poseStack.popPose();
-            }
-
-            // Render Halo
-            if (!"none".equalsIgnoreCase(race.haloType)) {
-                float[] rgb = parseRGB(race.getColor("halo"));
-                PartTransformData pt = race.partTransforms.get("halo");
-                poseStack.pushPose();
-                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
-                poseStack.popPose();
-            }
-
-            poseStack.popPose();
         }
 
-        // 2. Body Attachments (Wings, Tail)
-        if (!"none".equalsIgnoreCase(race.wingType) || !"none".equalsIgnoreCase(race.tailType)) {
+        // 2. Body Attachments (Wings, Tail, Extra Legs, Custom Part)
+        boolean hasWings = !"none".equalsIgnoreCase(race.wingType);
+        boolean hasTail = !"none".equalsIgnoreCase(race.tailType);
+        boolean hasExtraLegs = !"human".equalsIgnoreCase(race.legType) && race.legCount > 2;
+        boolean hasCustomPart = !"none".equalsIgnoreCase(race.customPartId);
+
+        if (hasWings || hasTail || hasExtraLegs || hasCustomPart) {
             poseStack.pushPose();
-            this.getParentModel().body.translateAndRotate(poseStack);
+            try {
+                this.getParentModel().body.translateAndRotate(poseStack);
 
-            // Render Wings
-            if (!"none".equalsIgnoreCase(race.wingType)) {
-                float[] rgb = parseRGB(race.getColor("wings"));
-                PartTransformData pt = race.partTransforms.get("wings");
+                // Render Wings
+                if (hasWings) {
+                    float[] rgb = parseRGB(race.getColor("wings"));
+                    PartTransformData pt = race.partTransforms.get("wings");
 
-                boolean isFlying = player.getAbilities().flying || !player.onGround();
-                float flapAngle = isFlying ? (float) (Math.sin(player.tickCount * 0.45f) * 0.4f) : 0.0f;
+                    boolean isFlying = player.getAbilities().flying || !player.onGround();
+                    float flapAngle = isFlying ? (float) (Math.sin(player.tickCount * 0.45f) * 0.4f) : 0.0f;
 
-                // Left Wing Panel
-                poseStack.pushPose();
-                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                poseStack.mulPose(com.mojang.math.Axis.YP.rotation(flapAngle));
+                    // Left Wing Panel
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        poseStack.mulPose(com.mojang.math.Axis.YP.rotation(flapAngle));
+                        renderWingGeometry(poseStack, vc, packedLight, race.wingType, rgb, true);
+                    } finally {
+                        poseStack.popPose();
+                    }
+
+                    // Right Wing Panel
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        poseStack.mulPose(com.mojang.math.Axis.YP.rotation(-flapAngle));
+                        renderWingGeometry(poseStack, vc, packedLight, race.wingType, rgb, false);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+
+                // Render Tail
+                if (hasTail) {
+                    float[] rgb = parseRGB(race.getColor("tail"));
+                    PartTransformData pt = race.partTransforms.get("tail");
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        renderTailGeometry(poseStack, vc, packedLight, race.tailType, rgb);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+
+                // Render Extra Legs (Preset #6)
+                if (hasExtraLegs) {
+                    float[] rgb = parseRGB(race.getColor("legs"));
+                    PartTransformData pt = race.partTransforms.get("legs");
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        renderExtraLegsGeometry(poseStack, vc, packedLight, race.legType, race.legCount, rgb);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+
+                // Render Custom Part
+                if (hasCustomPart) {
+                    float[] rgb = parseRGB(race.getColor("custom"));
+                    PartTransformData pt = race.partTransforms.get("custom");
+                    poseStack.pushPose();
+                    try {
+                        applyPartTransforms(poseStack, pt);
+                        renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.20f, -0.20f, 0.20f, 0.20f, 0.20f, rgb[0], rgb[1], rgb[2], 1.0f);
+                    } finally {
+                        poseStack.popPose();
+                    }
+                }
+            } finally {
+                poseStack.popPose();
+            }
+        }
+    }
+
+    private void renderEarsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String earType, float[] rgb) {
+        String type = earType.toLowerCase();
+        if ("dog".equals(type)) {
+            // Dog: Floppy/slanted ears
+            renderColoredBox(poseStack, vc, packedLight, -0.42f, -0.50f, -0.05f, -0.25f, -0.10f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.50f, -0.05f, 0.42f, -0.10f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("cat".equals(type)) {
+            // Cat: Pointed ears with inner ear contrast
+            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.75f, -0.05f, -0.20f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.20f, -0.75f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            // Inner ear accents (slightly lighter)
+            renderColoredBox(poseStack, vc, packedLight, -0.32f, -0.70f, -0.06f, -0.23f, -0.45f, -0.05f, Math.min(1.0f, rgb[0] + 0.2f), Math.min(1.0f, rgb[1] + 0.2f), Math.min(1.0f, rgb[2] + 0.2f), 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.23f, -0.70f, -0.06f, 0.32f, -0.45f, -0.05f, Math.min(1.0f, rgb[0] + 0.2f), Math.min(1.0f, rgb[1] + 0.2f), Math.min(1.0f, rgb[2] + 0.2f), 1.0f);
+        } else if ("dragon".equals(type)) {
+            // Dragon: Webbed fin-like flared ears
+            renderColoredBox(poseStack, vc, packedLight, -0.55f, -0.50f, -0.05f, -0.25f, -0.38f, 0.05f, rgb[0], rgb[1], rgb[2], 0.95f);
+            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.50f, -0.05f, 0.55f, -0.38f, 0.05f, rgb[0], rgb[1], rgb[2], 0.95f);
+        } else if ("bunny".equals(type)) {
+            // Bunny: Long upright rabbit ears
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, -1.10f, -0.05f, -0.18f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.18f, -1.10f, -0.05f, 0.30f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else {
+            // Standard/Default Ear Cuboids
+            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.65f, -0.05f, -0.22f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.22f, -0.65f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+        }
+    }
+
+    private void renderHornsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String hornType, float[] rgb) {
+        String type = hornType.toLowerCase();
+        if ("demon".equals(type)) {
+            // Demon: Steep curved backward horns
+            renderColoredBox(poseStack, vc, packedLight, -0.22f, -0.90f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.90f, -0.15f, 0.22f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("ram".equals(type)) {
+            // Ram: Wide curling horns wrapping outward around head sides
+            renderColoredBox(poseStack, vc, packedLight, -0.45f, -0.60f, -0.20f, -0.18f, -0.40f, 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.18f, -0.60f, -0.20f, 0.45f, -0.40f, 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("dragon".equals(type)) {
+            // Dragon: Swept-back multi-pronged spiky horns
+            renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.80f, 0.00f, -0.10f, -0.50f, 0.30f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.10f, -0.80f, 0.00f, 0.20f, -0.50f, 0.30f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("unicorn".equals(type)) {
+            // Unicorn: Single center forehead horn
+            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.95f, -0.30f, 0.05f, -0.45f, -0.18f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else {
+            // Standard Horn Cuboids
+            renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.70f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.70f, -0.15f, 0.20f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+        }
+    }
+
+    private void renderHaloGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String haloType, float[] rgb) {
+        String type = haloType.toLowerCase();
+        if ("angel".equals(type)) {
+            // Angel: Floating luminous ring
+            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.80f, -0.35f, 0.35f, -0.76f, 0.35f, rgb[0], rgb[1], rgb[2], 0.95f);
+        } else if ("flower".equals(type)) {
+            // Flower: Halo ring surrounded by 4 floral petal accents
+            renderColoredBox(poseStack, vc, packedLight, -0.32f, -0.78f, -0.32f, 0.32f, -0.74f, 0.32f, rgb[0], rgb[1], rgb[2], 0.9f);
+            renderColoredBox(poseStack, vc, packedLight, -0.38f, -0.80f, -0.05f, -0.30f, -0.72f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.30f, -0.80f, -0.05f, 0.38f, -0.72f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.80f, -0.38f, 0.05f, -0.72f, -0.30f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.80f, 0.30f, 0.05f, -0.72f, 0.38f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("demon".equals(type)) {
+            // Demon: Dark spiky ring halo
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
+            renderColoredBox(poseStack, vc, packedLight, -0.28f, -0.82f, -0.28f, -0.24f, -0.75f, -0.24f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.24f, -0.82f, -0.28f, 0.28f, -0.75f, -0.24f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else {
+            // Standard Halo Ring
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
+        }
+    }
+
+    private void renderWingGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String wingType, float[] rgb, boolean isLeft) {
+        String type = wingType.toLowerCase();
+        if ("feathered".equals(type)) {
+            if (isLeft) {
+                renderColoredBox(poseStack, vc, packedLight, -0.85f, -0.10f, 0.15f, -0.15f, 0.70f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                renderColoredBox(poseStack, vc, packedLight, -0.95f, 0.20f, 0.16f, -0.25f, 0.95f, 0.21f, rgb[0] * 0.9f, rgb[1] * 0.9f, rgb[2] * 0.9f, 0.95f);
+            } else {
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, -0.10f, 0.15f, 0.85f, 0.70f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                renderColoredBox(poseStack, vc, packedLight, 0.25f, 0.20f, 0.16f, 0.95f, 0.95f, 0.21f, rgb[0] * 0.9f, rgb[1] * 0.9f, rgb[2] * 0.9f, 0.95f);
+            }
+        } else if ("dragon".equals(type)) {
+            if (isLeft) {
+                renderColoredBox(poseStack, vc, packedLight, -0.90f, 0.0f, 0.15f, -0.15f, 0.85f, 0.20f, rgb[0], rgb[1], rgb[2], 0.90f);
+                renderColoredBox(poseStack, vc, packedLight, -0.88f, -0.05f, 0.14f, -0.17f, 0.10f, 0.21f, rgb[0] * 0.7f, rgb[1] * 0.7f, rgb[2] * 0.7f, 1.0f);
+            } else {
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.90f, 0.85f, 0.20f, rgb[0], rgb[1], rgb[2], 0.90f);
+                renderColoredBox(poseStack, vc, packedLight, 0.17f, -0.05f, 0.14f, 0.88f, 0.10f, 0.21f, rgb[0] * 0.7f, rgb[1] * 0.7f, rgb[2] * 0.7f, 1.0f);
+            }
+        } else {
+            if (isLeft) {
                 renderColoredBox(poseStack, vc, packedLight, -0.85f, 0.0f, 0.15f, -0.15f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
-                poseStack.popPose();
-
-                // Right Wing Panel
-                poseStack.pushPose();
-                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                poseStack.mulPose(com.mojang.math.Axis.YP.rotation(-flapAngle));
+            } else {
                 renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.85f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
-                poseStack.popPose();
             }
+        }
+    }
 
-            // Render Tail
-            if (!"none".equalsIgnoreCase(race.tailType)) {
-                float[] rgb = parseRGB(race.getColor("tail"));
-                PartTransformData pt = race.partTransforms.get("tail");
-                poseStack.pushPose();
-                if (pt != null) poseStack.translate(pt.posX, pt.posY, pt.posZ);
-                renderColoredBox(poseStack, vc, packedLight, -0.06f, 0.65f, 0.15f, 0.06f, 1.25f, 0.65f, rgb[0], rgb[1], rgb[2], 1.0f);
-                poseStack.popPose();
+    private void renderTailGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String tailType, float[] rgb) {
+        String type = tailType.toLowerCase();
+        if ("dog".equals(type)) {
+            // Dog: Bushy upward tail
+            renderColoredBox(poseStack, vc, packedLight, -0.08f, 0.50f, 0.15f, 0.08f, 1.05f, 0.45f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("cat".equals(type)) {
+            // Cat: Slender long tail box
+            renderColoredBox(poseStack, vc, packedLight, -0.04f, 0.60f, 0.15f, 0.04f, 1.35f, 0.35f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("camel".equals(type)) {
+            // Camel: Hump / tail tuft
+            renderColoredBox(poseStack, vc, packedLight, -0.15f, 0.20f, 0.15f, 0.15f, 0.60f, 0.45f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else if ("fish".equals(type)) {
+            // Fish: Tail body with caudal fin span
+            renderColoredBox(poseStack, vc, packedLight, -0.04f, 0.65f, 0.15f, 0.04f, 1.20f, 0.50f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.25f, 1.00f, 0.45f, 0.25f, 1.30f, 0.52f, rgb[0], rgb[1], rgb[2], 0.95f);
+        } else if ("dragon".equals(type)) {
+            // Dragon: Thick spiky tail
+            renderColoredBox(poseStack, vc, packedLight, -0.10f, 0.60f, 0.15f, 0.10f, 1.30f, 0.70f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else {
+            // Standard rear vertical tail
+            renderColoredBox(poseStack, vc, packedLight, -0.06f, 0.65f, 0.15f, 0.06f, 1.25f, 0.65f, rgb[0], rgb[1], rgb[2], 1.0f);
+        }
+    }
+
+    private void renderExtraLegsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String legType, int legCount, float[] rgb) {
+        String type = legType != null ? legType.toLowerCase() : "human";
+        if ("spider".equals(type)) {
+            int extraPairs = Math.max(1, (legCount - 2) / 2);
+            for (int i = 0; i < extraPairs; i++) {
+                float zOff = (i - extraPairs / 2.0f + 0.5f) * 0.25f;
+                // Left spider leg
+                renderColoredBox(poseStack, vc, packedLight, -0.75f, 0.50f + (i * 0.05f), zOff, -0.15f, 1.20f, zOff + 0.08f, rgb[0], rgb[1], rgb[2], 1.0f);
+                // Right spider leg
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.50f + (i * 0.05f), zOff, 0.75f, 1.20f, zOff + 0.08f, rgb[0], rgb[1], rgb[2], 1.0f);
             }
-
-            poseStack.popPose();
+        } else if ("centaur".equals(type)) {
+            // Rear quadruped body extension
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, 0.40f, 0.20f, 0.30f, 0.85f, 1.00f, rgb[0], rgb[1], rgb[2], 1.0f);
+            // Rear left leg
+            renderColoredBox(poseStack, vc, packedLight, -0.28f, 0.85f, 0.70f, -0.10f, 1.50f, 0.90f, rgb[0], rgb[1], rgb[2], 1.0f);
+            // Rear right leg
+            renderColoredBox(poseStack, vc, packedLight, 0.10f, 0.85f, 0.70f, 0.28f, 1.50f, 0.90f, rgb[0], rgb[1], rgb[2], 1.0f);
+        } else {
+            // Generic extra leg pairs
+            int extraPairs = Math.max(1, (legCount - 2) / 2);
+            for (int i = 0; i < extraPairs; i++) {
+                float zOff = (i + 1) * 0.25f;
+                renderColoredBox(poseStack, vc, packedLight, -0.35f, 0.60f, zOff, -0.15f, 1.30f, zOff + 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.60f, zOff, 0.35f, 1.30f, zOff + 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
+            }
         }
     }
 

@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -137,9 +138,13 @@ public class ModPackets {
             String raceId = buf.readUtf(256);
             ServerPlayer player = (ServerPlayer) context.getPlayer();
             context.queue(() -> {
-                RaceRegistry.setPlayerRace(player.getUUID(), raceId);
                 RaceData race = RaceRegistry.getRace(raceId);
-                PehkuiIntegration.applyRaceScales(player, race);
+                if (race != null && !RaceRegistry.canPlayerSelectRace(player, race)) {
+                    player.sendSystemMessage(Component.literal("§cYou do not have permission to select the " + race.name + " race! (§e" + race.permissionLock + "§c)"));
+                    return;
+                }
+                RaceRegistry.setPlayerRace(player.getUUID(), raceId);
+                if (race != null) PehkuiIntegration.applyRaceScales(player, race);
                 syncRacesToAll(player.getServer());
             });
         });

@@ -162,6 +162,7 @@ public class CustomRacesCommands {
                         // /custom_races admin reload
                         .then(Commands.literal("reload")
                                 .executes(context -> {
+                                    RaceRegistry.loadConfig();
                                     RaceRegistry.loadRaces();
                                     RaceRegistry.loadPlayerRaces();
                                     ModPackets.syncRacesToAll(context.getSource().getServer());

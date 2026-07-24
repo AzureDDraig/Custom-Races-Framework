@@ -89,6 +89,9 @@ public class RaceCreatorScreen extends Screen {
     // Form Mode Toggle (Base Form vs Were-Form)
     private boolean editingWereForm = false;
 
+    // Part Transform Selection State for Tab 2
+    private String selectedPartTransformKey = "ears";
+
     // Search Query State for Passives, Actives, and Drawbacks
     private String searchPassivesQuery = "";
     private String searchActivesQuery = "";
@@ -710,32 +713,81 @@ public class RaceCreatorScreen extends Screen {
                 this.addRenderableWidget(partsBtn);
             }
 
-        } else if (activeTab == 2) { // Positions / Part Transforms
-            int py = contentTop + 18;
-            String[] partKeys = {"ears", "wings", "tail", "horns", "halo", "custom"};
+        } else if (activeTab == 2) { // Positions & Part Transforms (Pos, Rot, Scale)
+            String[] partKeys = {"ears", "wings", "tail", "horns", "halo", "legs", "custom"};
+
+            // Part selector button row
+            int bx = contentLeft;
+            int partBtnY = contentTop + 18;
             for (String pKey : partKeys) {
-                PartTransformData pt = workingRace.partTransforms.computeIfAbsent(pKey, k -> new PartTransformData());
-
-                EditBox xBox = new EditBox(this.font, contentLeft + 110, py, 45, 18, Component.literal(pKey + " X"));
-                xBox.setMaxLength(2048);
-                xBox.setValue(String.valueOf(pt.posX));
-                xBox.setResponder(val -> { try { pt.posX = Float.parseFloat(val); } catch (Exception ignored) {} });
-                this.addRenderableWidget(xBox);
-
-                EditBox yBox = new EditBox(this.font, contentLeft + 160, py, 45, 18, Component.literal(pKey + " Y"));
-                yBox.setMaxLength(2048);
-                yBox.setValue(String.valueOf(pt.posY));
-                yBox.setResponder(val -> { try { pt.posY = Float.parseFloat(val); } catch (Exception ignored) {} });
-                this.addRenderableWidget(yBox);
-
-                EditBox zBox = new EditBox(this.font, contentLeft + 210, py, 45, 18, Component.literal(pKey + " Z"));
-                zBox.setMaxLength(2048);
-                zBox.setValue(String.valueOf(pt.posZ));
-                zBox.setResponder(val -> { try { pt.posZ = Float.parseFloat(val); } catch (Exception ignored) {} });
-                this.addRenderableWidget(zBox);
-
-                py += 24;
+                String label = (pKey.equalsIgnoreCase(selectedPartTransformKey) ? "§e> " : "") + pKey.substring(0, 1).toUpperCase() + pKey.substring(1);
+                Button pBtn = Button.builder(Component.literal(label), b -> {
+                    this.selectedPartTransformKey = pKey;
+                    this.init();
+                }).bounds(bx, partBtnY, 46, 18).build();
+                pBtn.setTooltip(Tooltip.create(Component.literal("Select transform controls for " + pKey)));
+                this.addRenderableWidget(pBtn);
+                bx += 48;
             }
+
+            PartTransformData pt = workingRace.partTransforms.computeIfAbsent(selectedPartTransformKey, k -> new PartTransformData());
+
+            // Position Offsets (X, Y, Z)
+            EditBox posXBox = new EditBox(this.font, contentLeft + 140, contentTop + 45, 55, 18, Component.literal("Pos X"));
+            posXBox.setMaxLength(2048);
+            posXBox.setValue(String.valueOf(pt.posX));
+            posXBox.setResponder(val -> { try { pt.posX = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(posXBox);
+
+            EditBox posYBox = new EditBox(this.font, contentLeft + 200, contentTop + 45, 55, 18, Component.literal("Pos Y"));
+            posYBox.setMaxLength(2048);
+            posYBox.setValue(String.valueOf(pt.posY));
+            posYBox.setResponder(val -> { try { pt.posY = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(posYBox);
+
+            EditBox posZBox = new EditBox(this.font, contentLeft + 260, contentTop + 45, 55, 18, Component.literal("Pos Z"));
+            posZBox.setMaxLength(2048);
+            posZBox.setValue(String.valueOf(pt.posZ));
+            posZBox.setResponder(val -> { try { pt.posZ = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(posZBox);
+
+            // Rotation Degrees (Pitch, Yaw, Roll)
+            EditBox rotPitchBox = new EditBox(this.font, contentLeft + 140, contentTop + 75, 55, 18, Component.literal("Rot Pitch"));
+            rotPitchBox.setMaxLength(2048);
+            rotPitchBox.setValue(String.valueOf(pt.rotPitch));
+            rotPitchBox.setResponder(val -> { try { pt.rotPitch = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(rotPitchBox);
+
+            EditBox rotYawBox = new EditBox(this.font, contentLeft + 200, contentTop + 75, 55, 18, Component.literal("Rot Yaw"));
+            rotYawBox.setMaxLength(2048);
+            rotYawBox.setValue(String.valueOf(pt.rotYaw));
+            rotYawBox.setResponder(val -> { try { pt.rotYaw = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(rotYawBox);
+
+            EditBox rotRollBox = new EditBox(this.font, contentLeft + 260, contentTop + 75, 55, 18, Component.literal("Rot Roll"));
+            rotRollBox.setMaxLength(2048);
+            rotRollBox.setValue(String.valueOf(pt.rotRoll));
+            rotRollBox.setResponder(val -> { try { pt.rotRoll = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(rotRollBox);
+
+            // Scale Factors (Scale X, Scale Y, Scale Z)
+            EditBox scaleXBox = new EditBox(this.font, contentLeft + 140, contentTop + 105, 55, 18, Component.literal("Scale X"));
+            scaleXBox.setMaxLength(2048);
+            scaleXBox.setValue(String.valueOf(pt.scaleX));
+            scaleXBox.setResponder(val -> { try { pt.scaleX = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(scaleXBox);
+
+            EditBox scaleYBox = new EditBox(this.font, contentLeft + 200, contentTop + 105, 55, 18, Component.literal("Scale Y"));
+            scaleYBox.setMaxLength(2048);
+            scaleYBox.setValue(String.valueOf(pt.scaleY));
+            scaleYBox.setResponder(val -> { try { pt.scaleY = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(scaleYBox);
+
+            EditBox scaleZBox = new EditBox(this.font, contentLeft + 260, contentTop + 105, 55, 18, Component.literal("Scale Z"));
+            scaleZBox.setMaxLength(2048);
+            scaleZBox.setValue(String.valueOf(pt.scaleZ));
+            scaleZBox.setResponder(val -> { try { pt.scaleZ = Float.parseFloat(val); } catch (Exception ignored) {} });
+            this.addRenderableWidget(scaleZBox);
 
         } else if (activeTab == 3) { // Passives (1 Column Scrollable List)
             passiveWidgets.clear();
@@ -1515,13 +1567,10 @@ public class RaceCreatorScreen extends Screen {
                 guiGraphics.drawString(this.font, "§e❖ Particle Count:", contentLeft, contentTop + 184, 0xFFFFFF);
             }
         } else if (activeTab == 2) {
-            guiGraphics.drawString(this.font, "§e❖ Part Scale & Offset (X, Y, Z):", contentLeft, contentTop + 4, 0xFFFFFF);
-            String[] partKeys = {"Ears", "Wings", "Tail", "Horns", "Halo", "Custom"};
-            int py = contentTop + 20;
-            for (String pKey : partKeys) {
-                guiGraphics.drawString(this.font, "§e❖ " + pKey + ":", contentLeft, py + 4, 0xCCCCCC);
-                py += 24;
-            }
+            guiGraphics.drawString(this.font, "§e❖ Part Transforms (Selected: " + selectedPartTransformKey.toUpperCase() + "):", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§e❖ Pos Offset (X/Y/Z):", contentLeft, contentTop + 49, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§e❖ Rot Deg (P/Y/R):", contentLeft, contentTop + 79, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§e❖ Scale Multi (X/Y/Z):", contentLeft, contentTop + 109, 0xCCCCCC);
         } else if (activeTab == 3) {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Toggle Were-Form Granted Passives:" : "§a❖ Toggle Passive Race Abilities:", contentLeft, contentTop + 4, 0xFFFFFF);
 

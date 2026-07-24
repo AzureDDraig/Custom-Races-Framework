@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.world.entity.player.Player;
 
 /**
  * Registry for loading, saving, and querying race configurations and player race assignments.
@@ -54,8 +55,58 @@ public class RaceRegistry {
         return new File(dir, "player_races.json");
     }
 
+    public static File getConfigFile() {
+        File dir = new File("config/custom_races");
+        if (!dir.exists()) dir.mkdirs();
+        return new File(dir, "config.json");
+    }
+
+    public static void loadConfig() {
+        File file = getConfigFile();
+        if (file.exists()) {
+            try (FileReader reader = new FileReader(file)) {
+                com.google.gson.JsonObject json = GSON.fromJson(reader, com.google.gson.JsonObject.class);
+                if (json != null && json.has("autoOpenSelectionOnJoin")) {
+                    autoOpenSelectionOnJoin = json.get("autoOpenSelectionOnJoin").getAsBoolean();
+                }
+            } catch (Exception e) {
+                System.err.println("[CustomRaces] Error loading config.json: " + e.getMessage());
+            }
+        } else {
+            saveConfig();
+        }
+    }
+
+    public static void saveConfig() {
+        File file = getConfigFile();
+        try (FileWriter writer = new FileWriter(file)) {
+            com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+            json.addProperty("autoOpenSelectionOnJoin", autoOpenSelectionOnJoin);
+            GSON.toJson(json, writer);
+        } catch (Exception e) {
+            System.err.println("[CustomRaces] Error saving config.json: " + e.getMessage());
+        }
+    }
+
+    public static boolean canPlayerSelectRace(Player player, RaceData race) {
+        if (race == null) return false;
+        if (race.permissionLock == null || race.permissionLock.trim().isEmpty()) {
+            return true;
+        }
+        if (player == null) return false;
+        if (player.hasPermissions(2)) {
+            return true;
+        }
+        try {
+            int level = Integer.parseInt(race.permissionLock.trim());
+            return player.hasPermissions(level);
+        } catch (NumberFormatException ignored) {}
+        return false;
+    }
+
     public static void init() {
         initDirectories();
+        loadConfig();
         loadRaces();
         loadPlayerRaces();
         rebuildSuggestionsCache();

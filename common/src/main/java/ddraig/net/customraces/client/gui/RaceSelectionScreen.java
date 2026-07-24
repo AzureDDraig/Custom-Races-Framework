@@ -102,6 +102,23 @@ public class RaceSelectionScreen extends Screen {
         }
     }
 
+    public boolean isRaceLocked(RaceData race) {
+        if (race == null) return false;
+        if (race.permissionLock == null || race.permissionLock.trim().isEmpty()) {
+            return false;
+        }
+        if (this.minecraft != null && this.minecraft.player != null) {
+            if (this.minecraft.player.hasPermissions(2)) {
+                return false;
+            }
+            try {
+                int level = Integer.parseInt(race.permissionLock.trim());
+                return !this.minecraft.player.hasPermissions(level);
+            } catch (NumberFormatException ignored) {}
+        }
+        return true;
+    }
+
     private void updateFilteredRaces() {
         String query = searchBox != null ? searchBox.getValue().toLowerCase().trim() : "";
         filteredRaces = RaceRegistry.loadedRaces.values().stream()
@@ -146,6 +163,7 @@ public class RaceSelectionScreen extends Screen {
             if (itemY + itemHeight >= listTop && itemY <= bottomY) {
                 boolean isSelected = race.id.equals(selectedRaceId);
                 boolean isHovered = mouseX >= 12 && mouseX <= leftWidth - 12 && mouseY >= itemY && mouseY <= itemY + itemHeight - 2;
+                boolean isLocked = isRaceLocked(race);
 
                 int bgColor = isSelected ? 0xFF2D3850 : (isHovered ? 0xFF1F2636 : 0xFF161B26);
                 int borderColor = isSelected ? 0xFF6C5CE7 : (isHovered ? 0xFF3D4A66 : 0xFF222938);
@@ -154,8 +172,13 @@ public class RaceSelectionScreen extends Screen {
                 guiGraphics.fill(12, itemY, leftWidth - 12, itemY + 1, borderColor);
                 guiGraphics.fill(12, itemY + itemHeight - 3, leftWidth - 12, itemY + itemHeight - 2, borderColor);
 
-                String displayName = isSelected ? "§e§l❖ " + race.name : "§7• " + race.name;
+                String prefix = isLocked ? "§c🔒 " : (isSelected ? "§e§l❖ " : "§7• ");
+                String displayName = prefix + race.name + (isLocked ? " §c[VIP]" : "");
                 guiGraphics.drawString(this.font, displayName, 16, itemY + 6, 0xFFFFFF);
+
+                if (isHovered && isLocked) {
+                    hoveredAbilityTooltip = Component.literal("§cRequires Permission: §e" + race.permissionLock);
+                }
             }
             itemY += itemHeight;
         }
@@ -168,6 +191,17 @@ public class RaceSelectionScreen extends Screen {
         guiGraphics.fill(centerLeft, topY, centerLeft + centerWidth, topY + 1, 0xFF7B61FF); // Top Violet Border Line
 
         RaceData selectedRace = RaceRegistry.getRace(selectedRaceId);
+        boolean isSelectedLocked = isRaceLocked(selectedRace);
+
+        if (confirmButton != null) {
+            confirmButton.active = !isSelectedLocked && selectedRace != null;
+            if (isSelectedLocked && selectedRace != null) {
+                confirmButton.setTooltip(Tooltip.create(Component.literal("§cRequires Permission: §e" + selectedRace.permissionLock)));
+            } else {
+                confirmButton.setTooltip(Tooltip.create(Component.translatable("gui.customraces.tooltip.confirm")));
+            }
+        }
+
         if (wereToggleBtn != null) {
             wereToggleBtn.visible = selectedRace != null && selectedRace.enableWereRace;
         }
@@ -192,6 +226,13 @@ public class RaceSelectionScreen extends Screen {
 
             String titleText = (previewWereForm && selectedRace.enableWereRace) ? "§c§l" + selectedRace.name.toUpperCase() + " §4[WERE-FORM]" : "§l" + selectedRace.name.toUpperCase();
             guiGraphics.drawString(this.font, titleText, textX, topY + 10, titleColor);
+
+            if (isSelectedLocked) {
+                int badgeX = centerLeft + centerWidth - 110;
+                guiGraphics.fill(badgeX, topY + 5, centerLeft + centerWidth - 10, topY + 23, 0xFF8B0000);
+                guiGraphics.fill(badgeX, topY + 5, centerLeft + centerWidth - 10, topY + 6, 0xFFFF5555);
+                guiGraphics.drawCenteredString(this.font, "🔒 VIP / LOCKED", badgeX + 50, topY + 9, 0xFFFFFF);
+            }
 
             // Playstyle Difficulty Meter (1 to 10)
             int diffY = topY + 38;
