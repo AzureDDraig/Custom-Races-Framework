@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b112a] - 2026-07-24
+
+### ⚔️ Minion AI Defender Target Priority (`ActiveAbilityHandler.java`)
+- Enhanced minion AI targeting logic when active minion skills are invoked (`minion_summon`, `wolf_pack_summon`).
+- Prioritizes targets in order: player's recent attack target (`player.getLastHurtMob()`), player's recent attacker (`player.getLastHurtByMob()`), and nearby hostile entities, ensuring summoned minions immediately assist and defend the player.
+
+---
+
 ## [1.0.0-b110a] - 2026-07-24
 
 ### 📦 Comprehensive System Verification & Multi-Phase Stability Enhancements
