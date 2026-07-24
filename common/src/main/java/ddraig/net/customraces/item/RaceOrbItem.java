@@ -29,10 +29,12 @@ public class RaceOrbItem extends Item {
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
             player.getCooldowns().addCooldown(this, 20);
             if (serverPlayer.serverLevel() != null) {
-                serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.2f);
-                serverPlayer.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING, serverPlayer.getX(), serverPlayer.getY() + 1.0, serverPlayer.getZ(), 30, 0.5, 0.8, 0.5, 0.1);
-                serverPlayer.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD, serverPlayer.getX(), serverPlayer.getY() + 1.0, serverPlayer.getZ(), 15, 0.4, 0.6, 0.4, 0.05);
+                serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition(), net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.4f);
+                serverPlayer.serverLevel().playSound(null, serverPlayer.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 1.2f);
+                serverPlayer.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING, serverPlayer.getX(), serverPlayer.getY() + 1.0, serverPlayer.getZ(), 35, 0.5, 0.8, 0.5, 0.1);
+                serverPlayer.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD, serverPlayer.getX(), serverPlayer.getY() + 1.0, serverPlayer.getZ(), 20, 0.4, 0.6, 0.4, 0.05);
             }
+            player.displayClientMessage(Component.literal("§a[!] Rebirth Orb activated — opening race selection menu!"), true);
             ModPackets.openRaceSelection(serverPlayer);
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);

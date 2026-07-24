@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b115a] - 2026-07-24
+
+### 💎 Orb of Rebirth & Selection Interactivity Enhancements (`RaceOrbItem.java` & `RaceSelectionScreen.java`)
+- Enhanced Orb of Rebirth activation feedback with dual particle bursts (`TOTEM_OF_UNDYING` + `END_ROD`), amethyst chime sound effects, and immediate actionbar notifications upon opening the race selection menu.
+- Verified dynamic word-wrapping and viewport bounding boxes across race selection lore and ability panels.
+
+---
+
 ## [1.0.0-b114a] - 2026-07-24
 
 ### 🐺 Were-Form Cooldown Feedback Formatting (`WereRaceTransformHandler.java`)
