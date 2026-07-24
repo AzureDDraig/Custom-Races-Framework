@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b118a] - 2026-07-24
+
+### ⌨️ Race Creator Native Spell EditBox Synchronization (`RaceCreatorScreen.java`)
+- Synchronized `readFormInputs()` in `RaceCreatorScreen.java` to parse and serialize native spell input fields cleanly.
+
+---
+
 ## [1.0.0-b117a] - 2026-07-24
 
 ### 🕊️ Flight Fall-Distance Protection (`PassiveAbilityHandler.java`)

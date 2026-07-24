@@ -1324,6 +1324,8 @@ public class RaceCreatorScreen extends Screen {
         if (wereAmbientSoundBox != null) workingRace.wereAmbientSound = wereAmbientSoundBox.getValue();
         if (wereHurtSoundBox != null) workingRace.wereHurtSound = wereHurtSoundBox.getValue();
         if (wereDeathSoundBox != null) workingRace.wereDeathSound = wereDeathSoundBox.getValue();
+
+        if (nativeSpellBox != null) workingRace.nativeSpellId = nativeSpellBox.getValue();
     }
 
     private void playPreviewSound(String soundId) {
