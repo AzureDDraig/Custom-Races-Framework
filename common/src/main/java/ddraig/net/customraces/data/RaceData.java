@@ -312,6 +312,26 @@ public class RaceData {
         this.wereParticleCount = wereParticleCount <= 0 ? 10 : Math.min(100, wereParticleCount);
     }
 
+    public String getSafeFlyAnim() {
+        return (flyAnim != null && !flyAnim.isEmpty()) ? flyAnim : "animation.model.fly";
+    }
+
+    public String getSafeSwimAnim() {
+        return (swimAnim != null && !swimAnim.isEmpty()) ? swimAnim : "animation.model.swim";
+    }
+
+    public String getSafeWereIdleAnim() {
+        return (wereIdleAnim != null && !wereIdleAnim.isEmpty()) ? wereIdleAnim : "animation.were.idle";
+    }
+
+    public String getSafeWereWalkAnim() {
+        return (wereWalkAnim != null && !wereWalkAnim.isEmpty()) ? wereWalkAnim : "animation.were.walk";
+    }
+
+    public String getSafeWereAttackAnim() {
+        return (wereAttackAnim != null && !wereAttackAnim.isEmpty()) ? wereAttackAnim : "animation.were.attack";
+    }
+
     public net.minecraft.nbt.CompoundTag toNBT(net.minecraft.nbt.CompoundTag tag) {
         if (tag == null) tag = new net.minecraft.nbt.CompoundTag();
         tag.putString("id", id != null ? id : "human");

@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b116a] - 2026-07-24
+
+### 🎬 GeckoLib Animation Key Safety & Asset Fallbacks (`RaceData.java`)
+- Added safe animation getters (`getSafeFlyAnim()`, `getSafeSwimAnim()`, `getSafeWereIdleAnim()`, `getSafeWereWalkAnim()`, `getSafeWereAttackAnim()`) in `RaceData.java`.
+- Prevents null, empty, or unmapped animation strings from throwing GeckoLib animation parsing warnings.
+
+---
+
 ## [1.0.0-b115a] - 2026-07-24
 
 ### 💎 Orb of Rebirth & Selection Interactivity Enhancements (`RaceOrbItem.java` & `RaceSelectionScreen.java`)
