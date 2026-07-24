@@ -1,7 +1,7 @@
-# Progress Tracker — Comprehensive Iron's Spells Native Spell Casting Resolution
+# Progress Tracker — Were-Race Model Transformation Fixes & Configurable Particle Count
 
 ## Current Status
-Last visited: 2026-07-23T14:40:00Z
+Last visited: 2026-07-23T19:06:15Z
 
 ## Iteration Status
 Current iteration: 1 / 32
@@ -9,15 +9,15 @@ Current iteration: 1 / 32
 ## Milestone Progress
 | Milestone | Status | Details |
 |-----------|--------|---------|
-| M1: Exploration & Architecture Analysis | DONE | Explorers 1, 2, 3 completed detailed analysis of keybinds, reflection bridge, and spell slot capabilities. |
-| M2: Core Native Spell & Reflection Compatibility | DONE | IronSpellsHandler.java refactored, remediated, and fully verified by Reviewers, Challengers, and Forensic Auditor. |
-| M3: Native Spell Input & Keybind Binding Integration | DONE | ActiveAbilityHandler.java & IronSpellsHandler.java updated for actionbar feedback, form toggles, deferred cooldowns. Verified CLEAN by Auditor and Reviewer. |
-| M4: Comprehensive Build & Multi-Platform Verification | DONE | Multi-platform build verified successful across Fabric & Forge. CHANGELOG updated. Verified CLEAN by Forensic Auditor. |
+| M1: Exploration & Architecture Analysis | DONE | Explorers 1, 2, and 3 completed comprehensive analysis of state sync, model layers, Pehkui scale refresh, fallback logic, particle fields, and GUI screen. |
+| M2: Were-Race Custom Model Transformation Rendering Fixes | IN_PROGRESS | Implementing tracking client state sync, model rendering layer overrides, fallback logic, and Pehkui dimension refresh. |
+| M3: Configurable Ambient Particle Count Settings | PLANNED | Pending M2 completion. |
+| M4: Rolling Changelog & Multi-Platform Build Verification | PLANNED | Pending M2 & M3 completion. |
 
 ## Task Checklist
 - [x] Initialized project briefing, plan, progress, and project documents.
 - [x] Set up recurring heartbeat cron.
 - [x] M1: Exploration & Architecture Analysis
-- [x] M2: Core Native Spell & Reflection Compatibility Implementation
-- [x] M3: Native Spell Input & Keybind Binding Integration
-- [x] M4: Comprehensive Build & Multi-Platform Verification
+- [ ] M2: Were-Race Custom Model Transformation Rendering Fixes
+- [ ] M3: Configurable Ambient Particle Count Settings
+- [ ] M4: Rolling Changelog & Multi-Platform Build Verification

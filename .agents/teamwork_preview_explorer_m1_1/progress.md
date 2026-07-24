@@ -1,12 +1,12 @@
-# Progress Log - Explorer 1 (Keybinds & Input Handling)
+# Progress Log
 
-Last visited: 2026-07-23T19:35:00Z
+Last visited: 2026-07-23T19:06:00Z
 
+## Status
 - [x] Initialized BRIEFING.md and ORIGINAL_REQUEST.md
-- [x] Perform grep searches for native_spell references across the repo
-- [x] Analyze keybind registration and handling in fabric and forge
-- [x] Trace packet network flow from client to server
-- [x] Investigate active skill triggers and actionbar feedback
-- [x] Write analysis.md report
-- [x] Write handoff.md report
-- [x] Send message to parent
+- [x] Search codebase for `ClientWereState`, `WereRaceTransformHandler`, networking packets, and tracking listeners
+- [x] Analyze server-to-client transformation sync logic and tracking player sync gaps
+- [x] Identify precise file paths, line numbers, and required code fixes
+- [x] Write `analysis.md`
+- [x] Write `handoff.md`
+- [ ] Send report to parent via `send_message`

@@ -43,6 +43,15 @@ public class ModPackets {
             boolean isTransformed = buf.readBoolean();
             context.queue(() -> {
                 ddraig.net.customraces.client.ClientWereState.setTransformed(pUuid, isTransformed);
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.level != null) {
+                    net.minecraft.world.entity.player.Player target = mc.level.getPlayerByUUID(pUuid);
+                    if (target != null) {
+                        RaceData race = RaceRegistry.getPlayerRace(pUuid);
+                        PehkuiIntegration.applyRaceScales(target, race);
+                        target.refreshDimensions();
+                    }
+                }
             });
         });
         // Register Client-Bound (S2C)
@@ -212,13 +221,18 @@ public class ModPackets {
         NetworkManager.sendToPlayer(player, OPEN_CREATOR_ID, buf);
     }
 
+    public static void sendWereStateToPlayer(ServerPlayer recipient, UUID playerUuid, boolean isTransformed) {
+        if (recipient == null || playerUuid == null) return;
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        buf.writeUUID(playerUuid);
+        buf.writeBoolean(isTransformed);
+        NetworkManager.sendToPlayer(recipient, SYNC_WERE_STATE_ID, buf);
+    }
+
     public static void syncWereStateToAll(net.minecraft.server.MinecraftServer server, UUID playerUuid, boolean isTransformed) {
         if (server == null || playerUuid == null) return;
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-            buf.writeUUID(playerUuid);
-            buf.writeBoolean(isTransformed);
-            NetworkManager.sendToPlayer(p, SYNC_WERE_STATE_ID, buf);
+            sendWereStateToPlayer(p, playerUuid, isTransformed);
         }
     }
 }

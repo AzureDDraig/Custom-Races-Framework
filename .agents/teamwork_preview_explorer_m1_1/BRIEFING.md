@@ -1,13 +1,13 @@
-# BRIEFING — 2026-07-23T19:35:00Z
+# BRIEFING — 2026-07-23T19:06:00Z
 
 ## Mission
-Investigate native_spell_1 through native_spell_5 keybinds, network packets, active skill triggers, and actionbar feedback handlers across common, fabric, and forge modules.
+Investigate transformation state (`ClientWereState`, `WereRaceTransformHandler`, networking packets, tracking client synchronization) across the codebase.
 
 ## 🔒 My Identity
 - Archetype: Explorer
-- Roles: Keybinds & Input Handling Explorer
+- Roles: Transformation State & Networking Explorer
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_1
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
+- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
 - Milestone: M1: Exploration & Architecture Analysis
 
 ## 🔒 Key Constraints
@@ -16,20 +16,23 @@ Investigate native_spell_1 through native_spell_5 keybinds, network packets, act
 - Send results back to parent via `send_message`
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T19:35:00Z
+- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Updated: 2026-07-23T19:06:00Z
 
 ## Investigation State
-- **Explored paths**: `RaceKeybindings.java`, `CustomRacesClient.java`, `CustomRacesFabric.java`, `CustomRacesForge.java`, `ModPackets.java`, `ActiveAbilityHandler.java`, `IronSpellsHandler.java`, `RaceData.java`, `RaceCreatorScreen.java`, `en_us.json`
-- **Key findings**: Complete mapping of keybinding registration, C2S networking (`customraces:trigger_ability`), ability routing (`native_spell_1`..`5`), dynamic spell reflection, and 5 distinct actionbar feedback gaps.
+- **Explored paths**: `ClientWereState.java`, `WereRaceTransformHandler.java`, `ModPackets.java`, `FirstJoinHandler.java`, `PlayerRaceLayer.java`, `PehkuiIntegration.java`, `CustomRaces.java`, `CustomRacesClient.java`, `CustomRacesFabric.java`, `CustomRacesForge.java`
+- **Key findings**: 
+  1. Identified missing `PlayerEvent.PLAYER_START_TRACKING` event listener, which causes tracking clients entering render/chunk/dimension range of a transformed player to never receive `SYNC_WERE_STATE_ID`.
+  2. Identified missing client main-thread `player.refreshDimensions()` and `PehkuiIntegration.applyRaceScales(...)` calls when receiving `SYNC_WERE_STATE_ID` S2C packet in `ModPackets.java`.
+  3. Identified missing transformation re-sync in `FirstJoinHandler.java` on `PLAYER_RESPAWN`.
 - **Unexplored areas**: None within scope.
 
 ## Key Decisions Made
-- Performed thorough cross-module analysis of input pipeline and feedback handlers.
-- Documented findings in `analysis.md` and created 5-component `handoff.md`.
+- Completed root-cause analysis of tracking client synchronization gaps and client dimension refresh flaws.
+- Documented precise file paths, class names, method signatures, line numbers, and exact code changes needed in `analysis.md` and 5-component `handoff.md`.
 
 ## Artifact Index
-- ORIGINAL_REQUEST.md — Initial task request log
+- ORIGINAL_REQUEST.md — Task prompt log
 - BRIEFING.md — Persistent briefing state
 - progress.md — Liveness heartbeat and step tracking
 - analysis.md — Detailed investigation findings report

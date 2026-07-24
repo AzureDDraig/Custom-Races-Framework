@@ -49,18 +49,25 @@ public class PehkuiIntegration {
         // Apply Vanilla Base Stat Modifiers first
         applyVanillaAttributes(player, race);
 
-        if (isPehkuiLoaded() && race != null) {
+        if (race != null) {
             boolean isTransformed = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
-            float heightMult = isTransformed && race.enableWereRace ? race.wereHeightScale : race.heightScale;
-            float widthMult = isTransformed && race.enableWereRace ? race.wereWidthScale : race.widthScale;
+            float rawWereHeight = race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f;
+            float rawWereWidth = race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f;
+            float rawHeight = race.heightScale > 0 ? race.heightScale : 1.0f;
+            float rawWidth = race.widthScale > 0 ? race.widthScale : 1.0f;
 
-            float hScale = heightMult * race.baseScale;
-            float wScale = widthMult * race.baseScale;
+            float heightMult = isTransformed && race.enableWereRace ? rawWereHeight : rawHeight;
+            float widthMult = isTransformed && race.enableWereRace ? rawWereWidth : rawWidth;
+
+            float baseScale = race.baseScale > 0 ? race.baseScale : 1.0f;
+            float hScale = heightMult * baseScale;
+            float wScale = widthMult * baseScale;
             float rScale = race.reachScale > 0 ? race.reachScale : 1.0f;
             float sScale = race.stepHeightScale > 0 ? race.stepHeightScale : 1.0f;
 
-            try {
-                Class<?> scaleTypesClass = Class.forName("virtuoel.pehkui.api.ScaleTypes");
+            if (isPehkuiLoaded()) {
+                try {
+                    Class<?> scaleTypesClass = Class.forName("virtuoel.pehkui.api.ScaleTypes");
                 Class<?> scaleDataClass = Class.forName("virtuoel.pehkui.api.ScaleData");
                 Method setTargetScaleMethod = scaleDataClass.getMethod("setTargetScale", float.class);
                 Method setScaleMethod = scaleDataClass.getMethod("setScale", float.class);
@@ -120,6 +127,7 @@ public class PehkuiIntegration {
                     }
                 } catch (Exception ignored) {}
             } catch (Exception ignored) {}
+        }
         }
         try {
             player.refreshDimensions();

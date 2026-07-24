@@ -33,6 +33,10 @@ public class FirstJoinHandler {
                 if (race != null) {
                     PehkuiIntegration.applyRaceScales(newPlayer, race);
                 }
+                WereRaceTransformHandler.syncAllWereStatesTo(newPlayer);
+                if (WereRaceTransformHandler.isTransformed(newPlayer.getUUID())) {
+                    ModPackets.syncWereStateToAll(newPlayer.getServer(), newPlayer.getUUID(), true);
+                }
             }
         });
     }

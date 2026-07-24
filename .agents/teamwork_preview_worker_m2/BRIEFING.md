@@ -1,50 +1,46 @@
-# BRIEFING — 2026-07-23T19:37:00Z
+# BRIEFING — 2026-07-23T19:06:14Z
 
 ## Mission
-Refactor `IronSpellsHandler.java` to robustly resolve spell IDs, unwrap spell objects, and invoke `onCast`/`castSpell` methods across Iron's Spells 'n Spellbooks 1.20.1 API variations. Verify compilation on Fabric and Forge.
+Implement Were-Race Custom Model Transformation Rendering Fixes (Milestone 2) including tracking client state sync, model swap & render layer overrides, fallback logic for model IDs, and Pehkui scale & bounding box refreshes across Fabric and Forge.
 
 ## 🔒 My Identity
-- Archetype: implementer / qa / specialist
+- Archetype: implementer, qa, specialist
 - Roles: implementer, qa, specialist
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Milestone: M2
+- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Milestone: Milestone 2 (Were-Race Model Transformation Rendering Fixes)
 
 ## 🔒 Key Constraints
-- NEVER EXPORT ON ME: No automatic exports without explicit user request.
-- BACKUP FOLDER READ-ONLY: Never write to BACKUP directory.
-- Code modification: minimal change principle, re-read files before modifying.
-- Write changes.md and handoff.md in working directory.
+- Follow minimal change principle.
+- No dummy/facade implementations or hardcoded values.
+- Strictly read-only for BACKUP directory.
+- Verify build with gradlew build -x test.
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T19:37:00Z
+- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Updated: 2026-07-23T19:06:14Z
 
 ## Task Summary
-- **What to build**: Refactored `IronSpellsHandler.java` for Iron's Spells API reflection compatibility.
-- **Success criteria**:
-  1. Search for methods named `onCast`, `castSpell`, or `onCastSpell` with strict signature matching.
-  2. Enum matching for `CastSource` checks class/package name, non-matching enums set to null.
-  3. `unwrapSpellHolder` recursively handles `Holder`, `RegistryObject`, `Supplier`, `Optional`, and `AbstractSpell`.
-  4. Registry lookup resolves spell IDs across known Iron's Spells registry locations and vanilla `BuiltInRegistries`.
-  5. Reflection exceptions log warnings/errors with stack traces.
-  6. `./gradlew build -x test` succeeded for Fabric and Forge.
+- **What to build**: Were-Race custom model transformation rendering fixes in Fabric and Forge subprojects and common module.
+- **Success criteria**: All 4 areas implemented genuinely, code compiles and tests pass via `./gradlew build -x test`.
+- **Interface contracts**: PROJECT.md and Explorer 1 & 2 analysis reports.
 
 ## Change Tracker
-- **Files modified**: `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`
-- **Build status**: PASS (Fabric & Forge)
+- **Files modified**: None yet
+- **Build status**: Pending
 - **Pending issues**: None
 
 ## Quality Status
-- **Build/test result**: PASS (`./gradlew build -x test`)
-- **Lint status**: Clean (no new lint issues)
-- **Tests added/modified**: Verified via clean compilation across all targets
+- **Build/test result**: Pending
+- **Lint status**: OK
+- **Tests added/modified**: Pending
 
 ## Loaded Skills
 - None
 
+## Key Decisions Made
+- Initialized briefing and workspace environment.
+
 ## Artifact Index
-- `.agents/teamwork_preview_worker_m2/task.md` — Task definition
-- `.agents/teamwork_preview_worker_m2/ORIGINAL_REQUEST.md` — Original request prompt
-- `.agents/teamwork_preview_worker_m2/changes.md` — Code change documentation
-- `.agents/teamwork_preview_worker_m2/handoff.md` — 5-component handoff report
+- ORIGINAL_REQUEST.md — Original request instructions
+- BRIEFING.md — Persistent context index

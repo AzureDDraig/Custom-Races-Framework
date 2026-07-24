@@ -1,51 +1,45 @@
-# BRIEFING — 2026-07-23T14:38:30Z
+# BRIEFING — 2026-07-23T19:10:04Z
 
 ## Mission
-Independent M2 review of IronSpellsHandler.java focusing on edge cases, recursion safety, null safety, exception handling, and multi-platform compilation.
+Independently review M2 implementation (Preview & Transformation System) for edge cases, performance, security, integrity violations, and potential bugs, verify build succeeds, and produce review handoff report.
 
 ## 🔒 My Identity
-- Archetype: reviewer / critic
+- Archetype: Teamwork agent
 - Roles: reviewer, critic
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Milestone: M2 Independent Review
-- Instance: 2 of 2
+- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Milestone: M2 - Transformation & Preview System
+- Instance: 2 of 2 (Reviewer 2)
 
 ## 🔒 Key Constraints
-- Review-only — do NOT modify implementation code
-- Evidence-based findings only
-- Multi-platform compilation check via .\gradlew build -x test
-- Strict integrity violation check (hardcoded results, dummy implementations, shortcuts, self-certification, etc.)
+- Review-only — do NOT modify implementation code.
+- Strictly adhere to User Rules: NEVER export on me, BACKUP folder read-only.
+- Verify integrity: check for hardcoded test results, facade implementations, shortcuts, or fake verification artifacts.
+- Execute build verification: `./gradlew build -x test`.
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T14:38:30Z
+- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Updated: 2026-07-23T19:10:04Z
 
 ## Review Scope
-- **Files to review**: common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java
-- **Interface contracts**: PROJECT.md / SCOPE.md / integration interfaces
-- **Review criteria**: recursion safety, edge cases, null checks, exception handling, multi-platform build clean check
-
-## Key Decisions Made
-- Executed multi-platform compilation test: `.\gradlew fabric:build forge:build -x test` succeeded cleanly.
-- Inspected IronSpellsHandler.java for integrity violations: none found.
-- Conducted deep static code analysis and stress testing: identified 2 Major findings (unbounded recursion risk in `unwrapSpellHolder` and fall-through return of container object on `VoidSpell`/`null` unwrap) and 4 Minor findings.
-- Issued verdict: **REQUEST_CHANGES**.
-
-## Artifact Index
-- ORIGINAL_REQUEST.md — Initial instruction record
-- task.md — Task specification
-- BRIEFING.md — Working memory state
-- progress.md — Progress log
-- review.md — Detailed review report
-- handoff.md — 5-component handoff report
+- **Files to review**: M2 implementation files (networking, capability/attachment, rendering, preview, transformation lifecycle, client handlers)
+- **Interface contracts**: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+- **Worker report**: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md
+- **Review criteria**: correctness, edge cases, thread safety, NPE safety, dimension travel/respawn, model layer visibility cleanup, build success.
 
 ## Review Checklist
-- **Items reviewed**: IronSpellsHandler.java
-- **Verdict**: REQUEST_CHANGES
-- **Unverified claims**: Live runtime particle and audio rendering in Minecraft runtime (requires game client)
+- **Items reviewed**: [TBD]
+- **Verdict**: PENDING
+- **Unverified claims**: Worker claims M2 implementation complete and verified.
 
 ## Attack Surface
-- **Hypotheses tested**: Cyclic wrapper unwrapping in unwrapSpellHolder, unwrapped null fall-through, malformed ResourceLocation strings, primitive type mismatch in reflection args.
-- **Vulnerabilities found**: Unbounded recursion on indirect cycles (StackOverflowError), fall-through container return on VoidSpell unwrap.
-- **Untested angles**: Live Minecraft client/server gameplay session.
+- **Hypotheses tested**: [TBD]
+- **Vulnerabilities found**: [TBD]
+- **Untested angles**: Thread safety of packets, player respawn/dimension change data persistence, model visibility reset, null UUID handling.
+
+## Key Decisions Made
+- Initialized review process for M2.
+
+## Artifact Index
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2\ORIGINAL_REQUEST.md — Prompt record
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2\BRIEFING.md — Working memory

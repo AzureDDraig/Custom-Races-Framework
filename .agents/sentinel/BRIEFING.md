@@ -1,32 +1,30 @@
-# BRIEFING — 2026-07-23T19:33:35Z
+# BRIEFING — 2026-07-23T19:03:48Z
 
 ## Mission
-Orchestrate and monitor the resolution of Iron's Spells native spell casting across Fabric and Forge platforms, verify completion via Victory Auditor, and report progress.
+Monitor Were-Race Model Transformation Fixes & Configurable Particle Count project implementation and audit victory claims.
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\sentinel
-- Orchestrator: 5362807d-b273-4c70-99ee-5c0258a07035
-- Victory Auditor: fcf0ae73-9454-4856-b5df-499d04d864c3
+- Orchestrator: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Victory Auditor: to be spawned on victory claim
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
 - Victory Audit is MANDATORY before reporting completion
-- Backup folder read-only
-- Never export on me
 
 ## User Context
-- **Last user request**: Iron's Spells Native Spell Casting Resolution (R1, R2, R3)
+- **Last user request**: Fix Were-Race custom model transformation rendering, add configurable particle count settings, update CHANGELOG.md, and verify `./gradlew build -x test`.
 - **Pending clarifications**: none
 - **Delivered results**: none
 
 ## Project Status
-- **Phase**: complete
+- **Phase**: in progress
 
 ## Victory Audit Status
-- **Triggered**: yes
-- **Verdict**: VICTORY CONFIRMED
+- **Triggered**: no
+- **Verdict**: pending
 - **Retry count**: 0
 
 ## Artifact Index
-- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\ORIGINAL_REQUEST.md — Verbatim user request record
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\ORIGINAL_REQUEST.md — Original user request record

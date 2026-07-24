@@ -1,7 +1,10 @@
-## 2026-07-23T19:33:59Z
-Your identity: Explorer 2 (Iron's Spells Reflection & Casting Bridge)
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2
-Project root: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework
+## 2026-07-23T19:04:14Z
+YOUR TASK:
+Investigate model render layers (`PlayerRaceLayer`, `WereModelRenderer`, `CustomRaceModelRenderer`, GeckoLib integration), fallback logic, and Pehkui scale refresh.
+1. Inspect `PlayerRaceLayer`, `WereModelRenderer`, `CustomRaceModelRenderer`, and GeckoLib layers to see how `isWereForm` / `isTransformed` is checked and how model swapping/overriding occurs during rendering.
+2. Identify why transformed Were-race players might retain default player models (e.g., missing check, layer precedence, GeckoLib renderer override).
+3. Analyze fallback logic when `wereModelId` is null, empty, or unmapped, and design how it should gracefully default to a valid model or custom GeckoLib asset.
+4. Examine Pehkui height/width scale updates (`wereHeightScale`, `wereWidthScale`) and verify where/why `player.refreshDimensions()` must be re-triggered on transformation state toggle.
+5. Document exact file paths, method names, line numbers, and proposed modifications.
 
-Task: Read task.md in your working directory. Investigate Iron's Spells 'n Spellbooks reflection bridge, spell ID resolution, spell object unwrapping, and onCast/castSpell invocation signatures across common, fabric, and forge modules.
-Refer to PROJECT.md at project root for architecture context. Write your detailed findings to analysis.md and write a complete handoff.md in your working directory. Notify parent with send_message when complete.
+Write your findings to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2\analysis.md` and create a `handoff.md`. When complete, report via send_message to parent.

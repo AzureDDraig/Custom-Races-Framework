@@ -1,18 +1,25 @@
-# Execution Plan — Comprehensive Iron's Spells Native Spell Casting Resolution
+# Execution Plan — Were-Race Model Transformation Fixes & Configurable Particle Count
 
-## Milestone Overview
-- **M1: Exploration & Architecture Analysis**
-  - Dispatch Explorer agents to investigate native spell casting across common, fabric, and forge modules.
-  - Locate `native_spell_1` through `native_spell_5` keybind bindings, spell resolution logic, reflection wrappers for Iron's Spells 'n Spellbooks API variations in 1.20.1, and actionbar feedback handlers.
-  - Analyze differences between base form and Were-form spell slots.
-- **M2: Core Native Spell & Reflection Compatibility Implementation**
-  - Refactor/Implement reflection wrapper for Iron's Spells 'n Spellbooks API variations across common, fabric, forge.
-  - Ensure resolution of spell IDs for all 5 slots (base and Were-form).
-  - Ensure `onCast`/`castSpell` invocation with valid parameter signatures (`Level`, `spellLevel`, `ServerPlayer`/`LivingEntity`, `CastSource`, `MagicData`).
-- **M3: Native Spell Input & Keybind Binding Integration**
-  - Connect keybound active skills (`native_spell_1`..`5`) to native spell resolution and casting.
-  - Provide actionbar feedback for unassigned slots, cooldowns, or missing requirements.
-- **M4: Comprehensive Build & Multi-Platform Verification**
-  - Perform `./gradlew build -x test` on Fabric and Forge via Worker agents.
-  - Perform code reviews, challenger stress testing, and forensic audit.
-  - Update `CHANGELOG.md`.
+## Overview
+This plan coordinates the execution of model transformation fixes, particle count configurability, changelog updates, and multi-platform build verification across Fabric and Forge targets.
+
+## Milestones & Execution Strategy
+
+### Milestone 1: Exploration & Architecture Analysis
+- **Goal**: Perform comprehensive code search across Fabric, Forge, and Common modules to map transformation state sync, model rendering layers, Pehkui dimension refresh triggers, particle count fields, and GUI screen components.
+- **Workers**: 3 Explorers in parallel.
+  - Explorer 1: Were-Race transformation state sync & networking (`ClientWereState`, `WereRaceTransformHandler`, packet handlers).
+  - Explorer 2: Model render layers (`PlayerRaceLayer`, `WereModelRenderer`, `CustomRaceModelRenderer`, GeckoLib integration, `wereModelId` fallback).
+  - Explorer 3: Pehkui scale bounding box refresh, `RaceData` particle fields (`particleCount`, `wereParticleCount`), and `RaceCreatorScreen` GUI integration.
+
+### Milestone 2: Were-Race Model Transformation Fixes
+- **Goal**: Implement client-side tracking sync, model layer swap logic, fallback model handling, and Pehkui dimension refresh on transformation.
+- **Workers**: Worker -> 2 Reviewers + 2 Challengers + 1 Forensic Auditor.
+
+### Milestone 3: Configurable Ambient Particle Count Settings
+- **Goal**: Implement particle count fields in `RaceData.java` (with codecs & net packets), GUI controls in `RaceCreatorScreen`, and particle scaling in `PlayerRaceLayer.java`.
+- **Workers**: Worker -> 2 Reviewers + 2 Challengers + 1 Forensic Auditor.
+
+### Milestone 4: Rolling Changelog & Build Verification
+- **Goal**: Update `CHANGELOG.md` without removing existing entries and verify multi-platform build (`./gradlew build -x test`).
+- **Workers**: Worker -> 1 Reviewer + 1 Forensic Auditor.

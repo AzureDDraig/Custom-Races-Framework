@@ -2,6 +2,20 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b094a] - 2026-07-23
+
+### 🐺 Were-Form Model Transformation & Tracking Network Sync Engine
+- **Entity Model Swap Integration (`PlayerRaceLayer.java` & `WereModelRenderer.java`)**:
+  - Integrated `WereModelRenderer.renderWereForm(...)` in `PlayerRaceLayer`, ensuring that transformed Were-race players swap from default human player models to their custom defined Were models.
+  - Automatically hides base player model mesh parts when rendering custom Were models, restoring base mesh visibility upon reverting to human form (`setBaseModelVisible`).
+- **Player Tracking & Join Were-State Network Sync (`ModPackets.java`, `WereRaceTransformHandler.java`, `FirstJoinHandler.java`)**:
+  - Added `sendWereStateToPlayer` S2C packet dispatch when tracking newly encountered transformed players (`PlayerEvent.PLAYER_START_TRACKING` / `syncAllWereStatesTo`).
+  - Automatically re-applies Pehkui scales and refreshes entity dimensions (`target.refreshDimensions()`) on client received Were-state packets.
+- **Configurable Ambient Particle Density (`PlayerRaceLayer.java` & `RaceData.java`)**:
+  - Connected race ambient particle rendering to race-configured particle counts for base and Were-forms.
+
+---
+
 ## [1.0.0-b092a] - 2026-07-23
 
 ### 🔮 Core Reflection Bridge & Iron's Spells Integration Engine

@@ -1,37 +1,37 @@
-# BRIEFING — 2026-07-23T14:35:00-05:00
+# BRIEFING — 2026-07-23T19:05:58Z
 
 ## Mission
-Investigate Iron's Spells 'n Spellbooks reflection bridge, spell ID resolution, spell object unwrapping, and onCast/castSpell invocation signatures across common, fabric, and forge modules.
+Investigate model render layers (`PlayerRaceLayer`, `WereModelRenderer`, `CustomRaceModelRenderer`, GeckoLib integration), fallback logic when `wereModelId` is null/unmapped, and Pehkui height/width scale refresh (`player.refreshDimensions()`).
 
 ## 🔒 My Identity
 - Archetype: Explorer
-- Roles: Explorer 2 (Iron's Spells Reflection & Casting Bridge)
+- Roles: Explorer 2 (Model Rendering & Scale Explorer)
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
+- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
 - Milestone: M1: Exploration & Architecture Analysis
 
 ## 🔒 Key Constraints
-- Read-only investigation — do NOT implement
+- Read-only investigation — do NOT implement source code changes
 - Never export on me / Backup folder read-only
 - Write analysis.md and handoff.md in working directory
 - Notify parent via send_message when complete
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T14:35:00-05:00
+- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
+- Updated: 2026-07-23T19:05:58Z
 
 ## Investigation State
-- **Explored paths**: `IronSpellsHandler.java`, `RaceData.java`, `ActiveAbilityHandler.java`, `PassiveAbilityHandler.java`, `RaceKeybindings.java`, `ModPackets.java`, `CustomRacesFabric.java`, `CustomRacesForge.java`, `PROJECT.md`, `task.md`.
-- **Key findings**: Complete mapping of reflection mechanisms, spell ID resolution, holder unwrapping, parameter matching heuristics, actionbar overlays, and identified 5 critical reflection vulnerabilities for M2 refactoring.
+- **Explored paths**: `PlayerRaceLayer.java`, `ClientWereState.java`, `WereRaceTransformHandler.java`, `PehkuiIntegration.java`, `RaceData.java`, `ModPackets.java`, `CustomRacesFabric.java`, `CustomRacesForge.java`.
+- **Key findings**: Identified 4 root causes for default player model retention, designed fallback hierarchy for unmapped/missing `wereModelPath`, verified Pehkui `refreshDimensions()` triggers, and identified missing client-side dimension refresh in `SYNC_WERE_STATE_ID` packet handler.
 - **Unexplored areas**: None within scope.
 
 ## Key Decisions Made
 - Initialized briefing and original request log.
-- Completed comprehensive investigation and wrote `analysis.md` and `handoff.md`.
+- Completed comprehensive investigation and written `analysis.md` and `handoff.md`.
 
 ## Artifact Index
-- ORIGINAL_REQUEST.md — Initial request log
-- task.md — Explorer 2 task description
+- ORIGINAL_REQUEST.md — Initial request log & status request message log
+- BRIEFING.md — Mission and state tracker
 - progress.md — Liveness tracking heartbeat
 - analysis.md — Full investigation analysis report
 - handoff.md — 5-component handoff report

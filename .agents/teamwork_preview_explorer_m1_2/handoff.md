@@ -1,70 +1,42 @@
-# Handoff Report — Explorer 2 (Iron's Spells Reflection & Casting Bridge)
-
-**Working Directory**: `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2`  
-**Target Analysis File**: `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2\analysis.md`
-
----
+# Handoff Report: Were-Race Model Rendering & Pehkui Scale Refresh Exploration
 
 ## 1. Observation
-
-1. **Reflection Integration Entry Point**:
-   - `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java` (lines 1–379).
-   - Contains soft-reflection spell casting (`castNativeSpell`, `resolveSpellObject`, `unwrapSpellHolder`, `invokeSpellCast`), Wild Magic catalogue (`ALL_SPELLS`), and racial attribute registration (`applyIronSpellsAttributes`).
-
-2. **Spell Data & Resolution**:
-   - `common/src/main/java/ddraig/net/customraces/data/RaceData.java` (lines 184–242):
-     - `getNativeSpellId(int slot, boolean isWere)`
-     - `getWildMagic(int slot, boolean isWere)`
-     - `getNativeSpellLevel(int slot, boolean isWere)`
-   - Storage fields in `RaceData.java`: `nativeSpellId1`..`5`, `wereNativeSpellId1`..`5`, `wildMagic1`..`5`, `wereWildMagic1`..`5`, `nativeSpellLevel1`..`5`, `wereNativeSpellLevel1`..`5`.
-
-3. **Registry Resolution & Unwrapping**:
-   - `IronSpellsHandler.java` (lines 129–166): Class target search includes `net.ironsspellbooks.api.registry.SpellRegistry`, `io.github.elytra.irons_spellbooks.api.registry.SpellRegistry`, `net.ironsspellbooks.spells.SpellRegistry`, and `net.ironsspellbooks.api.spells.AbstractSpell`.
-   - `IronSpellsHandler.java` (lines 168–188): `unwrapSpellHolder(Object obj)` handles `Holder`, `RegistryObject`, and `Supplier` wrappers by recursively calling `.value()` and `.get()`.
-
-4. **Cast Invocation Signature & Parameter Matching**:
-   - `IronSpellsHandler.java` (lines 190–248): `invokeSpellCast(Player player, Object spellObj, int spellLevel)` searches `getMethods()` for names containing `"oncast"`, `"cast"`, or `"initiate"`.
-   - Resolves `CastSource` (`SPELLBOOK` / `INNATE`) via `getCastSourceEnum()` (lines 264–290) and `MagicData` via `getPlayerMagicData(player)` (lines 292–313).
-   - Heuristically maps parameters: `Level`, `int`/`Integer`, `Player`/`LivingEntity`/`ServerPlayer`, `CastSource`, `MagicData`, and generic enum (`p.isEnum() -> castSource`).
-
-5. **Cross-Platform Delivery**:
-   - Client keybind inputs (`RaceKeybindings.java`, lines 32–36) send `TRIGGER_ABILITY_ID` network packets (`ModPackets.java`, lines 138–144).
-   - `ActiveAbilityHandler.java` (lines 70–90) handles packet execution on `ServerPlayer` and delegates `native_spell_1`..`5` to `IronSpellsHandler.castNativeSpell(...)`.
-   - `fabric` and `forge` modules delegate initialization entirely to `common` via `CustomRaces.init()`.
-
----
+- **`PlayerRaceLayer.java` (`common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java`)**:
+  - `render(...)` (lines 28-94): Extends `RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>`. Checks `ClientWereState.isTransformed(player.getUUID()) || WereRaceTransformHandler.isTransformed(player.getUUID())` (lines 39-40).
+  - Lines 44-46: Applies `poseStack.scale(wScale, hScale, wScale)` for the render layer.
+  - Lines 49, 96-114: `renderWereBeastParts(...)` renders hardcoded ears, snout, and crimson eye cuboids.
+  - Does NOT hide base player model parts (`getParentModel().head.visible`, `body.visible`, etc.).
+  - Does NOT instantiate or render GeckoLib `.geo.json` models specified in `RaceData.wereModelPath`.
+- **`PehkuiIntegration.java` (`common/src/main/java/ddraig/net/customraces/integration/PehkuiIntegration.java`)**:
+  - Lines 53-55: Calculates transformed height/width scale multipliers (`wereHeightScale`, `wereWidthScale`).
+  - Lines 62-123: Sets Pehkui BASE, HEIGHT, WIDTH, REACH, STEP_HEIGHT scales via reflection.
+  - Line 125 & Line 166: Calls `player.refreshDimensions()`.
+- **`WereRaceTransformHandler.java` (`common/src/main/java/ddraig/net/customraces/event/WereRaceTransformHandler.java`)**:
+  - Lines 141-187 (`transformIntoWereForm`) & Lines 189-204 (`revertWereForm`): Invokes `PehkuiIntegration.applyRaceScales(player, race)` on server side.
+- **`ModPackets.java` (`common/src/main/java/ddraig/net/customraces/network/ModPackets.java`)**:
+  - Lines 41-47: Receives `SYNC_WERE_STATE_ID` on client and updates `ClientWereState.setTransformed(pUuid, isTransformed)`, but does NOT call `PehkuiIntegration.applyRaceScales` or `target.refreshDimensions()` on client player entity.
 
 ## 2. Logic Chain
-
-1. **Observation 1 & 5** demonstrate that Iron's Spells integration is implemented centrally in the `common` module (`IronSpellsHandler.java`) using Architectury's multi-platform packet framework. Both `fabric` and `forge` modules invoke shared server-side spell execution routines without platform-specific reflection code.
-2. **Observation 2** shows that native spell configuration is fully supported for both human and Were forms across 5 slots in `RaceData`, supporting spell ID lookup, level scaling, and Wild Magic randomness.
-3. **Observation 3 & 4** show that spell object resolution and unwrapping correctly account for `Holder` and `RegistryObject` wrappers in 1.20.1 API structures. However, invocation heuristics in `invokeSpellCast` suffer from critical reflection vulnerabilities:
-   - `getMethods()` order is non-deterministic, risking invocation of non-casting methods (e.g. `canCast`).
-   - Generic `p.isEnum()` mapping causes `IllegalArgumentException` on non-`CastSource` enums.
-   - Exceptions inside `m.invoke` are silently caught, hiding underlying NPEs or parameter mismatch errors.
-
----
+1. **Observation**: `PlayerRaceLayer` is registered as a feature renderer layer attached to `PlayerRenderer`. `PlayerRenderer` executes its standard `render` method (drawing vanilla Steve/Alex player mesh) before running attached layers.
+   **Inference**: `PlayerRaceLayer` currently draws procedural beast features on top of the already-rendered vanilla player model. Without hiding `getParentModel()` body parts, transformed players retain their default player model underneath.
+2. **Observation**: `RaceData` contains `wereModelPath`, `wereTexturePath`, `wereAnimationPath`, `wereIdleAnim`, but no renderer class (`WereModelRenderer` / `CustomRaceModelRenderer`) exists to parse or render `.geo.json` GeckoLib models for players.
+   **Inference**: A custom model renderer layer must be implemented in M2 to handle GeckoLib models and replace the default player model mesh when a custom Were model is defined.
+3. **Observation**: `WereRaceTransformHandler` calls `PehkuiIntegration.applyRaceScales` (which calls `player.refreshDimensions()`) on `ServerPlayer` during transformation, but `ModPackets.SYNC_WERE_STATE_ID` client packet receiver only sets `ClientWereState.setTransformed` without refreshing client entity scales or dimensions.
+   **Inference**: Client-side bounding boxes, camera eye heights, and rendering hitboxes lag or desync until client scales are explicitly updated and `player.refreshDimensions()` is called on client player entities.
 
 ## 3. Caveats
-
-- Runtime testing with actual Iron's Spells 'n Spellbooks JAR files was not performed in this exploration phase, as the environment is read-only code analysis.
-- Third-party add-on spells (e.g. `totweaks:*`) rely on `IronSpellsHandler.ALL_SPELLS` hardcoded list for Wild Magic, but registry lookup relies on Iron's Spells' `SpellRegistry`. If add-ons register spells in separate registries, resolution relies on standard `ResourceLocation` lookup within Iron's Spells registry.
-
----
+- No live runtime Minecraft client environment was launched during this read-only static analysis phase (all findings are based on static code inspection across common, fabric, and forge modules).
+- GeckoLib API version compatibility assumes standard GeckoLib 4.x `GeoModel` / `GeoEntityRenderer` patterns used in 1.20.1.
 
 ## 4. Conclusion
-
-The Iron's Spells reflection bridge in `IronSpellsHandler.java` provides a solid, cross-platform foundation for spell resolution and execution. To prepare for **Milestone 2 (Core Native Spell & Reflection Compatibility)**, the casting engine should be refactored to:
-1. Target explicit `onCast(Level, int, LivingEntity, CastSource, MagicData)` method signatures rather than unconstrained `getMethods()` iteration.
-2. Provide strict parameter type matching without blind enum fallbacks.
-3. Properly log reflection errors and handle `MagicData` mana/cooldown integration if desired.
-
----
+Transformed Were-race players retain default player models because `PlayerRaceLayer` is purely additive and never suppresses vanilla player mesh rendering. Furthermore, no GeckoLib model renderer is hooked into the player entity render pipeline. To fix this in M2:
+1. Implement model visibility toggles (`getParentModel().head.visible = false`, etc.) during transformed rendering.
+2. Implement custom GeckoLib model renderer integration with fallback to procedural beast features when `wereModelPath` is empty/unmapped.
+3. Update `ModPackets.SYNC_WERE_STATE_ID` client receiver to trigger `PehkuiIntegration.applyRaceScales` and `player.refreshDimensions()` on client player entities.
 
 ## 5. Verification Method
-
-To independently verify these findings:
-1. View `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java` and inspect lines 129–248.
-2. View `common/src/main/java/ddraig/net/customraces/data/RaceData.java` and inspect lines 184–242.
-3. View `common/src/main/java/ddraig/net/customraces/ability/ActiveAbilityHandler.java` and inspect lines 70–90.
-4. Verify project compilation by inspecting `analysis.md` in the working directory.
+- **Build Verification**: Run `./gradlew build -x test` from root directory to verify zero compilation errors.
+- **Code Inspection Verification**:
+  - Check `PlayerRaceLayer.java` lines 39-46 to verify transformation checks and model suppression.
+  - Check `ModPackets.java` lines 41-47 to verify client packet handler triggers client scale updates.
+  - Check `PehkuiIntegration.java` lines 46-127 to verify `player.refreshDimensions()` invocation.

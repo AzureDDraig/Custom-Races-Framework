@@ -30,65 +30,73 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                        float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
 
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
-        if (race == null) return;
+        if (race == null) {
+            WereModelRenderer.setBaseModelVisible(this.getParentModel(), true);
+            return;
+        }
 
         try {
             poseStack.pushPose();
 
-        // 1. Check Were-Form Transformation State (Server & Client Synced)
-        boolean isWereTransformed = ddraig.net.customraces.client.ClientWereState.isTransformed(player.getUUID())
-                || ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+            boolean isWereTransformed = WereModelRenderer.isWereForm(player, race);
 
-        if (isWereTransformed && race.enableWereRace) {
-            // Apply Were-Form Visual Scale Transformation
-            float hScale = race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f;
-            float wScale = race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f;
-            poseStack.scale(wScale, hScale, wScale);
+            if (isWereTransformed) {
+                // Apply Were-Form Visual Scale Transformation
+                float hScale = race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f;
+                float wScale = race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f;
+                poseStack.scale(wScale, hScale, wScale);
 
-            // Render Were-Form Beast Features (Ears, Horns, Snout, Crimson Eye Aura)
-            renderWereBeastParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
+                // Render custom Were model or fallback procedural beast parts
+                boolean customRendered = WereModelRenderer.renderWereForm(poseStack, buffer, packedLight, player, this.getParentModel(), race, netHeadYaw, headPitch);
+                if (!customRendered) {
+                    renderWereBeastParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
+                }
 
-            // Render Real-Time Dark Were-Form Smoke Particles
-            if (player.level().isClientSide && player.tickCount % 3 == 0) {
-                player.level().addParticle(
-                        net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
-                        player.getRandomX(0.6),
-                        player.getRandomY(),
-                        player.getRandomZ(0.6),
-                        0.0, 0.05, 0.0
-                );
-                player.level().addParticle(
-                        race.isWereFlyingRace ? net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME : net.minecraft.core.particles.ParticleTypes.FLAME,
-                        player.getRandomX(0.4),
-                        player.getRandomY(),
-                        player.getRandomZ(0.4),
-                        0.0, 0.02, 0.0
-                );
+                // Render Real-Time Dark Were-Form Smoke Particles
+                if (player.level().isClientSide && player.tickCount % 3 == 0) {
+                    player.level().addParticle(
+                            net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
+                            player.getRandomX(0.6),
+                            player.getRandomY(),
+                            player.getRandomZ(0.6),
+                            0.0, 0.05, 0.0
+                    );
+                    player.level().addParticle(
+                            race.isWereFlyingRace ? net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME : net.minecraft.core.particles.ParticleTypes.FLAME,
+                            player.getRandomX(0.4),
+                            player.getRandomY(),
+                            player.getRandomZ(0.4),
+                            0.0, 0.02, 0.0
+                    );
+                }
+            } else {
+                // Ensure base player model mesh is visible in human form
+                WereModelRenderer.setBaseModelVisible(this.getParentModel(), true);
+
+                // Render Base Race Preset Body Parts (Ears, Wings, Tail, Horns, Halo, Legs)
+                renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
             }
-        } else {
-            // Render Base Race Preset Body Parts (Ears, Wings, Tail, Horns, Halo, Legs)
-            renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
-        }
 
-        // 2. Render Particle Auras in Real-Time
-        if (player.level().isClientSide && race.particleAuras != null && !race.particleAuras.isEmpty()) {
-            for (ParticleAuraData aura : race.particleAuras) {
-                if (player.tickCount % 4 == 0) {
-                    net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.particleType));
-                    if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
-                        player.level().addParticle(
-                                pOptions,
-                                player.getRandomX(aura.spread),
-                                player.getRandomY() + 0.5,
-                                player.getRandomZ(aura.spread),
-                                0.0, aura.speed, 0.0
-                        );
+            // 2. Render Particle Auras in Real-Time
+            if (player.level().isClientSide && race.particleAuras != null && !race.particleAuras.isEmpty()) {
+                for (ParticleAuraData aura : race.particleAuras) {
+                    if (player.tickCount % 4 == 0) {
+                        net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.particleType));
+                        if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
+                            player.level().addParticle(
+                                    pOptions,
+                                    player.getRandomX(aura.spread),
+                                    player.getRandomY() + 0.5,
+                                    player.getRandomZ(aura.spread),
+                                    0.0, aura.speed, 0.0
+                            );
+                        }
                     }
                 }
             }
-        }
 
-        } catch (Exception ignored) {} finally {
+        } catch (Exception ignored) {
+        } finally {
             poseStack.popPose();
         }
     }

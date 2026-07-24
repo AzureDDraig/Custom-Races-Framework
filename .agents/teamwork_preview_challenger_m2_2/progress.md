@@ -1,8 +1,12 @@
-# Progress Log
+# Progress Tracker
 
-Last visited: 2026-07-23T14:39:20Z
-Status: Completed M2 Method Scoring & Invocation Challenge.
-- Created empirical test suite: `common/src/test/java/ddraig/net/customraces/integration/IronSpellsHandlerTest.java`
-- Executed tests via Gradle and proved 5 vulnerability / failure modes.
-- Verified build with `.\gradlew build -x test` (SUCCESSFUL).
-- Written `challenge.md` and `handoff.md` in workspace directory.
+Last visited: 2026-07-23T19:10:04-05:00
+
+- [x] Initialized workspace files (ORIGINAL_REQUEST.md, BRIEFING.md, progress.md)
+- [ ] Read worker handoff report and project scope
+- [ ] Inspect codebase related to PlayerRaceLayer, model rendering, visibility toggling, network packets, scale refresh
+- [ ] Execute `./gradlew build -x test` to verify build integrity
+- [ ] Stress-test PlayerRaceLayer mesh visibility restoration logic
+- [ ] Stress-test tracking packet broadcasts and Pehkui scale refresh calls
+- [ ] Write handoff.md report
+- [ ] Send summary message to parent agent
