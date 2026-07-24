@@ -39,6 +39,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             poseStack.pushPose();
 
             boolean isWereTransformed = WereModelRenderer.isWereForm(player, race);
+            int effectiveParticleCount = isWereTransformed ? race.getWereParticleCount() : race.getParticleCount();
 
             if (isWereTransformed) {
                 // Apply Were-Form Visual Scale Transformation
@@ -52,22 +53,25 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     renderWereBeastParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
                 }
 
-                // Render Real-Time Dark Were-Form Smoke Particles
+                // Render Real-Time Dark Were-Form Smoke Particles (Scaled by wereParticleCount)
                 if (player.level().isClientSide && player.tickCount % 3 == 0) {
-                    player.level().addParticle(
-                            net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
-                            player.getRandomX(0.6),
-                            player.getRandomY(),
-                            player.getRandomZ(0.6),
-                            0.0, 0.05, 0.0
-                    );
-                    player.level().addParticle(
-                            race.isWereFlyingRace ? net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME : net.minecraft.core.particles.ParticleTypes.FLAME,
-                            player.getRandomX(0.4),
-                            player.getRandomY(),
-                            player.getRandomZ(0.4),
-                            0.0, 0.02, 0.0
-                    );
+                    int smokeLoops = Math.max(1, Math.round(effectiveParticleCount / 2.0f));
+                    for (int i = 0; i < smokeLoops; i++) {
+                        player.level().addParticle(
+                                net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
+                                player.getRandomX(0.6),
+                                player.getRandomY(),
+                                player.getRandomZ(0.6),
+                                0.0, 0.05, 0.0
+                        );
+                        player.level().addParticle(
+                                race.isWereFlyingRace ? net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME : net.minecraft.core.particles.ParticleTypes.FLAME,
+                                player.getRandomX(0.4),
+                                player.getRandomY(),
+                                player.getRandomZ(0.4),
+                                0.0, 0.02, 0.0
+                        );
+                    }
                 }
             } else {
                 // Ensure base player model mesh is visible in human form
@@ -77,19 +81,22 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                 renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
             }
 
-            // 2. Render Particle Auras in Real-Time
+            // 2. Render Particle Auras in Real-Time (Scaled by effectiveParticleCount)
             if (player.level().isClientSide && race.particleAuras != null && !race.particleAuras.isEmpty()) {
                 for (ParticleAuraData aura : race.particleAuras) {
                     if (player.tickCount % 4 == 0) {
                         net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.particleType));
                         if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
-                            player.level().addParticle(
-                                    pOptions,
-                                    player.getRandomX(aura.spread),
-                                    player.getRandomY() + 0.5,
-                                    player.getRandomZ(aura.spread),
-                                    0.0, aura.speed, 0.0
-                            );
+                            int countToSpawn = aura.getScaledParticleCount(effectiveParticleCount);
+                            for (int i = 0; i < countToSpawn; i++) {
+                                player.level().addParticle(
+                                        pOptions,
+                                        player.getRandomX(aura.spread),
+                                        player.getRandomY() + 0.5,
+                                        player.getRandomZ(aura.spread),
+                                        0.0, aura.speed, 0.0
+                                );
+                            }
                         }
                     }
                 }

@@ -9,9 +9,9 @@
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
 | 1 | M1: Exploration & Architecture Analysis | Search and analyze transformation state sync, model render layers, fallback logic, scale refresh, particle fields, and GUI screen | none | DONE |
-| 2 | M2: Were-Race Custom Model Transformation Rendering Fixes | Implement tracking client sync, model layer swap logic, fallback model handling, Pehkui dimension refresh | M1 | IN_PROGRESS |
-| 3 | M3: Configurable Ambient Particle Count Settings | Add particle count fields to `RaceData`, GUI controls in `RaceCreatorScreen`, dynamic particle emission in `PlayerRaceLayer` | M1 | PLANNED |
-| 4 | M4: Rolling Changelog & Multi-Platform Build Verification | Update `CHANGELOG.md`, verify multi-platform build with `./gradlew build -x test` | M2, M3 | PLANNED |
+| 2 | M2: Were-Race Custom Model Transformation Rendering Fixes | Implement tracking client sync, model layer swap logic, fallback model handling, Pehkui dimension refresh | M1 | DONE |
+| 3 | M3: Configurable Ambient Particle Count Settings | Add particle count fields to `RaceData`, GUI controls in `RaceCreatorScreen`, dynamic particle emission in `PlayerRaceLayer` | M1 | DONE |
+| 4 | M4: Rolling Changelog & Multi-Platform Build Verification | Update `CHANGELOG.md`, verify multi-platform build with `./gradlew build -x test` | M2, M3 | DONE |
 
 ## Interface Contracts
 ### Transformation Sync Contract

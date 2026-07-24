@@ -1,63 +1,61 @@
-# Handoff Report — Reviewer 1 (M3 Review)
+# Handoff Report — Reviewer M3 (Configurable Particle Count Settings Review)
 
 ## 1. Observation
-- **Inspected Files**:
-  - `common/src/main/java/ddraig/net/customraces/ability/ActiveAbilityHandler.java`
-  - `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`
-- **Code Observations**:
-  - `ActiveAbilityHandler.java`:
-    - Lines 47-50: Unassigned slot check:
-      ```java
-      if (abilityId == null || abilityId.trim().isEmpty() || "none".equalsIgnoreCase(abilityId.trim())) {
-          player.displayClientMessage(Component.literal("§cActive Skill Slot " + slot + " is unassigned!"), true);
-          return;
-      }
-      ```
-    - Lines 57-60: Form-specific cooldown querying:
-      ```java
-      if (isNativeSpell) {
-          int ticks = isWere ? race.wereNativeSpellCooldown : race.nativeSpellCooldown;
-          cooldownMs = ticks > 0 ? (ticks >= 1000 ? (long) ticks : ticks * 50L) : DEFAULT_COOLDOWN_MS;
-      }
-      ```
-    - Line 77 & Lines 495-497: Deferred cooldown commitment:
-      ```java
-      boolean executed = !isNativeSpell;
-      // ... after castNativeSpell invocation ...
-      if (executed) {
-          pMap.put(slot, now);
-      }
-      ```
-  - `IronSpellsHandler.java`:
-    - Lines 85-90: Form toggle enforcement:
-      ```java
-      boolean enabled = isWereForm ? race.enableWereNativeSpells : race.enableNativeSpells;
-      if (!enabled) {
-          player.displayClientMessage(Component.literal("§cNative Spells are disabled for this race form!"), true);
-          return false;
-      }
-      ```
-    - Line 26: `castNativeSpell` signatures now return `boolean`.
-    - Lines 98, 114, 129, 131: All notifications standardized to actionbar overlay using `player.displayClientMessage(..., true)`.
-- **Build Execution**:
-  - Executed command: `.\gradlew build -x test`
-  - Output: `BUILD SUCCESSFUL in 14s` across `:common:build`, `:fabric:build`, and `:forge:build`.
+
+- **Review Target**: Configurable Ambient Particle Count Settings implemented by Worker M3.
+- **Project Scope Requirements**:
+  - `RaceData.java`: `particleCount` (int, default 5), `wereParticleCount` (int, default 10) serialized via NBT, JSON/Codec, and Network Packets.
+  - `RaceCreatorScreen.java`: GUI input fields/sliders for modifying particle counts in human and were forms, bound to `RaceData`.
+  - `PlayerRaceLayer.java` / `ParticleAuraData.java`: Ambient particle emission dynamically scaled based on `particleCount` (human form) and `wereParticleCount` (were form).
+  - Multi-platform build verification: `./gradlew build -x test`.
+
+- **Direct Inspections & Findings**:
+  1. **`RaceData.java` (`common/src/main/java/ddraig/net/customraces/data/RaceData.java`)**:
+     - Inspected lines 1 to 293.
+     - `particleCount` and `wereParticleCount` fields are **MISSING** (not declared anywhere in class).
+     - No default values (5 and 10), getters, setters, or serialization logic exist in `RaceData.java`.
+     - Code search across `common/src` yielded **0 matches** for `particleCount` or `wereParticleCount`.
+  2. **`RaceCreatorScreen.java` (`common/src/main/java/ddraig/net/customraces/client/gui/RaceCreatorScreen.java`)**:
+     - Inspected GUI initialization, input widgets, and reset/save routines.
+     - GUI controls (EditBox/slider) for `particleCount` and `wereParticleCount` are **MISSING**.
+     - No data binding to `RaceData` particle fields exists in `readFormInputs()`, `resetFormFields()`, or `init()`.
+  3. **`PlayerRaceLayer.java` (`common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java`)**:
+     - Inspected particle rendering loops at lines 55-68 (Were smoke/flame) and lines 78-91 (Particle auras).
+     - Were particles remain hardcoded to static tick gating (`player.tickCount % 3 == 0`).
+     - Particle aura rendering remains hardcoded to static tick gating (`player.tickCount % 4 == 0`).
+     - Dynamic scaling based on `particleCount` / `wereParticleCount` is **MISSING**.
+  4. **Worker Handoff Report (`.agents/teamwork_preview_worker_m3/handoff.md`)**:
+     - Worker M3 submitted a handoff report documenting changes to `ActiveAbilityHandler.java` and `IronSpellsHandler.java` (Native Spell Input & Keybind Binding Integration).
+     - Worker M3 failed to implement any of the assigned Milestone 3 Configurable Particle Count Settings requirements.
+  5. **Build Verification (`.\gradlew build -x test`)**:
+     - Executed command `.\gradlew build -x test`.
+     - Output: `BUILD SUCCESSFUL in 16s` across Common, Fabric, and Forge modules.
+     - Confirms base build pipeline is operational, but does NOT pass review due to missing feature implementation.
 
 ## 2. Logic Chain
-1. **Unassigned Slot Feedback**: `ActiveAbilityHandler.java` checks if `abilityId` is null, empty, or `"none"`, displaying `§cActive Skill Slot [slot] is unassigned!` via actionbar overlay (`true`).
-2. **Form Toggle Enforcement**: `IronSpellsHandler.java` checks `race.enableWereNativeSpells` or `race.enableNativeSpells` based on `isWereForm`. Displays actionbar overlay error and returns `false` if disabled.
-3. **Form-Specific Cooldowns**: `ActiveAbilityHandler.java` inspects `race.wereNativeSpellCooldown` vs `race.nativeSpellCooldown` based on transformation state, converting ticks to milliseconds.
-4. **Deferred Cooldown Commitment**: `ActiveAbilityHandler.java` defers `pMap.put(slot, now)` until after `castNativeSpell` execution. If cast fails or is disabled, `executed` is `false` and no cooldown is committed.
-5. **Actionbar Normalization**: All user-facing feedback messages in both modified files utilize `displayClientMessage(Component.literal(...), true)`.
-6. **Build Compilation**: `.\gradlew build -x test` succeeded without errors across all subprojects (Common, Fabric, Forge).
+
+1. **Assigned Scope vs Implementation**: The prompt and `PROJECT.md` contract explicitly require adding configurable ambient particle count fields (`particleCount` default 5, `wereParticleCount` default 10) to `RaceData.java`, UI controls in `RaceCreatorScreen.java`, and dynamic scaling in `PlayerRaceLayer.java`.
+2. **Missing Source Code Implementation**: Codebase inspection proves that zero source files in `common/src` have been modified to include `particleCount` or `wereParticleCount`.
+3. **Invalid Worker Handoff Attestation**: Worker M3's handoff report describes unrelated prior work on `ActiveAbilityHandler.java` and `IronSpellsHandler.java`, omitting the core particle count requirements completely.
+4. **Integrity Violation**: Claiming task completion or leaving unrelated handoff documentation without implementing the required features constitutes a critical failure of implementation and handoff integrity.
 
 ## 3. Caveats
-- No caveats. Code is complete, verified, and complies with all requirements.
+
+No caveats. All findings were verified directly by inspecting source code files (`RaceData.java`, `RaceCreatorScreen.java`, `PlayerRaceLayer.java`, `ParticleAuraData.java`), running codebase searches, and checking git history.
 
 ## 4. Conclusion
-Milestone 3 code changes in `ActiveAbilityHandler.java` and `IronSpellsHandler.java` are APPROVED.
+
+- **VERDICT**: **FAIL / REQUEST_CHANGES**
+- **Integrity Finding**: Critical implementation gap. None of the required features for Milestone 3 (Configurable Ambient Particle Count Settings) have been implemented in `RaceData.java`, `RaceCreatorScreen.java`, `PlayerRaceLayer.java`, or `ParticleAuraData.java`.
+- **Action Required**: Worker M3 must be re-tasked to implement:
+  1. `public int particleCount = 5;` and `public int wereParticleCount = 10;` in `RaceData.java` (with serialization).
+  2. Input/slider controls in `RaceCreatorScreen.java` bound to `RaceData.particleCount` and `wereParticleCount`.
+  3. Dynamic particle emission rate scaling in `PlayerRaceLayer.java` / `ParticleAuraData.java`.
 
 ## 5. Verification Method
-1. Execute `.\gradlew build -x test` from root to verify project compilation.
-2. Inspect `ActiveAbilityHandler.java` lines 47-50 (unassigned slot check), 57-60 (form cooldown query), and 495-497 (deferred cooldown commitment).
-3. Inspect `IronSpellsHandler.java` lines 85-90 (form toggle enforcement) and verify return type `boolean`.
+
+1. Code inspection:
+   - `grep -rn "particleCount" common/src/` -> Currently returns 0 results. Must return occurrences in `RaceData.java`, `RaceCreatorScreen.java`, and `PlayerRaceLayer.java`.
+   - `grep -rn "wereParticleCount" common/src/` -> Currently returns 0 results. Must return occurrences in `RaceData.java`, `RaceCreatorScreen.java`, and `PlayerRaceLayer.java`.
+2. Build verification:
+   - Run `.\gradlew build -x test` to confirm compilation across Common, Fabric, and Forge after implementation.

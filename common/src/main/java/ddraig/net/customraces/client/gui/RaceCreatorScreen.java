@@ -50,6 +50,8 @@ public class RaceCreatorScreen extends Screen {
     private EditBox widthScaleBox;
     private EditBox healthBox;
     private EditBox speedBox;
+    private EditBox particleCountBox;
+    private EditBox wereParticleCountBox;
 
     private EditBox ambientSoundBox;
     private EditBox hurtSoundBox;
@@ -367,6 +369,7 @@ public class RaceCreatorScreen extends Screen {
         wereIdleAnimBox = null; wereWalkAnimBox = null; wereAttackAnimBox = null;
         wereTransformSoundBox = null; wereHowlSoundBox = null; wereAmbientSoundBox = null;
         wereHurtSoundBox = null; wereDeathSoundBox = null; nativeSpellBox = null;
+        particleCountBox = null; wereParticleCountBox = null;
         passiveWidgets.clear(); drawbackWidgets.clear();
     }
 
@@ -643,6 +646,12 @@ public class RaceCreatorScreen extends Screen {
                 this.wereDamageBox.setValue(String.valueOf(workingRace.wereDamageBonus));
                 this.wereDamageBox.setTooltip(Tooltip.create(Component.literal("Bonus attack damage granted while in Were-form.")));
                 this.addRenderableWidget(this.wereDamageBox);
+
+                this.wereParticleCountBox = new EditBox(this.font, contentLeft + 140, contentTop + 155, 60, 18, Component.literal("Were Particle Count"));
+                this.wereParticleCountBox.setMaxLength(2048);
+                this.wereParticleCountBox.setValue(String.valueOf(workingRace.wereParticleCount));
+                this.wereParticleCountBox.setTooltip(Tooltip.create(Component.literal("Ambient particle count per tick emission rate in Were-form (Default: 10).")));
+                this.addRenderableWidget(this.wereParticleCountBox);
             } else {
                 Button modelTypeBtn = Button.builder(Component.literal("Type: " + workingRace.modelType), b -> {
                     workingRace.modelType = "Default".equals(workingRace.modelType) ? "Custom" : "Default";
@@ -687,12 +696,16 @@ public class RaceCreatorScreen extends Screen {
                 this.swimAnimBox.setTooltip(Tooltip.create(Component.literal("GeckoLib swim animation key (e.g. animation.model.swim).")));
                 this.addRenderableWidget(this.swimAnimBox);
 
+                this.particleCountBox = new EditBox(this.font, contentLeft + 140, contentTop + 180, 60, 18, Component.literal("Particle Count"));
+                this.particleCountBox.setMaxLength(2048);
+                this.particleCountBox.setValue(String.valueOf(workingRace.particleCount));
+                this.particleCountBox.setTooltip(Tooltip.create(Component.literal("Ambient particle count per tick emission rate in base form (Default: 5).")));
+                this.addRenderableWidget(this.particleCountBox);
+
                 // Open Body Parts & Color Picker Overlay
                 Button partsBtn = Button.builder(Component.literal("§ePreset Body Parts & Colors"), b -> {
                     Minecraft.getInstance().setScreen(new BodyPartOverlay(this, workingRace));
-                }).bounds(contentLeft, contentTop + 180, 200, 22).build();
-                partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
-                this.addRenderableWidget(partsBtn);
+                }).bounds(contentLeft, contentTop + 205, 200, 22).build();
                 partsBtn.setTooltip(Tooltip.create(Component.literal("Open Body Part Selector & RGB Color Picker Wheel overlay.")));
                 this.addRenderableWidget(partsBtn);
             }
@@ -1254,6 +1267,9 @@ public class RaceCreatorScreen extends Screen {
             if (wereDamageBox != null) {
                 try { workingRace.wereDamageBonus = Float.parseFloat(wereDamageBox.getValue()); } catch (Exception ignored) {}
             }
+            if (wereParticleCountBox != null) {
+                try { workingRace.setWereParticleCount(Integer.parseInt(wereParticleCountBox.getValue())); } catch (Exception ignored) {}
+            }
         } else {
             if (heightScaleBox != null) {
                 try { workingRace.heightScale = Float.parseFloat(heightScaleBox.getValue()); } catch (Exception ignored) {}
@@ -1266,6 +1282,9 @@ public class RaceCreatorScreen extends Screen {
             }
             if (speedBox != null) {
                 try { workingRace.movementSpeed = Float.parseFloat(speedBox.getValue()); } catch (Exception ignored) {}
+            }
+            if (particleCountBox != null) {
+                try { workingRace.setParticleCount(Integer.parseInt(particleCountBox.getValue())); } catch (Exception ignored) {}
             }
         }
 
@@ -1349,6 +1368,8 @@ public class RaceCreatorScreen extends Screen {
         copy.heightScale = source.heightScale;
         copy.widthScale = source.widthScale;
         copy.baseScale = source.baseScale;
+        copy.particleCount = source.particleCount;
+        copy.wereParticleCount = source.wereParticleCount;
         copy.maxHealth = source.maxHealth;
         copy.movementSpeed = source.movementSpeed;
         copy.armor = source.armor;
@@ -1485,7 +1506,12 @@ public class RaceCreatorScreen extends Screen {
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were Width Scale:" : "§e❖ Width Scale:", contentLeft, contentTop + 59, 0xFFFFFF);
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were HP Bonus:" : "§e❖ Max Health:", contentLeft, contentTop + 84, 0xFFFFFF);
             guiGraphics.drawString(this.font, isWereMode ? "§c❖ Were Speed Bonus:" : "§e❖ Move Speed:", contentLeft, contentTop + 109, 0xFFFFFF);
-            if (isWereMode) guiGraphics.drawString(this.font, "§c❖ Were Damage Bonus:", contentLeft, contentTop + 134, 0xFFFFFF);
+            if (isWereMode) {
+                guiGraphics.drawString(this.font, "§c❖ Were Damage Bonus:", contentLeft, contentTop + 134, 0xFFFFFF);
+                guiGraphics.drawString(this.font, "§c❖ Were Particle Count:", contentLeft, contentTop + 159, 0xFFFFFF);
+            } else {
+                guiGraphics.drawString(this.font, "§e❖ Particle Count:", contentLeft, contentTop + 184, 0xFFFFFF);
+            }
         } else if (activeTab == 2) {
             guiGraphics.drawString(this.font, "§e❖ Part Scale & Offset (X, Y, Z):", contentLeft, contentTop + 4, 0xFFFFFF);
             String[] partKeys = {"Ears", "Wings", "Tail", "Horns", "Halo", "Custom"};

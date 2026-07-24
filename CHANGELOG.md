@@ -2,6 +2,35 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b096a] - 2026-07-23
+
+### 🐺 Were-Race Custom Model Transformation Rendering Fixes
+- **Tracking Client State Sync & Packet Broadcast (`ModPackets.java`, `WereRaceTransformHandler.java`, `FirstJoinHandler.java`)**:
+  - Implemented `PlayerLookup.tracking` packet broadcast upon transformation toggle to sync client-side state across all tracking players.
+  - Added start tracking event handlers (`PlayerEvent.PLAYER_START_TRACKING` / `syncAllWereStatesTo`) to send `sendWereStateToPlayer` packets so newly encountered players immediately receive active transformation states.
+- **Player Model Mesh Part Hiding (`PlayerRaceLayer.java`, `WereModelRenderer.java`)**:
+  - Automatically hides default human player model mesh parts (`setBaseModelVisible(false)`) during custom Were-form rendering, preventing visual overlapping and Z-fighting.
+  - Restores player model mesh visibility (`setBaseModelVisible(true)`) when players revert to human base form.
+- **3-Tier Model Asset Fallback Resolution (`WereModelRenderer.java`, `CustomRaceModelRenderer.java`)**:
+  - Implemented 3-tier fallback logic resolving model assets safely: custom specified model file -> default Were model asset fallback -> standard human player model fallback.
+  - Handled missing, null, empty, or invalid model resource paths gracefully without throwing rendering exceptions.
+- **Pehkui Dimension Refresh & Scale Resync (`WereRaceTransformHandler.java`, `PehkuiIntegration.java`)**:
+  - Added `player.refreshDimensions()` calls on transformation state changes and client packet reception to recalculate entity bounding boxes, eye height, and collision parameters instantly.
+  - Integrated scale persistence re-applying Pehkui multipliers across transformation state changes.
+
+### 🌟 Configurable Ambient Particle Count Settings
+- **Particle Count Data Fields (`RaceData.java`)**:
+  - Added `particleCount` (default: 5) and `wereParticleCount` (default: 10) fields to `RaceData.java` for base and Were-form ambient particle density.
+  - Integrated NBT serialization (`toNBT` / `fromNBT`) and Codec/JSON persistence with invalid/negative value fallback logic.
+- **GUI EditBox Controls (`RaceCreatorScreen.java`)**:
+  - Added interactive GUI EditBox input widgets in `RaceCreatorScreen.java` (Tab 1 / Tab 8) allowing race creators to configure base and Were particle emission rates directly.
+  - Includes real-time input parsing, validation, and auto-saving.
+- **Dynamic Particle Emission Scaling (`PlayerRaceLayer.java`, `ParticleAuraData.java`)**:
+  - Connected `PlayerRaceLayer.java` to scale ambient particle emission rates dynamically based on active form (`particleCount` for human form, `wereParticleCount` for Were-form).
+  - Integrated `ParticleAuraData.getScaledParticleCount(...)` to compute proportional particle density per render tick without performance degradation.
+
+---
+
 ## [1.0.0-b094a] - 2026-07-23
 
 ### 🐺 Were-Form Model Transformation & Tracking Network Sync Engine

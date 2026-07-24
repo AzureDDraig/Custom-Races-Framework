@@ -1,17 +1,18 @@
-## 2026-07-23T19:45:48Z
-You are the Forensic Auditor (teamwork_preview_auditor) performing the final integrity audit for Milestone 4 (Comprehensive Build & Multi-Platform Verification) and overall project integrity for the Custom Races Framework.
+## 2026-07-23T19:15:58-05:00
+You are Forensic Auditor M4 (Integrity Auditor).
+Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m4
 
-Your Working Directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m4
+PROJECT SCOPE:
+c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+WORKER HANDOFF REPORT:
+c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\worker_m4\handoff.md
 
-Objectives:
-1. Initialize your BRIEFING.md and progress.md in your working directory.
-2. Perform comprehensive static analysis and code verification on all implemented files:
-   - `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`
-   - `common/src/main/java/ddraig/net/customraces/ability/ActiveAbilityHandler.java`
-   - `CHANGELOG.md`
-3. Audit for any integrity violations, fake/facade logic, dummy returns, hardcoded test results, or bypasses:
-   - Check if reflection candidate sorting, parameter matching, container null checks (`isPresent`/`isEmpty`), depth limiting (`depth > 10`), and root exclusions are genuinely implemented without hardcoded mocks.
-   - Check if `ActiveAbilityHandler` slot routing, actionbar messages (`§cActive Skill Slot X is unassigned!`), form toggle checking (`enableNativeSpells` / `enableWereNativeSpells`), form cooldowns, and deferred cooldown updates are genuinely implemented.
-4. Execute `.\gradlew build -x test` at the project root (`c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework`) to independently verify that both Fabric and Forge targets compile cleanly with 0 errors.
-5. Create `handoff.md` in your working directory `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m4\handoff.md` with your audit findings and explicit final verdict: CLEAN or INTEGRITY VIOLATION.
-6. Send a message to the orchestrator with your verdict and evidence.
+YOUR TASK:
+Perform forensic integrity audit on Milestone 4 (Rolling Changelog & Build Verification):
+1. Inspect `CHANGELOG.md` in project root (`c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\CHANGELOG.md`).
+2. Verify that all existing changelog history was preserved without deletion or truncation.
+3. Verify that the new release notes accurately and genuinely document Were-Race model transformation fixes and configurable particle count settings.
+4. Run `./gradlew build -x test` from root directory and verify build passes with 0 errors across `:common`, `:fabric`, and `:forge` targets.
+5. Render verdict: `CLEAN` or `INTEGRITY VIOLATION`.
+
+Write audit report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m4\handoff.md` and send verdict via send_message to parent.

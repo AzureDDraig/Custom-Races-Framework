@@ -12,3 +12,8 @@ dependencies {
     modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
 }
 
+task runM3Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M3ParticleConfigVerificationTest'
+}
+

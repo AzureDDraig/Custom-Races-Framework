@@ -17,3 +17,30 @@ Objectives:
 MANDATORY INTEGRITY WARNING:
 DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.
 </USER_REQUEST>
+
+## 2026-07-24T00:15:43Z
+<USER_REQUEST>
+You are Worker M4 (Rolling Changelog & Multi-Platform Build Verification Worker).
+Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\worker_m4
+
+PROJECT SCOPE:
+c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+ORIGINAL REQUEST:
+c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
+
+MANDATORY INTEGRITY WARNING:
+DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.
+
+YOUR TASK (MILESTONE 4):
+1. **Update `CHANGELOG.md`**:
+   - Inspect `CHANGELOG.md` in project root (`c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\CHANGELOG.md`).
+   - Retain ALL existing changelog history without deleting or truncating any previous entries.
+   - Add a detailed new release section at the top documenting:
+     - Were-Race Custom Model Transformation Rendering Fixes: Tracking client state sync (`PlayerLookup.tracking` broadcast, start tracking event handlers), player model mesh hiding during transform, 3-tier model asset fallback logic, and Pehkui dimension refresh (`player.refreshDimensions()`).
+     - Configurable Ambient Particle Count Settings: `particleCount` (default: 5) and `wereParticleCount` (default: 10) fields in `RaceData.java`, GUI EditBox widgets in `RaceCreatorScreen.java`, and dynamic particle emission scaling in `PlayerRaceLayer.java`.
+2. **Multi-Platform Build Verification**:
+   - Execute `./gradlew build -x test` from the project root.
+   - Verify 0 compilation errors across `:common`, `:fabric`, and `:forge` modules.
+
+Write your handoff report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\worker_m4\handoff.md` and report via send_message to parent.
+</USER_REQUEST>

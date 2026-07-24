@@ -56,6 +56,10 @@ public class RaceData {
     // Part Transforms (Position, Rotation, Scale per part key e.g. "ears", "wings", "tail", "horns", "halo", "legs", "custom")
     public Map<String, PartTransformData> partTransforms = new HashMap<>();
 
+    // Particle Configurations
+    public int particleCount = 5;      // Base form ambient particle emission rate (Default: 5)
+    public int wereParticleCount = 10;  // Were-form ambient particle emission rate (Default: 10)
+
     // Particle Auras
     public List<ParticleAuraData> particleAuras = new ArrayList<>();
 
@@ -274,6 +278,8 @@ public class RaceData {
         if (wereSwimAnim == null) wereSwimAnim = "animation.were.swim";
         if (spawnDimension == null) spawnDimension = "";
         if (spawnBiome == null) spawnBiome = "";
+        if (particleCount <= 0) particleCount = 5;
+        if (wereParticleCount <= 0) wereParticleCount = 10;
         enableNativeSpells = true;
         enableWereNativeSpells = true;
     }
@@ -288,5 +294,39 @@ public class RaceData {
 
     public void setColor(String partKey, String hexColor) {
         bodyPartColors.put(partKey, hexColor);
+    }
+
+    public int getParticleCount() {
+        return particleCount <= 0 ? 5 : particleCount;
+    }
+
+    public void setParticleCount(int particleCount) {
+        this.particleCount = particleCount <= 0 ? 5 : Math.min(100, particleCount);
+    }
+
+    public int getWereParticleCount() {
+        return wereParticleCount <= 0 ? 10 : wereParticleCount;
+    }
+
+    public void setWereParticleCount(int wereParticleCount) {
+        this.wereParticleCount = wereParticleCount <= 0 ? 10 : Math.min(100, wereParticleCount);
+    }
+
+    public net.minecraft.nbt.CompoundTag toNBT(net.minecraft.nbt.CompoundTag tag) {
+        if (tag == null) tag = new net.minecraft.nbt.CompoundTag();
+        tag.putString("id", id != null ? id : "human");
+        tag.putString("name", name != null ? name : "Human");
+        tag.putInt("particleCount", getParticleCount());
+        tag.putInt("wereParticleCount", getWereParticleCount());
+        return tag;
+    }
+
+    public void fromNBT(net.minecraft.nbt.CompoundTag tag) {
+        if (tag == null) return;
+        if (tag.contains("id")) this.id = tag.getString("id");
+        if (tag.contains("name")) this.name = tag.getString("name");
+        if (tag.contains("particleCount")) this.particleCount = tag.getInt("particleCount");
+        if (tag.contains("wereParticleCount")) this.wereParticleCount = tag.getInt("wereParticleCount");
+        initDefaults();
     }
 }

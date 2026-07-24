@@ -1,4 +1,4 @@
-# BRIEFING — 2026-07-23T19:10:04Z
+# BRIEFING — 2026-07-23T19:12:30Z
 
 ## Mission
 Perform forensic integrity audit on M2 implementation of Custom Races Framework.
@@ -18,29 +18,36 @@ Perform forensic integrity audit on M2 implementation of Custom Races Framework.
 
 ## Current Parent
 - Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-23T19:10:04Z
+- Updated: 2026-07-23T19:12:30Z
 
 ## Audit Scope
-- **Work product**: M2 implementation code changes (`WereRaceTransformHandler.java`, `PlayerRaceLayer.java`, `WereModelRenderer.java`, `RaceData.java`, `ModPackets.java`, `PlayerTracker.java`, `PehkuiIntegration.java`)
+- **Work product**: M2 implementation code changes (`WereRaceTransformHandler.java`, `PlayerRaceLayer.java`, `WereModelRenderer.java`, `RaceData.java`, `ModPackets.java`, `PlayerTracker.java` / `CustomRacesFabric.java` / `CustomRacesForge.java`, `PehkuiIntegration.java`)
 - **Profile loaded**: General Project
 - **Audit type**: Forensic integrity check & build verification
 
 ## Audit Progress
-- **Phase**: starting
-- **Checks completed**: Initial request & briefing creation
-- **Checks remaining**: Inspect worker handoff and project scope, Inspect code files, Check for hardcoding/facades/bypasses, Run build verification, Render verdict
-- **Findings so far**: CLEAN (pending investigation)
+- **Phase**: complete
+- **Checks completed**:
+  - Code inspection of all 7 target files
+  - Forensic hardcode, facade, and mock detection (0 issues found)
+  - Multi-platform Gradle build verification (`./gradlew build -x test` passed in 14s)
+  - Adversarial challenge assessment
+- **Checks remaining**: None
+- **Findings so far**: CLEAN
 
 ## Key Decisions Made
-- Initialized audit briefing.
+- Confirmed transformation state tracking, packet serialization, Pehkui scaling integration, model layer swapping, and tracking events are 100% genuine.
+- Verified `./gradlew build -x test` output (`BUILD SUCCESSFUL in 14s`).
+- Rendered final verdict: CLEAN.
 
 ## Attack Surface
-- **Hypotheses tested**: None yet
-- **Vulnerabilities found**: None yet
-- **Untested angles**: Transformation logic, rendering hooks, network packet handling, Pehkui scaling integration
+- **Hypotheses tested**: Checked whether transformation states, Pehkui scales, model renderer fallbacks, or network packets used hardcoded values or facade methods.
+- **Vulnerabilities found**: None.
+- **Untested angles**: Runtime client rendering under extreme entity counts (out of scope for unit/build audit).
 
 ## Loaded Skills
 - None
 
 ## Artifact Index
 - ORIGINAL_REQUEST.md — Initial prompt and task context
+- handoff.md — Final audit handoff report

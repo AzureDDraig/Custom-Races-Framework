@@ -17,4 +17,9 @@ public class ParticleAuraData {
         this.speed = speed;
         this.spread = spread;
     }
+
+    public int getScaledParticleCount(int raceParticleCount) {
+        int effectiveCount = raceParticleCount > 0 ? raceParticleCount : 5;
+        return Math.max(1, Math.round(this.count * (effectiveCount / 5.0f)));
+    }
 }

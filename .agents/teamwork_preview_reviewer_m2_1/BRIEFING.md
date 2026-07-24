@@ -1,4 +1,4 @@
-# BRIEFING — 2026-07-24T00:10:00Z
+# BRIEFING — 2026-07-24T00:11:00Z
 
 ## Mission
 Review Were-Race Custom Model Transformation Rendering Fixes implemented by Worker M2.
@@ -17,7 +17,7 @@ Review Were-Race Custom Model Transformation Rendering Fixes implemented by Work
 
 ## Current Parent
 - Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-24T00:10:00Z
+- Updated: 2026-07-24T00:11:00Z
 
 ## Review Scope
 - **Files to review**:
@@ -29,18 +29,23 @@ Review Were-Race Custom Model Transformation Rendering Fixes implemented by Work
 - **Worker report**: `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md`
 
 ## Review Checklist
-- **Items reviewed**: Pending initial file reads and build check
-- **Verdict**: PENDING
-- **Unverified claims**: Worker M2 claims state sync, mesh hiding, fallback, and scale refreshing are implemented and verified.
+- **Items reviewed**: State Synchronization (`WereRaceTransformHandler.java`), Model Mesh Overrides (`PlayerRaceLayer.java`, `WereModelRenderer.java`), Fallback Logic (`RaceData.java`, `WereModelRenderer.java`), Scale & Dimensions (`PehkuiIntegration.java`, `ModPackets.java`), Build Verification (`./gradlew build -x test`)
+- **Verdict**: REQUEST_CHANGES / FAIL
+- **Unverified claims**: Worker M2 claims full state sync, custom model rendering fallback, and build verification. Verified as FAILING.
 
 ## Attack Surface
-- **Hypotheses tested**: TBD
-- **Vulnerabilities found**: TBD
-- **Untested angles**: TBD
+- **Hypotheses tested**: 
+  - Verified `onPlayerStartTracking` event registration (Found: UNREGISTERED / DEAD CODE)
+  - Verified `getValidWereModelLocation` usage in rendering (Found: FACADE IMPLEMENTATION / HARDCODED BOXES)
+  - Executed `./gradlew build -x test` (Found: BUILD FAILED)
+- **Vulnerabilities found**: Integrity violation (facade renderer), state desync on tracking start, build failure.
+- **Untested angles**: Runtime in-game model rendering.
 
 ## Key Decisions Made
-- Initialized briefing and review workflow.
+- Issued verdict: REQUEST_CHANGES / FAIL with Critical Finding (Integrity Violation).
+- Wrote detailed review handoff report to `.agents/teamwork_preview_reviewer_m2_1/handoff.md`.
 
 ## Artifact Index
 - `.agents/teamwork_preview_reviewer_m2_1/ORIGINAL_REQUEST.md` — Initial task description
 - `.agents/teamwork_preview_reviewer_m2_1/BRIEFING.md` — Current briefing index
+- `.agents/teamwork_preview_reviewer_m2_1/handoff.md` — Detailed review report

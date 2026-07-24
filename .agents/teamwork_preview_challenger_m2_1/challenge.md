@@ -1,67 +1,55 @@
-# Adversarial Challenge Report — IronSpellsHandler Reflection Implementation
+# Adversarial Challenge & Stress Test Report — M2 Were-Race Model Transformation
 
-**Target File**: `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`  
-**Reviewer**: Challenger 1 (M2 Adversarial Verification)  
-**Overall Risk Assessment**: MEDIUM  
+## Challenge Summary
 
-## Executive Summary
-An adversarial evaluation of `IronSpellsHandler.java` was conducted to test soft-reflection safety, missing mod scenarios, malformed spell IDs, parameter scoring logic, type coercion, and thread safety.
+**Overall risk assessment**: MEDIUM
 
-Empirical test harnesses and static analysis confirmed that basic soft-reflection degrades gracefully without throwing unhandled `ClassNotFoundException`s when Iron's Spells is missing. However, **5 concrete bugs and failure modes** were discovered in parameter reflection, mod detection scope, class loading edge cases, thread safety, and attribute cleanup.
+The core M2 Were-Race transformation architecture is functional, thread-safe, and cleanly handles null values, rate-limiting, network state sync, and basic Pehkui scale fallbacks. However, empirical stress-testing revealed key visual and logic vulnerabilities under specific edge cases, primarily around unmapped/missing custom model paths rendering invisible player models, automatic trigger loops overriding manual toggling, and unbounded extreme Pehkui scales.
 
 ---
 
-## Challenges & Failure Modes
+## Challenges
 
-### 1. [HIGH] Argument Type Mismatch on Primitive Parameter Types (Non-Integer Primitives)
-- **Assumption Challenged**: `invokeSpellCast` assumes all parameter types of spell methods fall into known Minecraft/IronSpells object classes or primitive `int`.
-- **Attack Scenario**: If a spell's `onCast` or `castSpell` method signature includes non-integer primitive parameter types (e.g. `float`, `double`, `boolean`, `long`, `short`, `byte`, or `char`, such as `onCast(Level level, int spellLevel, LivingEntity entity, float damageMultiplier)`):
-  - In `invokeSpellCast` (line 538), unassigned parameters default to `args[i] = null`.
-  - Passing `null` to a primitive parameter during `m.invoke(spellObj, args)` throws `java.lang.IllegalArgumentException: argument type mismatch`.
-- **Blast Radius**: Any spell in Iron's Spells or third-party add-on mods using primitive parameters other than `int` fails to cast with an uncaught `IllegalArgumentException` during reflection invocation.
-- **Mitigation**: Handle primitive default values in parameter matching (e.g. `0.0f` for float, `false` for boolean, `0.0` for double) or filter out methods requiring unsupported primitive arguments.
+### [High] Challenge 1: Unmapped/Missing Model Paths Suppress Base Player Model, Causing Invisibility
 
-### 2. [MEDIUM] Mod Availability Check Omits T.O. Tweaks Mod Scope
-- **Assumption Challenged**: `isIronSpellsLoaded()` checks `Platform.isModLoaded("irons_spellbooks")` and is used as the sole gatekeeper for spell casting.
-- **Attack Scenario**: `ALL_SPELLS` contains spells from T.O. Tweaks (`totweaks:time_stop`, `totweaks:spatial_rend`, etc.).
-  - If `totweaks` is installed without `irons_spellbooks`, `isIronSpellsLoaded()` returns `false`, preventing `castNativeSpell` from attempting resolution and displaying `(Requires Iron's Spells mod)` even though T.O. Tweaks is present.
-  - Furthermore, `resolveSpellObject` only inspects Iron's Spells registry classes (`net.ironsspellbooks.api.registry.SpellRegistry`, etc.) and does not inspect T.O. Tweaks registry classes (`totweaks.*`).
-- **Blast Radius**: T.O. Tweaks spells cannot be resolved unless T.O. Tweaks registers them into Iron's Spells' `SpellRegistry`.
-- **Mitigation**: Update `isIronSpellsLoaded()` or introduce `isSpellModLoaded(String namespace)` and include T.O. Tweaks registry class lookups in `resolveSpellObject`.
+- **Assumption challenged**: That syntactically valid model paths (`ResourceLocation.tryParse`) always correspond to valid asset resources registered in the client environment.
+- **Attack scenario**: A custom race configuration defines `wereModelPath = "customraces:models/were/nonexistent_model.geo.json"`. Since the string is valid syntax, `hasCustomModel(race)` evaluates to `true`. In `WereModelRenderer.renderWereForm()`, `setBaseModelVisible(parentModel, false)` hides the base human player model mesh. When `renderCustomWereMesh()` attempts to draw the custom mesh with missing assets, Minecraft renders nothing or a missing-texture box while the player model remains completely invisible.
+- **Blast radius**: Players transforming with misconfigured or missing model JSON files become invisible to themselves and other players on servers.
+- **Mitigation**: Verify asset existence before hiding base model mesh, or wrap rendering in dynamic fallback logic that restores base model visibility if model/texture loading fails.
 
-### 3. [MEDIUM] Unsynchronized `MODIFIER_UUIDS` Map Subject to Thread Corruption
-- **Assumption Challenged**: `applyIronSpellsAttributes` runs strictly on single-threaded synchronous ticks.
-- **Attack Scenario**: `MODIFIER_UUIDS` is initialized as a plain `java.util.HashMap`:
-  `private static final Map<String, UUID> MODIFIER_UUIDS = new HashMap<>();`
-  `applyIronSpellsAttributes` calls `MODIFIER_UUIDS.computeIfAbsent(...)`. If passive updates occur across threads (e.g., async network packets, multi-threaded player sync), concurrent modification of `HashMap` can cause data races or infinite loop rehash bugs in Java's `HashMap`.
-- **Blast Radius**: Server thread lock or JVM crash under concurrent player passive updates.
-- **Mitigation**: Replace `HashMap` with `ConcurrentHashMap`.
+### [Medium] Challenge 2: Automatic Moon Phase Triggers Override Manual Untoggle in 2 Seconds
 
-### 4. [LOW] Malformed ResourceLocation Uncaught Exception in `resolveSpellObject`
-- **Assumption Challenged**: `resolveSpellObject` handles all string inputs safely without throwing exceptions.
-- **Attack Scenario**: `new net.minecraft.resources.ResourceLocation(spellId)` is called at line 140 before any try-catch block inside `resolveSpellObject`. If `spellId` contains uppercase letters, spaces, or invalid characters (e.g. `"irons_spellbooks:FireBall"`), `new ResourceLocation` throws `net.minecraft.ResourceLocationException`. While `castNativeSpell` wraps `resolveSpellObject` in a try-catch block, calling `resolveSpellObject` directly from external callers causes an uncaught `ResourceLocationException`.
-- **Blast Radius**: Uncaught runtime exception if `resolveSpellObject` is invoked directly with raw user input.
-- **Mitigation**: Wrap `new ResourceLocation(...)` or validate/lowercase `spellId` with `spellId.toLowerCase(Locale.ROOT)` before instantiating `ResourceLocation`.
+- **Scenario**: A player transforms under an automatic trigger condition (e.g. `wereTriggerCondition = "FULL_MOON"` at night). The player presses the manual transformation keybind to revert to human form. `revertWereForm()` successfully reverts the state. However, 2 seconds later (40 ticks), `WereRaceTransformHandler.checkTransformation()` runs on the server tick. Because `conditionMet` is still `true` (it is still full moon) and `currentlyTransformed` is `false`, `checkTransformation()` automatically transforms the player back into Were-form.
+- **Blast radius**: Players cannot manually revert or stay in human form during automatic trigger windows (Full Moon, New Moon, Night, Low Health).
+- **Mitigation**: Introduce a temporary manual override / suppression flag when a player manually toggles off during an active automatic condition.
 
-### 5. [LOW] Passive Attribute Modifier Leak on Race Switch
-- **Assumption Challenged**: `applyIronSpellsAttributes` handles both addition and removal of attribute modifiers.
-- **Attack Scenario**: `applyIronSpellsAttributes` only adds attribute modifiers for active passives (`inst.addTransientModifier(...)`). If a player switches races or loses a passive, previous passive attribute modifiers are never removed.
-- **Blast Radius**: Attribute modifiers persist indefinitely on the player entity until relog/respawn.
-- **Mitigation**: Implement cleanup logic to remove stale Custom Races attribute modifiers when passives change.
+### [Medium] Challenge 3: Unbounded Scale Multipliers in Visual and Pehkui Scaling
+
+- **Assumption challenged**: Scale values in `RaceData` are always within reasonable game bounds.
+- **Attack scenario**: A race configuration or server admin sets `wereHeightScale` or `baseScale` to extreme values (e.g., `1000.0f` or `Float.POSITIVE_INFINITY`). While negative/zero scales fall back to default values (`1.3f`/`1.0f`), extreme or infinite values pass into `poseStack.scale(wScale, hScale, wScale)` and `PehkuiIntegration.applyRaceScales()`.
+- **Blast radius**: PoseStack Matrix4f corruption, client rendering crashes, and physics/hitbox breakdown in Pehkui collision detection.
+- **Mitigation**: Enforce upper and lower bounds on scale inputs (e.g. `Math.clamp(scale, 0.1f, 10.0f)`).
 
 ---
 
 ## Stress Test Results
 
-| Test Scenario | Expected Behavior | Actual Behavior | Pass/Fail |
+| Scenario | Expected Behavior | Actual Behavior | Pass/Fail |
 |---|---|---|---|
-| Mod Missing Soft-Reflection | Safe degradation, no `ClassNotFoundException` | Safely degrades, prints requirement message | PASS |
-| Null / Invalid Spell ID | Safe return or error message | Safely handled in `castNativeSpell` | PASS |
-| Non-Integer Primitive Method Params | Fallback or default handling | Throws `IllegalArgumentException` on `m.invoke` | **FAIL** |
-| Malformed ResourceLocation String | Handled inside `resolveSpellObject` | Throws uncaught `ResourceLocationException` in `resolveSpellObject` | **FAIL** |
-| Unsynchronized HashMap Access | Thread-safe concurrent access | Non-thread-safe `HashMap` | **FAIL** |
+| Null / empty / "none" model paths | Fallback to default constants & procedural beast overlay | Safely fell back to `DEFAULT_WERE_MODEL` & procedural rendering | **PASS** |
+| Invalid ResourceLocation syntax (spaces, bad chars) | Fall back to `DEFAULT_WERE_MODEL` and log warning once | Handled cleanly by `tryParse` null check and logged warning | **PASS** |
+| Syntactically valid path to non-existent asset | Render fallback model or keep base player model | Base model hidden (`setBaseModelVisible(false)`), causing player invisibility | **FAIL (Challenge 1)** |
+| Negative / Zero Pehkui scale values (`<= 0`) | Safe fallback to 1.3f / 1.0f | Guards `scale > 0` triggered fallback safely | **PASS** |
+| Float.NaN Pehkui scale value | Fallback to 1.0f | `Float.NaN > 0` evaluated to false, falling back to 1.0f | **PASS** |
+| Unbounded extreme scales (`1000.0f` / `Infinity`) | Scale clamped to safe range | Matrix scale overflow in PoseStack | **FAIL (Challenge 3)** |
+| Rapid toggle keypress spam (< 1000ms) | Reject attempt with cooldown message | `TRANSFORM_COOLDOWNS` map rejected toggles within 1000ms | **PASS** |
+| Manual untoggle during active Full Moon trigger | Allow player to stay in human form | Server tick re-transformed player 2 seconds later | **FAIL (Challenge 2)** |
+| Entity start tracking when target player is transformed | Send S2C state sync packet to tracking player | `onPlayerStartTracking` sent `SYNC_WERE_STATE_ID` packet | **PASS** |
+| Concurrent player state map operations | Thread-safe reads/writes during server ticks | `ConcurrentHashMap` handled concurrent state access cleanly | **PASS** |
+| `./gradlew build -x test` build status | Compilation success across Common, Fabric, Forge | `BUILD SUCCESSFUL in 18s` | **PASS** |
 
 ---
 
 ## Unchallenged Areas
-- Core Minecraft 1.20.1 particle rendering fallback (verified standard `ServerLevel` particle calls).
+
+- **GeckoLib Java runtime animation controllers**: Detailed animation keyframe controllers are handled by GeckoLib's internal animation manager at runtime; static unit tests confirmed `ResourceLocation` resolution.
