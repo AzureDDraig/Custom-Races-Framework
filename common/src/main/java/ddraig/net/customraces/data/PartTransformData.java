@@ -27,4 +27,16 @@ public class PartTransformData {
         this.scaleY = scaleY;
         this.scaleZ = scaleZ;
     }
+
+    public float getSafeScaleX() {
+        return Math.max(0.01f, Math.min(5.0f, scaleX <= 0 ? 1.0f : scaleX));
+    }
+
+    public float getSafeScaleY() {
+        return Math.max(0.01f, Math.min(5.0f, scaleY <= 0 ? 1.0f : scaleY));
+    }
+
+    public float getSafeScaleZ() {
+        return Math.max(0.01f, Math.min(5.0f, scaleZ <= 0 ? 1.0f : scaleZ));
+    }
 }

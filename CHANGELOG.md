@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b123a] - 2026-07-24
+
+### 📐 Part Transform Scale Bounds — Round 4 (`PartTransformData.java`)
+- Added `getSafeScaleX()`, `getSafeScaleY()`, and `getSafeScaleZ()` bounds (0.01f to 5.0f) in `PartTransformData.java`.
+- Prevents invalid or zero scale multipliers from causing model rendering errors.
+
+---
+
 ## [1.0.0-b122a] - 2026-07-24
 
 ### 🎵 Safe Sound Resource Getters — Round 3 (`RaceData.java`)
