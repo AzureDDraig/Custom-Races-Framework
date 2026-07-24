@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b113a] - 2026-07-24
+
+### 🌟 Particle Aura Bounds & Safety Guards (`ParticleAuraData.java` & `PlayerRaceLayer.java`)
+- Added `getSafeSpread()`, `getSafeSpeed()`, and `getValidParticleType()` safety getters in `ParticleAuraData.java` preventing zero/negative particle spread or null particle types from throwing particle options warnings.
+- Integrated safe particle bounds into `PlayerRaceLayer.java` rendering.
+
+---
+
 ## [1.0.0-b112a] - 2026-07-24
 
 ### ⚔️ Minion AI Defender Target Priority (`ActiveAbilityHandler.java`)

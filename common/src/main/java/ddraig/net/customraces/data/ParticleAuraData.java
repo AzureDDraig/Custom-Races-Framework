@@ -22,4 +22,16 @@ public class ParticleAuraData {
         int effectiveCount = raceParticleCount > 0 ? raceParticleCount : 5;
         return Math.max(1, Math.round(this.count * (effectiveCount / 5.0f)));
     }
+
+    public float getSafeSpread() {
+        return Math.max(0.1f, Math.abs(this.spread));
+    }
+
+    public float getSafeSpeed() {
+        return Math.abs(this.speed);
+    }
+
+    public String getValidParticleType() {
+        return (this.particleType != null && !this.particleType.isEmpty()) ? this.particleType : "minecraft:flame";
+    }
 }

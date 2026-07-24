@@ -85,16 +85,16 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             if (player.level().isClientSide && race.particleAuras != null && !race.particleAuras.isEmpty()) {
                 for (ParticleAuraData aura : race.particleAuras) {
                     if (player.tickCount % 4 == 0) {
-                        net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.particleType));
+                        net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.getValidParticleType()));
                         if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
                             int countToSpawn = aura.getScaledParticleCount(effectiveParticleCount);
                             for (int i = 0; i < countToSpawn; i++) {
                                 player.level().addParticle(
                                         pOptions,
-                                        player.getRandomX(aura.spread),
+                                        player.getRandomX(aura.getSafeSpread()),
                                         player.getRandomY() + 0.5,
-                                        player.getRandomZ(aura.spread),
-                                        0.0, aura.speed, 0.0
+                                        player.getRandomZ(aura.getSafeSpread()),
+                                        0.0, aura.getSafeSpeed(), 0.0
                                 );
                             }
                         }
