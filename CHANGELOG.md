@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b120a] - 2026-07-24
+
+### 🏹 Multi-System Deep Refinements — Round 1 (`ActiveAbilityHandler.java`, `RaceData.java`, `DrawbackEventHandler.java`)
+- **Safe Reach & Step Height Bounds (`RaceData.java`)**: Added `getSafeReachScale()` and `getSafeStepHeightScale()` bounds preventing invalid or negative scale values from corrupting Pehkui transformations.
+- **Null Safety in Event Handlers (`DrawbackEventHandler.java`)**: Reinforced null-pointer protection across player tick and hurt listeners during dimension/world transitions.
+
+---
+
 ## [1.0.0-b119a] - 2026-07-24
 
 ### 🔄 Client State & Race Cache Reset Engine (`RaceRegistry.java`)

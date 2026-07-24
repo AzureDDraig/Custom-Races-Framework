@@ -312,6 +312,14 @@ public class RaceData {
         this.wereParticleCount = wereParticleCount <= 0 ? 10 : Math.min(100, wereParticleCount);
     }
 
+    public float getSafeReachScale() {
+        return Math.max(0.1f, Math.min(10.0f, reachScale <= 0 ? 1.0f : reachScale));
+    }
+
+    public float getSafeStepHeightScale() {
+        return Math.max(0.1f, Math.min(5.0f, stepHeightScale <= 0 ? 1.0f : stepHeightScale));
+    }
+
     public String getSafeFlyAnim() {
         return (flyAnim != null && !flyAnim.isEmpty()) ? flyAnim : "animation.model.fly";
     }
