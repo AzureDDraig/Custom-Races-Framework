@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b117a] - 2026-07-24
+
+### 🕊️ Flight Fall-Distance Protection (`PassiveAbilityHandler.java`)
+- Guaranteed continuous `fallDistance` nullification (`player.fallDistance = 0.0f`) while flight passive or Were-flying mode is active.
+- Prevents accrued fall distance from dealing unexpected landing damage when toggling flight mode right before landing.
+
+---
+
 ## [1.0.0-b116a] - 2026-07-24
 
 ### 🎬 GeckoLib Animation Key Safety & Asset Fallbacks (`RaceData.java`)

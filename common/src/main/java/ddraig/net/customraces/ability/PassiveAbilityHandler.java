@@ -127,9 +127,7 @@ public class PassiveAbilityHandler {
                 player.getAbilities().mayfly = true;
                 player.onUpdateAbilities();
             }
-            if (player.getAbilities().flying) {
-                player.fallDistance = 0.0f;
-            }
+            player.fallDistance = 0.0f;
         }
         if (passives.contains("feather_light") || passives.contains("slow_falling") || passives.contains("fall_damage_immunity")) {
             if (passives.contains("slow_falling")) {
