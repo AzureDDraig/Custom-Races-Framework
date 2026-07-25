@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b152a] - 2026-07-25
+
+### 🩸 Damage Hurt Flash Lighting & Deep Audit Verification (`GeckoLibWereRenderer.java`)
+- **Damage Hurt Flash Lighting Overlay**: Passed dynamic player `hurtTime` overlay coordinates (`OverlayTexture.pack`) to quad vertex consumers in `GeckoLibWereRenderer.java`. Allows red damage flash overlays to render properly when players take damage in Were-forms.
+- **5-Point Exhaustive System Audit Verification**: Completed 5 continuous deep audits verifying living entity suppression, matrix cancellations, Blockbench joint pivot offsets, and dynamic disk texture loading.
+
+---
+
 ## [1.0.0-b151a] - 2026-07-25
 
 ### 🖼️ Dynamic Disk Texture Registration & RenderLayer Matrix Correction (`WereModelRenderer.java`)

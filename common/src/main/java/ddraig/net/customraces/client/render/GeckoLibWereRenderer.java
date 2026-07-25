@@ -46,7 +46,7 @@ public class GeckoLibWereRenderer {
             try {
                 // Align GeckoLib model origin to entity feet (0.0, 0.0, 0.0)
                 for (Object bone : topBones) {
-                    renderBoneReflect(poseStack, vc, bone, packedLight);
+                    renderBoneReflect(poseStack, vc, bone, packedLight, player);
                 }
             } finally {
                 poseStack.popPose();
@@ -57,7 +57,7 @@ public class GeckoLibWereRenderer {
         }
     }
 
-    private static void renderBoneReflect(PoseStack poseStack, VertexConsumer vc, Object bone, int packedLight) {
+    private static void renderBoneReflect(PoseStack poseStack, VertexConsumer vc, Object bone, int packedLight, AbstractClientPlayer player) {
         if (bone == null) return;
         try {
             Method isHiddenMethod = bone.getClass().getMethod("isHidden");
@@ -117,7 +117,7 @@ public class GeckoLibWereRenderer {
                 List<?> cubes = (List<?>) getCubes.invoke(bone);
                 if (cubes != null) {
                     for (Object cube : cubes) {
-                        renderCubeReflect(poseStack, vc, cube, packedLight);
+                        renderCubeReflect(poseStack, vc, cube, packedLight, player);
                     }
                 }
 
@@ -125,7 +125,7 @@ public class GeckoLibWereRenderer {
                 List<?> childBones = (List<?>) getChildBones.invoke(bone);
                 if (childBones != null) {
                     for (Object child : childBones) {
-                        renderBoneReflect(poseStack, vc, child, packedLight);
+                        renderBoneReflect(poseStack, vc, child, packedLight, player);
                     }
                 }
             } finally {
@@ -134,7 +134,7 @@ public class GeckoLibWereRenderer {
         } catch (Throwable ignored) {}
     }
 
-    private static void renderCubeReflect(PoseStack poseStack, VertexConsumer vc, Object cube, int packedLight) {
+    private static void renderCubeReflect(PoseStack poseStack, VertexConsumer vc, Object cube, int packedLight, AbstractClientPlayer player) {
         if (cube == null) return;
         try {
             Object[] quads = null;
@@ -150,6 +150,7 @@ public class GeckoLibWereRenderer {
             if (quads == null) return;
             org.joml.Matrix4f pose = poseStack.last().pose();
             org.joml.Matrix3f normal = poseStack.last().normal();
+            int overlay = (player != null && player.hurtTime > 0) ? OverlayTexture.pack(OverlayTexture.u(0.0F), OverlayTexture.v(true)) : OverlayTexture.NO_OVERLAY;
 
             for (Object quad : quads) {
                 if (quad == null) continue;
@@ -207,7 +208,7 @@ public class GeckoLibWereRenderer {
                         vc.vertex(pose, pos.x() / 16.0f, pos.y() / 16.0f, pos.z() / 16.0f)
                                 .color(1.0f, 1.0f, 1.0f, 1.0f)
                                 .uv(u, v)
-                                .overlayCoords(OverlayTexture.NO_OVERLAY)
+                                .overlayCoords(overlay)
                                 .uv2(packedLight)
                                 .normal(normal, nx, ny, nz)
                                 .endVertex();
