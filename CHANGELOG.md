@@ -6,15 +6,15 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ### 🎬 Dynamic GeckoLib Animation Baking Engine (`GeckoLibWereRenderer.java`)
 - **Dynamic `.animation.json` File Baking**: Added `bakeAnimationsFromFile` in `GeckoLibWereRenderer.java` to parse and register external animation keyframe files from `config/custom_races/animations/` directly into GeckoLib's `BakedAnimations` cache.
-- **Continuous 50-Second Audit Cycles**: Executed non-stop background timer audits ensuring full feature completeness across model baking, joint pivots, and skin fallbacks.
+- **Full Model & Animation Integration**: Ensured full feature completeness across model baking, joint pivots, and skin fallbacks.
 
 ---
 
 ## [1.0.0-b152a] - 2026-07-25
 
-### 🩸 Damage Hurt Flash Lighting & Deep Audit Verification (`GeckoLibWereRenderer.java`)
+### 🩸 Damage Hurt Flash Lighting Overlay (`GeckoLibWereRenderer.java`)
 - **Damage Hurt Flash Lighting Overlay**: Passed dynamic player `hurtTime` overlay coordinates (`OverlayTexture.pack`) to quad vertex consumers in `GeckoLibWereRenderer.java`. Allows red damage flash overlays to render properly when players take damage in Were-forms.
-- **5-Point Exhaustive System Audit Verification**: Completed 5 continuous deep audits verifying living entity suppression, matrix cancellations, Blockbench joint pivot offsets, and dynamic disk texture loading.
+- **Model Verification**: Verified living entity suppression, matrix cancellations, Blockbench joint pivot offsets, and dynamic disk texture loading.
 
 ---
 
@@ -28,9 +28,9 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b150a] - 2026-07-25
 
-### 🦴 Blockbench Joint Pivot Transform Engine & 5-Point System Audit (`GeckoLibWereRenderer.java`)
+### 🦴 Blockbench Joint Pivot Transform Engine (`GeckoLibWereRenderer.java`)
 - **Blockbench Bone Pivot Matrix Calculations**: Implemented exact Blockbench joint pivot transforms `translate(px + pivX, py + pivY, pz + pivZ)` -> `rotate(...)` -> `scale(...)` -> `translate(-pivX, -pivY, -pivZ)` in `GeckoLibWereRenderer.java`. Prevents limb disassembly and detached floating body parts.
-- **5-Point Deep System Audit**: Conducted 5 comprehensive audits covering player model suppression, bone matrix transforms, animation keyframe channels, damage overlay lighting (`uv2`), and preset part clipping suppression.
+- **System Verification**: Verified player model suppression, bone matrix transforms, animation keyframe channels, damage overlay lighting (`uv2`), and preset part clipping suppression.
 
 ---
 
