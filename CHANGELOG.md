@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b154a] - 2026-07-25
+
+### ⚔️ Mob Retaliation & Aggro Safety (`MobAllianceHandler.java`)
+- **Self-Defense Retaliation Handling**: Updated mob alliance logic in `MobAllianceHandler.java` so allied and neutral creatures can defend themselves if directly attacked by players, preventing passive AI lock during combat.
+
+---
+
 ## [1.0.0-b153a] - 2026-07-25
 
 ### 🎬 Dynamic GeckoLib Animation Baking Engine (`GeckoLibWereRenderer.java`)

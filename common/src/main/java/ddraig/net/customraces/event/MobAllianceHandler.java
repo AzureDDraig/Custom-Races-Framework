@@ -36,7 +36,7 @@ public class MobAllianceHandler {
                         if (alliance != null && alliance.mobId != null && mobId.equalsIgnoreCase(alliance.mobId.trim())) {
                             String stance = alliance.stance != null ? alliance.stance.toLowerCase() : "neutral";
                             if ("neutral".equals(stance) || "allied".equals(stance) || "friendly".equals(stance)) {
-                                if (mob.getTarget() == serverPlayer) {
+                                if (mob.getTarget() == serverPlayer && mob.getLastHurtByMob() != serverPlayer) {
                                     mob.setTarget(null);
                                 }
                             }
