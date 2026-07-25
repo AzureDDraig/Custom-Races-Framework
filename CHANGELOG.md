@@ -2,6 +2,15 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b148a] - 2026-07-25
+
+### 📐 Were-Form Model Matrix Alignment & Human Mesh Suppression (`PlayerRendererMixin.java`, `GeckoLibWereRenderer.java`)
+- **Base Human Model Suppression Mixin**: Registered `PlayerRendererMixin.java` targeting `PlayerRenderer.render` at `@At("HEAD")`, setting `setBaseModelVisible(model, false)` *before* the main entity body renders so the human player skin never bleeds through or renders alongside Were-forms.
+- **Fixed Bone Rotation Units**: Corrected bone rotation calls in `GeckoLibWereRenderer.java` from raw radians to `Axis.ZP.rotationDegrees()`, `Axis.YP.rotationDegrees()`, and `Axis.XP.rotationDegrees()`, eliminating extreme matrix scale distortions that caused shrunken models at the feet.
+- **Model Position & Orientation Alignment**: Aligned GeckoLib model matrix stack using standard Minecraft Y-flip and scale (`translate(0, 1.501, 0)` + `XP/YP 180°`), rendering custom Were-form models at full height directly attached to the player.
+
+---
+
 ## [1.0.0-b147a] - 2026-07-25
 
 ### 🐾 Full GeckoLib Bone Hierarchy & Vertex Quad Renderer (`GeckoLibWereRenderer.java`)

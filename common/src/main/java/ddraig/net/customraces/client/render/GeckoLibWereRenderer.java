@@ -44,9 +44,10 @@ public class GeckoLibWereRenderer {
 
             poseStack.pushPose();
             try {
-                // Adjust GeckoLib model Y-up alignment
-                poseStack.translate(0.0, 1.5, 0.0);
-                poseStack.scale(-1.0f, -1.0f, 1.0f);
+                // Correct GeckoLib entity model orientation in Minecraft player layer
+                poseStack.translate(0.0, 1.501, 0.0);
+                poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(180.0f));
+                poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(180.0f));
 
                 for (Object bone : topBones) {
                     renderBoneReflect(poseStack, vc, bone, packedLight);
@@ -94,9 +95,9 @@ public class GeckoLibWereRenderer {
             try {
                 poseStack.translate(px / 16.0f, py / 16.0f, pz / 16.0f);
 
-                if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotation(rz));
-                if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotation(ry));
-                if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotation(rx));
+                if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(rz));
+                if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(ry));
+                if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rx));
 
                 if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
                     poseStack.scale(sx, sy, sz);
