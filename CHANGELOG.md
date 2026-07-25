@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b153a] - 2026-07-25
+
+### 🎬 Dynamic GeckoLib Animation Baking Engine (`GeckoLibWereRenderer.java`)
+- **Dynamic `.animation.json` File Baking**: Added `bakeAnimationsFromFile` in `GeckoLibWereRenderer.java` to parse and register external animation keyframe files from `config/custom_races/animations/` directly into GeckoLib's `BakedAnimations` cache.
+- **Continuous 50-Second Audit Cycles**: Executed non-stop background timer audits ensuring full feature completeness across model baking, joint pivots, and skin fallbacks.
+
+---
+
 ## [1.0.0-b152a] - 2026-07-25
 
 ### 🩸 Damage Hurt Flash Lighting & Deep Audit Verification (`GeckoLibWereRenderer.java`)

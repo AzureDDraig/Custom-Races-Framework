@@ -266,4 +266,42 @@ public class GeckoLibWereRenderer {
         }
         return null;
     }
+
+    public static Object bakeAnimationsFromFile(ResourceLocation animLoc) {
+        if (animLoc == null) return null;
+        try {
+            String cleanPath = animLoc.getPath();
+            File file = new File(cleanPath);
+            if (!file.exists()) {
+                file = new File("config/custom_races/animations/" + cleanPath.replaceAll(".*/", ""));
+            }
+            if (!file.exists()) {
+                file = new File("config/custom_races/animations/were/" + cleanPath.replaceAll(".*/", ""));
+            }
+
+            if (file.exists() && file.isFile()) {
+                String content = Files.readString(file.toPath());
+                com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
+                Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
+                Object geoGson = jsonUtilClass.getField("GEO_GSON").get(null);
+                Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", com.google.gson.JsonElement.class, Class.class);
+
+                Class<?> bakedAnimsClass = Class.forName("software.bernie.geckolib.loading.object.BakedAnimations");
+                Object bakedAnimations = fromJsonMethod.invoke(geoGson, json.getAsJsonObject("animations"), bakedAnimsClass);
+
+                if (bakedAnimations != null) {
+                    Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
+                    Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
+                    Map<Object, Object> animMap = (Map<Object, Object>) getAnimsMethod.invoke(null);
+                    if (animMap != null) {
+                        animMap.put(animLoc, bakedAnimations);
+                    }
+                    return bakedAnimations;
+                }
+            }
+        } catch (Throwable t) {
+            System.err.println("[CustomRaces] Dynamic GeckoLib animation baking failed for " + animLoc + ": " + t.getMessage());
+        }
+        return null;
+    }
 }
