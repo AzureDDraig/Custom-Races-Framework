@@ -24,7 +24,7 @@ public class RaceSoundHandler {
                 RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
                 if (race != null) {
                     boolean isWere = WereRaceTransformHandler.isTransformed(player.getUUID());
-                    String soundId = isWere && race.enableWereRace ? race.wereHurtSound : race.hurtSound;
+                    String soundId = isWere ? (race.wereHurtSound != null && !race.wereHurtSound.trim().isEmpty() ? race.wereHurtSound : race.hurtSound) : race.hurtSound;
                     playSound(player, soundId, 1.0f, 1.0f);
                 }
             }
@@ -37,7 +37,7 @@ public class RaceSoundHandler {
                 RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
                 if (race != null) {
                     boolean isWere = WereRaceTransformHandler.isTransformed(player.getUUID());
-                    String soundId = isWere && race.enableWereRace ? race.wereDeathSound : race.deathSound;
+                    String soundId = isWere ? (race.wereDeathSound != null && !race.wereDeathSound.trim().isEmpty() ? race.wereDeathSound : race.deathSound) : race.deathSound;
                     playSound(player, soundId, 1.2f, 0.9f);
                 }
             }
@@ -50,7 +50,7 @@ public class RaceSoundHandler {
                 RaceData race = RaceRegistry.getPlayerRace(serverPlayer.getUUID());
                 if (race != null) {
                     boolean isWere = WereRaceTransformHandler.isTransformed(serverPlayer.getUUID());
-                    String soundId = isWere && race.enableWereRace ? race.wereAmbientSound : race.ambientSound;
+                    String soundId = isWere ? (race.wereAmbientSound != null && !race.wereAmbientSound.trim().isEmpty() ? race.wereAmbientSound : race.ambientSound) : race.ambientSound;
                     playSound(serverPlayer, soundId, 0.6f, 1.0f);
                 }
             }

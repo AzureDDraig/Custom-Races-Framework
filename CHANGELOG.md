@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b156a] - 2026-07-25
+
+### 🔊 Custom Transformation Sound Fallback (`RaceSoundHandler.java`)
+- **Sound FX Fallback Handling**: Updated custom hurt, death, and ambient sound resolution in `RaceSoundHandler.java` to fall back seamlessly to default race sound effects if transformed form sound entries are unassigned, preventing silent audio triggers.
+
+---
+
 ## [1.0.0-b155a] - 2026-07-25
 
 ### ⚡ Smooth Ability Cooldown HUD Display (`ActiveAbilityHandler.java`)
