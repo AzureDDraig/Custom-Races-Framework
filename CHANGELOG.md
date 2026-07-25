@@ -2,6 +2,15 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b149a] - 2026-07-25
+
+### 🐺 Universal LivingEntity Human Skin Suppression Mixin & Feet Model Alignment (`LivingEntityRendererMixin.java`, `GeckoLibWereRenderer.java`)
+- **LivingEntityRenderer Superclass Suppression Mixin**: Swapped player renderer mixin target to `@Mixin(LivingEntityRenderer.class)`, reliably intercepting `render(HEAD)` for all player entities before the base human model buffer renders.
+- **GeckoLib Model Feet Origin Alignment**: Fixed GeckoLib model matrix stack alignment in `GeckoLibWereRenderer.java`. Removed inverted Y-flips and fake 1.5 block offsets, cleanly aligning GeckoLib model origin `(0, 0, 0)` with entity feet level.
+- **Euler Rotation Sign Adjustments**: Adjusted Z and Y Euler rotation signs (`-rz`, `-ry`) to match Blockbench model coordinate systems.
+
+---
+
 ## [1.0.0-b148a] - 2026-07-25
 
 ### 📐 Were-Form Model Matrix Alignment & Human Mesh Suppression (`PlayerRendererMixin.java`, `GeckoLibWereRenderer.java`)
