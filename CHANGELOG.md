@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b150a] - 2026-07-25
+
+### 🦴 Blockbench Joint Pivot Transform Engine & 5-Point System Audit (`GeckoLibWereRenderer.java`)
+- **Blockbench Bone Pivot Matrix Calculations**: Implemented exact Blockbench joint pivot transforms `translate(px + pivX, py + pivY, pz + pivZ)` -> `rotate(...)` -> `scale(...)` -> `translate(-pivX, -pivY, -pivZ)` in `GeckoLibWereRenderer.java`. Prevents limb disassembly and detached floating body parts.
+- **5-Point Deep System Audit**: Conducted 5 comprehensive audits covering player model suppression, bone matrix transforms, animation keyframe channels, damage overlay lighting (`uv2`), and preset part clipping suppression.
+
+---
+
 ## [1.0.0-b149a] - 2026-07-25
 
 ### 🐺 Universal LivingEntity Human Skin Suppression Mixin & Feet Model Alignment (`LivingEntityRendererMixin.java`, `GeckoLibWereRenderer.java`)

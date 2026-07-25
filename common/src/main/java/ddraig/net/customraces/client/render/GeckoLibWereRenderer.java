@@ -63,6 +63,10 @@ public class GeckoLibWereRenderer {
             Method isHiddenMethod = bone.getClass().getMethod("isHidden");
             if ((Boolean) isHiddenMethod.invoke(bone)) return;
 
+            Method getPivotX = bone.getClass().getMethod("getPivotX");
+            Method getPivotY = bone.getClass().getMethod("getPivotY");
+            Method getPivotZ = bone.getClass().getMethod("getPivotZ");
+
             Method getPosX = bone.getClass().getMethod("getPosX");
             Method getPosY = bone.getClass().getMethod("getPosY");
             Method getPosZ = bone.getClass().getMethod("getPosZ");
@@ -74,6 +78,10 @@ public class GeckoLibWereRenderer {
             Method getScaleX = bone.getClass().getMethod("getScaleX");
             Method getScaleY = bone.getClass().getMethod("getScaleY");
             Method getScaleZ = bone.getClass().getMethod("getScaleZ");
+
+            float pivX = (Float) getPivotX.invoke(bone);
+            float pivY = (Float) getPivotY.invoke(bone);
+            float pivZ = (Float) getPivotZ.invoke(bone);
 
             float px = (Float) getPosX.invoke(bone);
             float py = (Float) getPosY.invoke(bone);
@@ -89,15 +97,21 @@ public class GeckoLibWereRenderer {
 
             poseStack.pushPose();
             try {
-                poseStack.translate(px / 16.0f, py / 16.0f, pz / 16.0f);
+                // 1. Move to bone position + pivot origin
+                poseStack.translate((px + pivX) / 16.0f, (py + pivY) / 16.0f, (pz + pivZ) / 16.0f);
 
+                // 2. Apply Euler rotations around joint pivot
                 if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-rz));
                 if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-ry));
                 if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rx));
 
+                // 3. Apply bone scaling
                 if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
                     poseStack.scale(sx, sy, sz);
                 }
+
+                // 4. Translate back by pivot offset
+                poseStack.translate(-pivX / 16.0f, -pivY / 16.0f, -pivZ / 16.0f);
 
                 Method getCubes = bone.getClass().getMethod("getCubes");
                 List<?> cubes = (List<?>) getCubes.invoke(bone);
