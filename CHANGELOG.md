@@ -2,6 +2,15 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b146a] - 2026-07-25
+
+### 🐉 Dynamic GeckoLib Were-Form Model Engine Refactoring (`WereModelRenderer.java`)
+- **Removed Hardcoded Werewolf Mesh**: Completely removed hardcoded werewolf box mesh (`renderCustomWereMesh`) that was overwriting dynamic GeckoLib models.
+- **Dynamic GeckoLib Model Baking**: Integrated dynamic `GeckoLibCache` baking and model loading in `WereModelRenderer.java` for any `.geo.json` model assigned to `wereModelPath` (cats, bears, dragons, tigers, beasts, etc.).
+- **Safe Fallback Handling**: If `wereModelPath` is set to `"none"` or empty, retains base player model with procedural beast overlays instead of replacing it with a fixed werewolf.
+
+---
+
 ## [1.0.0-b128a] - 2026-07-24
 
 ### 👑 VIP Races, First-Join Config, Were Texture Fix & Preset Body Part Matrix Engine

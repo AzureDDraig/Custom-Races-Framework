@@ -30,11 +30,18 @@ configurations {
     }
 }
 
+repositories {
+    maven { url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
+}
+
 dependencies {
     forge "net.minecraftforge:forge:$rootProject.forge_version"
 
     // Architectury API. This is optional, and you can comment it out if you don't need it.
     modImplementation "dev.architectury:architectury-forge:$rootProject.architectury_api_version"
+
+    // GeckoLib
+    modImplementation "software.bernie.geckolib:geckolib-forge-1.20.1:${rootProject.geckolib_version}"
 
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionForge')

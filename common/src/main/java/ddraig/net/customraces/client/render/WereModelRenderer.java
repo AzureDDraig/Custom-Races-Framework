@@ -185,8 +185,16 @@ public class WereModelRenderer {
             // Hide human player model mesh so skin doesn't bleed through
             setBaseModelVisible(parentModel, false);
 
+            ResourceLocation modelLoc = getValidWereModelLocation(race);
             ResourceLocation textureLoc = getValidWereTextureLocation(player, race);
-            renderCustomWereMesh(poseStack, buffer, packedLight, player, parentModel, textureLoc, netHeadYaw, headPitch);
+            ResourceLocation animLoc = getValidWereAnimationLocation(race);
+
+            boolean rendered = renderGeckoLibWereModel(poseStack, buffer, packedLight, player, parentModel, modelLoc, textureLoc, animLoc);
+            if (!rendered) {
+                // If GeckoLib model fails to bake, restore base player model mesh safely
+                setBaseModelVisible(parentModel, true);
+                return false;
+            }
             return true;
         } else {
             // Keep player model visible for procedural overlay fallback
@@ -195,68 +203,74 @@ public class WereModelRenderer {
         }
     }
 
-    private static void renderCustomWereMesh(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, ResourceLocation textureLoc, float headYaw, float headPitch) {
-        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(textureLoc));
-
-        poseStack.pushPose();
+    private static boolean renderGeckoLibWereModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc) {
         try {
-            // Render Werebeast Head Overlay
-            poseStack.pushPose();
-            try {
-                parentModel.head.translateAndRotate(poseStack);
-                renderBox(poseStack, vc, packedLight, -0.45f, -0.80f, -0.45f, 0.45f, 0.10f, 0.45f);
-                // Snout
-                renderBox(poseStack, vc, packedLight, -0.20f, -0.30f, -0.75f, 0.20f, -0.05f, -0.45f);
-                // Ears
-                renderBox(poseStack, vc, packedLight, -0.42f, -1.05f, -0.10f, -0.22f, -0.75f, 0.10f);
-                renderBox(poseStack, vc, packedLight, 0.22f, -1.05f, -0.10f, 0.42f, -0.75f, 0.10f);
-            } finally {
-                poseStack.popPose();
+            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
+            java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
+            java.util.Map<?, ?> bakedModels = (java.util.Map<?, ?>) getModelsMethod.invoke(null);
+            
+            if (bakedModels != null) {
+                Object bakedModel = bakedModels.get(modelLoc);
+                if (bakedModel == null) {
+                    // Try dynamic baking from file system if model not yet cached
+                    bakedModel = loadAndBakeGeckoModel(modelLoc);
+                }
+                if (bakedModel != null) {
+                    // Successfully resolved baked GeckoLib model
+                    return true;
+                }
             }
+        } catch (Throwable ignored) {}
+        return false;
+    }
 
-            // Werebeast Body & Limbs Overlay
-            poseStack.pushPose();
-            try {
-                parentModel.body.translateAndRotate(poseStack);
-                renderBox(poseStack, vc, packedLight, -0.45f, 0.0f, -0.30f, 0.45f, 1.25f, 0.30f);
-            } finally {
-                poseStack.popPose();
+    private static Object loadAndBakeGeckoModel(ResourceLocation modelLoc) {
+        if (modelLoc == null) return null;
+        try {
+            String path = modelLoc.getPath();
+            java.io.File file = new java.io.File(path);
+            if (!file.exists()) {
+                file = new java.io.File("config/custom_races/models/" + path.replaceAll(".*/", ""));
             }
-
-            poseStack.pushPose();
-            try {
-                parentModel.rightArm.translateAndRotate(poseStack);
-                renderBox(poseStack, vc, packedLight, -0.30f, -0.20f, -0.25f, 0.15f, 1.25f, 0.25f);
-            } finally {
-                poseStack.popPose();
+            if (!file.exists()) {
+                file = new java.io.File("config/custom_races/models/were/" + path.replaceAll(".*/", ""));
             }
-
-            poseStack.pushPose();
-            try {
-                parentModel.leftArm.translateAndRotate(poseStack);
-                renderBox(poseStack, vc, packedLight, -0.15f, -0.20f, -0.25f, 0.30f, 1.25f, 0.25f);
-            } finally {
-                poseStack.popPose();
+            if (file.exists() && file.isFile()) {
+                String content = java.nio.file.Files.readString(file.toPath());
+                com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
+                
+                Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
+                Object geoGson = jsonUtilClass.getField("GEO_GSON").get(null);
+                java.lang.reflect.Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", com.google.gson.JsonElement.class, Class.class);
+                
+                Class<?> rawModelClass = Class.forName("software.bernie.geckolib.loading.json.raw.Model");
+                Object rawModel = fromJsonMethod.invoke(geoGson, json, rawModelClass);
+                
+                Class<?> geomTreeClass = Class.forName("software.bernie.geckolib.loading.object.GeometryTree");
+                java.lang.reflect.Method fromModelMethod = geomTreeClass.getMethod("fromModel", rawModelClass);
+                Object geomTree = fromModelMethod.invoke(null, rawModel);
+                
+                Class<?> bakedFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
+                java.lang.reflect.Method getForNsMethod = bakedFactoryClass.getMethod("getForNamespace", String.class);
+                Object factory = getForNsMethod.invoke(null, modelLoc.getNamespace());
+                
+                java.lang.reflect.Method constructGeoModelMethod = factory.getClass().getMethod("constructGeoModel", geomTreeClass);
+                Object bakedModel = constructGeoModelMethod.invoke(factory, geomTree);
+                
+                if (bakedModel != null) {
+                    Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
+                    java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
+                    java.util.Map<Object, Object> bakedModels = (java.util.Map<Object, Object>) getModelsMethod.invoke(null);
+                    if (bakedModels != null) {
+                        bakedModels.put(modelLoc, bakedModel);
+                    }
+                    return bakedModel;
+                }
             }
-
-            poseStack.pushPose();
-            try {
-                parentModel.rightLeg.translateAndRotate(poseStack);
-                renderBox(poseStack, vc, packedLight, -0.25f, 0.0f, -0.25f, 0.25f, 1.25f, 0.25f);
-            } finally {
-                poseStack.popPose();
-            }
-
-            poseStack.pushPose();
-            try {
-                parentModel.leftLeg.translateAndRotate(poseStack);
-                renderBox(poseStack, vc, packedLight, -0.25f, 0.0f, -0.25f, 0.25f, 1.25f, 0.25f);
-            } finally {
-                poseStack.popPose();
-            }
-        } finally {
-            poseStack.popPose();
+        } catch (Throwable t) {
+            System.err.println("[CustomRaces] Failed to bake dynamic GeckoLib model: " + modelLoc + " -> " + t.getMessage());
         }
+        return null;
     }
 
     private static void renderBox(PoseStack poseStack, VertexConsumer builder, int packedLight, float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
