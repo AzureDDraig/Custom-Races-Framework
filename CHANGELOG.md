@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b151a] - 2026-07-25
+
+### 🖼️ Dynamic Disk Texture Registration & RenderLayer Matrix Correction (`WereModelRenderer.java`)
+- **Dynamic Disk Texture Registration**: Added `loadDiskTextureDynamic` in `WereModelRenderer.java`. Automatically registers external PNG texture files from `config/custom_races/textures/` as native `DynamicTexture` objects in Minecraft's `TextureManager`, eliminating missing checkerboard grids for custom skin paths.
+- **Layer Matrix Offset Calibration**: Calibrated `PlayerRaceLayer` matrix alignment for upright Blockbench GeckoLib models (`(0.0, 0.0, 0.0)` origin at entity feet).
+
+---
+
 ## [1.0.0-b150a] - 2026-07-25
 
 ### 🦴 Blockbench Joint Pivot Transform Engine & 5-Point System Audit (`GeckoLibWereRenderer.java`)

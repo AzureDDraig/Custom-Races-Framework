@@ -107,12 +107,50 @@ public class WereModelRenderer {
         // Client-side ResourceManager existence validation & safe fallback ladder
         if (isResourcePresentOnClient(loc)) {
             return loc;
-        } else {
-            if (LOGGED_WARNINGS.add("texture_missing:" + loc)) {
-                System.err.println("[CustomRaces] Were texture asset missing on disk: '" + loc + "', falling back to default: " + DEFAULT_WERE_TEXTURE);
-            }
-            return getSafeDefaultTexture(player);
         }
+
+        // Try dynamic disk file texture loading from config directory
+        ResourceLocation diskLoc = loadDiskTextureDynamic(path);
+        if (diskLoc != null) {
+            return diskLoc;
+        }
+
+        if (LOGGED_WARNINGS.add("texture_missing:" + loc)) {
+            System.err.println("[CustomRaces] Were texture asset missing on disk/resources: '" + loc + "', falling back to default.");
+        }
+        return getSafeDefaultTexture(player);
+    }
+
+    private static final java.util.Map<String, ResourceLocation> DYNAMIC_TEXTURE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static ResourceLocation loadDiskTextureDynamic(String path) {
+        if (path == null || path.trim().isEmpty()) return null;
+        String cleanPath = path.trim().replaceAll(".*/", "");
+        if (DYNAMIC_TEXTURE_CACHE.containsKey(cleanPath)) {
+            return DYNAMIC_TEXTURE_CACHE.get(cleanPath);
+        }
+
+        java.io.File file = new java.io.File("config/custom_races/textures/" + cleanPath);
+        if (!file.exists()) {
+            file = new java.io.File("config/custom_races/textures/were/" + cleanPath);
+        }
+        if (!file.exists()) {
+            file = new java.io.File(path);
+        }
+
+        if (file.exists() && file.isFile()) {
+            try (java.io.InputStream is = new java.io.FileInputStream(file)) {
+                com.mojang.blaze3d.platform.NativeImage nativeImage = com.mojang.blaze3d.platform.NativeImage.read(is);
+                net.minecraft.client.renderer.texture.DynamicTexture dynamicTexture = new net.minecraft.client.renderer.texture.DynamicTexture(nativeImage);
+                ResourceLocation loc = new ResourceLocation("customraces", "dynamic_were_texture/" + cleanPath.toLowerCase().replaceAll("[^a-z0-9_.-]", "_"));
+                net.minecraft.client.Minecraft.getInstance().getTextureManager().register(loc, dynamicTexture);
+                DYNAMIC_TEXTURE_CACHE.put(cleanPath, loc);
+                return loc;
+            } catch (Throwable t) {
+                System.err.println("[CustomRaces] Failed to load dynamic disk texture: " + file.getAbsolutePath() + " -> " + t.getMessage());
+            }
+        }
+        return null;
     }
 
     public static ResourceLocation getValidWereTextureLocation(RaceData race) {
