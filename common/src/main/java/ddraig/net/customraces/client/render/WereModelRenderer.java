@@ -204,24 +204,8 @@ public class WereModelRenderer {
     }
 
     private static boolean renderGeckoLibWereModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc) {
-        try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-            java.util.Map<?, ?> bakedModels = (java.util.Map<?, ?>) getModelsMethod.invoke(null);
-            
-            if (bakedModels != null) {
-                Object bakedModel = bakedModels.get(modelLoc);
-                if (bakedModel == null) {
-                    // Try dynamic baking from file system if model not yet cached
-                    bakedModel = loadAndBakeGeckoModel(modelLoc);
-                }
-                if (bakedModel != null) {
-                    // Successfully resolved baked GeckoLib model
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {}
-        return false;
+        RaceData race = ddraig.net.customraces.data.RaceRegistry.getPlayerRace(player.getUUID());
+        return GeckoLibWereRenderer.renderGeckoModel(poseStack, buffer, packedLight, player, race, modelLoc, textureLoc, animLoc);
     }
 
     private static Object loadAndBakeGeckoModel(ResourceLocation modelLoc) {

@@ -2,6 +2,15 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b147a] - 2026-07-25
+
+### 🐾 Full GeckoLib Bone Hierarchy & Vertex Quad Renderer (`GeckoLibWereRenderer.java`)
+- **Dynamic GeckoLib Bone Quad Mesh Engine**: Created `GeckoLibWereRenderer.java` to recursively translate, rotate, scale, and render bone hierarchies and quad vertices for ANY `.geo.json` GeckoLib model.
+- **Reflection-Backed Cross-Loader Bridge**: Safely interfaces with GeckoLib 4.x (`software.bernie.geckolib`) across both Fabric and Forge runtime environments.
+- **Universal Model Compatibility**: Supports all custom Were-form models (cats, bears, dragons, tigers, demons, custom beasts) without rigid hardcoded mesh assumptions.
+
+---
+
 ## [1.0.0-b146a] - 2026-07-25
 
 ### 🐉 Dynamic GeckoLib Were-Form Model Engine Refactoring (`WereModelRenderer.java`)
