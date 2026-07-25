@@ -65,8 +65,8 @@ public class ActiveAbilityHandler {
         long lastUse = pMap.getOrDefault(slot, 0L);
 
         if (now - lastUse < cooldownMs) {
-            long remainingSec = (cooldownMs - (now - lastUse)) / 1000 + 1;
-            player.displayClientMessage(Component.literal("§cAbility " + slot + " on cooldown! (" + remainingSec + "s)"), true);
+            float remainingSec = (cooldownMs - (now - lastUse)) / 1000.0f;
+            player.displayClientMessage(Component.literal(String.format("§cAbility %d on cooldown! (%.1fs)", slot, remainingSec)), true);
             return;
         }
 

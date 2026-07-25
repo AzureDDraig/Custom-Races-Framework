@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b155a] - 2026-07-25
+
+### ⚡ Smooth Ability Cooldown HUD Display (`ActiveAbilityHandler.java`)
+- **Sub-Second Cooldown Precision**: Updated skill HUD messaging in `ActiveAbilityHandler.java` to display remaining ability cooldowns with single-decimal precision (e.g. `0.4s` remaining), giving players accurate real-time feedback during combat.
+
+---
+
 ## [1.0.0-b154a] - 2026-07-25
 
 ### ⚔️ Mob Retaliation & Aggro Safety (`MobAllianceHandler.java`)
