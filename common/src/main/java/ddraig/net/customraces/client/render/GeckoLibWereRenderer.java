@@ -23,6 +23,21 @@ import java.util.Map;
  */
 public class GeckoLibWereRenderer {
 
+    public static boolean isModelPresent(ResourceLocation modelLoc) {
+        if (modelLoc == null) return false;
+        try {
+            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
+            Method getModelsMethod = cacheClass.getMethod("getBakedModels");
+            Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
+            if (bakedModels != null && bakedModels.containsKey(modelLoc)) {
+                return true;
+            }
+            return bakeModelFromFile(modelLoc) != null;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     public static boolean renderGeckoModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc) {
         if (modelLoc == null) return false;
         try {
@@ -221,6 +236,7 @@ public class GeckoLibWereRenderer {
     private static Object bakeModelFromFile(ResourceLocation modelLoc) {
         if (modelLoc == null) return null;
         try {
+            String content = null;
             String cleanPath = modelLoc.getPath();
             File file = new File(cleanPath);
             if (!file.exists()) {
@@ -231,26 +247,42 @@ public class GeckoLibWereRenderer {
             }
 
             if (file.exists() && file.isFile()) {
-                String content = Files.readString(file.toPath());
+                content = Files.readString(file.toPath());
+            } else {
+                try {
+                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                    if (mc != null && mc.getResourceManager() != null) {
+                        var resOpt = mc.getResourceManager().getResource(modelLoc);
+                        if (resOpt.isPresent()) {
+                            try (java.io.InputStream is = resOpt.get().open();
+                                 java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+                                content = br.lines().collect(java.util.stream.Collectors.joining("\n"));
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+
+            if (content != null && !content.trim().isEmpty()) {
                 com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
                 Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
                 Object geoGson = jsonUtilClass.getField("GEO_GSON").get(null);
                 Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", com.google.gson.JsonElement.class, Class.class);
-                
+
                 Class<?> rawModelClass = Class.forName("software.bernie.geckolib.loading.json.raw.Model");
                 Object rawModel = fromJsonMethod.invoke(geoGson, json, rawModelClass);
-                
+
                 Class<?> geomTreeClass = Class.forName("software.bernie.geckolib.loading.object.GeometryTree");
                 Method fromModelMethod = geomTreeClass.getMethod("fromModel", rawModelClass);
                 Object geomTree = fromModelMethod.invoke(null, rawModel);
-                
+
                 Class<?> bakedFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
                 Method getForNsMethod = bakedFactoryClass.getMethod("getForNamespace", String.class);
                 Object factory = getForNsMethod.invoke(null, modelLoc.getNamespace());
-                
+
                 Method constructGeoModelMethod = factory.getClass().getMethod("constructGeoModel", geomTreeClass);
                 Object bakedModel = constructGeoModelMethod.invoke(factory, geomTree);
-                
+
                 if (bakedModel != null) {
                     Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
                     Method getModelsMethod = cacheClass.getMethod("getBakedModels");
@@ -270,6 +302,7 @@ public class GeckoLibWereRenderer {
     public static Object bakeAnimationsFromFile(ResourceLocation animLoc) {
         if (animLoc == null) return null;
         try {
+            String content = null;
             String cleanPath = animLoc.getPath();
             File file = new File(cleanPath);
             if (!file.exists()) {
@@ -280,7 +313,23 @@ public class GeckoLibWereRenderer {
             }
 
             if (file.exists() && file.isFile()) {
-                String content = Files.readString(file.toPath());
+                content = Files.readString(file.toPath());
+            } else {
+                try {
+                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                    if (mc != null && mc.getResourceManager() != null) {
+                        var resOpt = mc.getResourceManager().getResource(animLoc);
+                        if (resOpt.isPresent()) {
+                            try (java.io.InputStream is = resOpt.get().open();
+                                 java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+                                content = br.lines().collect(java.util.stream.Collectors.joining("\n"));
+                            }
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+
+            if (content != null && !content.trim().isEmpty()) {
                 com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
                 Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
                 Object geoGson = jsonUtilClass.getField("GEO_GSON").get(null);

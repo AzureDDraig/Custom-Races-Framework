@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b157a] - 2026-07-27
+
+### 👻 Model Asset Pre-Validation & Fallback Rendering (`GeckoLibWereRenderer.java`, `LivingEntityRendererMixin.java`)
+- **Resource Pack & Mod Jar Asset Loading**: Updated `bakeModelFromFile` and `bakeAnimationsFromFile` in `GeckoLibWereRenderer.java` to load model and animation files directly from Minecraft's asset resource manager (mod JARs and resource packs) as well as disk folders (`config/custom_races/models/`).
+- **Invisibility Safeguard**: Enhanced `LivingEntityRendererMixin.java` with model pre-validation (`isModelAvailable`), ensuring human character meshes are only hidden when a custom 3D model is ready and baked. Guarantees players never become invisible even if custom model files are missing or unreadable.
+
+---
+
 ## [1.0.0-b156a] - 2026-07-25
 
 ### 🔊 Custom Transformation Sound Fallback (`RaceSoundHandler.java`)

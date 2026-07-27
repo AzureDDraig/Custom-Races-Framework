@@ -43,6 +43,12 @@ public class WereModelRenderer {
         return path != null && !path.trim().isEmpty() && !"none".equalsIgnoreCase(path.trim());
     }
 
+    public static boolean isModelAvailable(RaceData race) {
+        if (!hasCustomModel(race)) return false;
+        ResourceLocation loc = getValidWereModelLocation(race);
+        return GeckoLibWereRenderer.isModelPresent(loc);
+    }
+
     public static ResourceLocation getValidWereModelLocation(RaceData race) {
         if (race == null || !hasCustomModel(race)) {
             return DEFAULT_WERE_MODEL;

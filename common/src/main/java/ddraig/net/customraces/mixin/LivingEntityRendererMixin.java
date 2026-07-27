@@ -26,8 +26,8 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
             M model = renderer.getModel();
 
             if (model instanceof PlayerModel<?> playerModel) {
-                if (WereModelRenderer.isWereForm(player, race) && WereModelRenderer.hasCustomModel(race)) {
-                    // Suppress base human player model before LivingEntityRenderer renders main mesh
+                if (WereModelRenderer.isWereForm(player, race) && WereModelRenderer.isModelAvailable(race)) {
+                    // Suppress base human player model ONLY if custom model is available and baked
                     WereModelRenderer.setBaseModelVisible(playerModel, false);
                 } else {
                     WereModelRenderer.setBaseModelVisible(playerModel, true);
