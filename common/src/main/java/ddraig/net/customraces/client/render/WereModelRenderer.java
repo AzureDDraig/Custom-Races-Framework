@@ -27,6 +27,34 @@ public class WereModelRenderer {
 
     private static final Set<String> LOGGED_WARNINGS = new HashSet<>();
 
+    public static void clearCaches() {
+        DYNAMIC_TEXTURE_CACHE.clear();
+        LOGGED_WARNINGS.clear();
+        try {
+            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
+            java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
+            java.util.Map<?, ?> models = (java.util.Map<?, ?>) getModelsMethod.invoke(null);
+            if (models != null) {
+                models.keySet().removeIf(key -> {
+                    if (key instanceof ResourceLocation loc) {
+                        return loc.getNamespace().equals("customraces");
+                    }
+                    return key.toString().startsWith("customraces:");
+                });
+            }
+            java.lang.reflect.Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
+            java.util.Map<?, ?> anims = (java.util.Map<?, ?>) getAnimsMethod.invoke(null);
+            if (anims != null) {
+                anims.keySet().removeIf(key -> {
+                    if (key instanceof ResourceLocation loc) {
+                        return loc.getNamespace().equals("customraces");
+                    }
+                    return key.toString().startsWith("customraces:");
+                });
+            }
+        } catch (Throwable ignored) {}
+    }
+
     public static boolean isTransformed(UUID uuid) {
         if (uuid == null) return false;
         return ClientWereState.isTransformed(uuid) || WereRaceTransformHandler.isTransformed(uuid);

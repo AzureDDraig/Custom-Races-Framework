@@ -66,6 +66,7 @@ public class ModPackets {
                     if (map != null) {
                         RaceRegistry.loadedRaces.clear();
                         RaceRegistry.loadedRaces.putAll(map);
+                        ddraig.net.customraces.client.render.WereModelRenderer.clearCaches();
                     }
 
                     Type playerMapType = new TypeToken<Map<String, String>>() {}.getType();

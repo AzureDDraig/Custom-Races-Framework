@@ -2,6 +2,13 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b158a] - 2026-07-27
+
+### 🔄 Dynamic Model Cache Invalidation (`WereModelRenderer.java`, `ModPackets.java`)
+- **Live Configuration Cache Invalidation**: Added `clearCaches()` in `WereModelRenderer.java` and linked it to client-bound race synchronization packets (`SYNC_RACES_ID`). Automatically invalidates old GeckoLib model and texture caches when server race definitions or 3D models are edited live, ensuring instant visual updates without restarting the game.
+
+---
+
 ## [1.0.0-b157a] - 2026-07-27
 
 ### 👻 Model Asset Pre-Validation & Fallback Rendering (`GeckoLibWereRenderer.java`, `LivingEntityRendererMixin.java`)
