@@ -13,6 +13,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -86,16 +87,23 @@ public class GeckoLibWereRenderer {
             float alpha = isInvisible ? 0.15f : 1.0f;
 
             poseStack.pushPose();
+            int[] verticesDrawn = new int[1];
             try {
                 // Align GeckoLib model origin to entity feet (0.0, 0.0, 0.0)
                 for (Object bone : topBones) {
-                    renderBoneReflect(poseStack, vc, bone, packedLight, player, netHeadYaw, headPitch, alpha);
+                    renderBoneReflect(poseStack, vc, bone, packedLight, player, netHeadYaw, headPitch, alpha, verticesDrawn);
                 }
             } finally {
                 poseStack.popPose();
             }
+
+            if (verticesDrawn[0] == 0) {
+                System.err.println("[CustomRaces] GeckoLib model " + modelLoc + " rendered 0 quads/vertices. Falling back to base character model.");
+                return false;
+            }
             return true;
         } catch (Throwable t) {
+            System.err.println("[CustomRaces] GeckoLib model rendering exception for " + modelLoc + ": " + t.getMessage());
             return false;
         }
     }
@@ -154,7 +162,85 @@ public class GeckoLibWereRenderer {
         return lower.equals("head") || lower.equals("bipedhead") || lower.equals("head_bone") || lower.equals("headbone");
     }
 
-    private static void renderBoneReflect(PoseStack poseStack, VertexConsumer vc, Object bone, int packedLight, AbstractClientPlayer player, float netHeadYaw, float headPitch, float alpha) {
+    private static Iterable<?> toIterable(Object obj) {
+        if (obj == null) return java.util.Collections.emptyList();
+        if (obj instanceof Iterable<?> iter) {
+            return iter;
+        }
+        if (obj.getClass().isArray()) {
+            int length = java.lang.reflect.Array.getLength(obj);
+            List<Object> list = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                list.add(java.lang.reflect.Array.get(obj, i));
+            }
+            return list;
+        }
+        return java.util.Collections.emptyList();
+    }
+
+    private static float[] extractPos(Object posObj) {
+        if (posObj == null) return null;
+        if (posObj instanceof float[] fArr && fArr.length >= 3) {
+            return fArr;
+        }
+        if (posObj instanceof double[] dArr && dArr.length >= 3) {
+            return new float[]{(float) dArr[0], (float) dArr[1], (float) dArr[2]};
+        }
+        try {
+            Method xM = posObj.getClass().getMethod("x");
+            Method yM = posObj.getClass().getMethod("y");
+            Method zM = posObj.getClass().getMethod("z");
+            float x = ((Number) xM.invoke(posObj)).floatValue();
+            float y = ((Number) yM.invoke(posObj)).floatValue();
+            float z = ((Number) zM.invoke(posObj)).floatValue();
+            return new float[]{x, y, z};
+        } catch (Throwable t1) {
+            try {
+                Field xF = posObj.getClass().getField("x");
+                Field yF = posObj.getClass().getField("y");
+                Field zF = posObj.getClass().getField("z");
+                float x = xF.getFloat(posObj);
+                float y = yF.getFloat(posObj);
+                float z = zF.getFloat(posObj);
+                return new float[]{x, y, z};
+            } catch (Throwable t2) {
+                try {
+                    Method getXM = posObj.getClass().getMethod("getX");
+                    Method getYM = posObj.getClass().getMethod("getY");
+                    Method getZM = posObj.getClass().getMethod("getZ");
+                    float x = ((Number) getXM.invoke(posObj)).floatValue();
+                    float y = ((Number) getYM.invoke(posObj)).floatValue();
+                    float z = ((Number) getZM.invoke(posObj)).floatValue();
+                    return new float[]{x, y, z};
+                } catch (Throwable t3) {
+                    return null;
+                }
+            }
+        }
+    }
+
+    private static float getFloatReflect(Object obj, String method1, String method2, String fieldName) {
+        if (obj == null) return 0.0f;
+        try {
+            Method m = obj.getClass().getMethod(method1);
+            return ((Number) m.invoke(obj)).floatValue();
+        } catch (Throwable t1) {
+            try {
+                Method m = obj.getClass().getMethod(method2);
+                return ((Number) m.invoke(obj)).floatValue();
+            } catch (Throwable t2) {
+                try {
+                    Field f = obj.getClass().getDeclaredField(fieldName);
+                    f.setAccessible(true);
+                    return f.getFloat(obj);
+                } catch (Throwable t3) {
+                    return 0.0f;
+                }
+            }
+        }
+    }
+
+    private static void renderBoneReflect(PoseStack poseStack, VertexConsumer vc, Object bone, int packedLight, AbstractClientPlayer player, float netHeadYaw, float headPitch, float alpha, int[] verticesDrawn) {
         if (bone == null) return;
         try {
             Method isHiddenMethod = bone.getClass().getMethod("isHidden");
@@ -166,37 +252,25 @@ public class GeckoLibWereRenderer {
                 boneName = (String) getNameMethod.invoke(bone);
             } catch (Throwable ignored) {}
 
-            Method getPivotX = bone.getClass().getMethod("getPivotX");
-            Method getPivotY = bone.getClass().getMethod("getPivotY");
-            Method getPivotZ = bone.getClass().getMethod("getPivotZ");
+            float pivX = getFloatReflect(bone, "getPivotX", "pivotX", "pivotX");
+            float pivY = getFloatReflect(bone, "getPivotY", "pivotY", "pivotY");
+            float pivZ = getFloatReflect(bone, "getPivotZ", "pivotZ", "pivotZ");
 
-            Method getPosX = bone.getClass().getMethod("getPosX");
-            Method getPosY = bone.getClass().getMethod("getPosY");
-            Method getPosZ = bone.getClass().getMethod("getPosZ");
+            float px = getFloatReflect(bone, "getPosX", "posX", "posX");
+            float py = getFloatReflect(bone, "getPosY", "posY", "posY");
+            float pz = getFloatReflect(bone, "getPosZ", "posZ", "posZ");
 
-            Method getRotX = bone.getClass().getMethod("getRotX");
-            Method getRotY = bone.getClass().getMethod("getRotY");
-            Method getRotZ = bone.getClass().getMethod("getRotZ");
+            float rx = getFloatReflect(bone, "getRotX", "rotX", "rotX");
+            float ry = getFloatReflect(bone, "getRotY", "rotY", "rotY");
+            float rz = getFloatReflect(bone, "getRotZ", "rotZ", "rotZ");
 
-            Method getScaleX = bone.getClass().getMethod("getScaleX");
-            Method getScaleY = bone.getClass().getMethod("getScaleY");
-            Method getScaleZ = bone.getClass().getMethod("getScaleZ");
+            float sx = getFloatReflect(bone, "getScaleX", "scaleX", "scaleX");
+            float sy = getFloatReflect(bone, "getScaleY", "scaleY", "scaleY");
+            float sz = getFloatReflect(bone, "getScaleZ", "scaleZ", "scaleZ");
 
-            float pivX = (Float) getPivotX.invoke(bone);
-            float pivY = (Float) getPivotY.invoke(bone);
-            float pivZ = (Float) getPivotZ.invoke(bone);
-
-            float px = (Float) getPosX.invoke(bone);
-            float py = (Float) getPosY.invoke(bone);
-            float pz = (Float) getPosZ.invoke(bone);
-
-            float rx = (Float) getRotX.invoke(bone);
-            float ry = (Float) getRotY.invoke(bone);
-            float rz = (Float) getRotZ.invoke(bone);
-
-            float sx = (Float) getScaleX.invoke(bone);
-            float sy = (Float) getScaleY.invoke(bone);
-            float sz = (Float) getScaleZ.invoke(bone);
+            if (sx == 0.0f) sx = 1.0f;
+            if (sy == 0.0f) sy = 1.0f;
+            if (sz == 0.0f) sz = 1.0f;
 
             poseStack.pushPose();
             try {
@@ -226,20 +300,36 @@ public class GeckoLibWereRenderer {
                 // 4. Translate back by pivot offset
                 poseStack.translate(-pivX / 16.0f, -pivY / 16.0f, -pivZ / 16.0f);
 
-                Method getCubes = bone.getClass().getMethod("getCubes");
-                List<?> cubes = (List<?>) getCubes.invoke(bone);
-                if (cubes != null) {
-                    for (Object cube : cubes) {
-                        renderCubeReflect(poseStack, vc, cube, packedLight, player, alpha);
-                    }
+                Object cubesObj = null;
+                try {
+                    Method getCubes = bone.getClass().getMethod("getCubes");
+                    cubesObj = getCubes.invoke(bone);
+                } catch (Throwable t) {
+                    try {
+                        Field f = bone.getClass().getDeclaredField("cubes");
+                        f.setAccessible(true);
+                        cubesObj = f.get(bone);
+                    } catch (Throwable ignored) {}
                 }
 
-                Method getChildBones = bone.getClass().getMethod("getChildBones");
-                List<?> childBones = (List<?>) getChildBones.invoke(bone);
-                if (childBones != null) {
-                    for (Object child : childBones) {
-                        renderBoneReflect(poseStack, vc, child, packedLight, player, netHeadYaw, headPitch, alpha);
-                    }
+                for (Object cube : toIterable(cubesObj)) {
+                    renderCubeReflect(poseStack, vc, cube, packedLight, player, alpha, verticesDrawn);
+                }
+
+                Object childBonesObj = null;
+                try {
+                    Method getChildBones = bone.getClass().getMethod("getChildBones");
+                    childBonesObj = getChildBones.invoke(bone);
+                } catch (Throwable t) {
+                    try {
+                        Field f = bone.getClass().getDeclaredField("childBones");
+                        f.setAccessible(true);
+                        childBonesObj = f.get(bone);
+                    } catch (Throwable ignored) {}
+                }
+
+                for (Object child : toIterable(childBonesObj)) {
+                    renderBoneReflect(poseStack, vc, child, packedLight, player, netHeadYaw, headPitch, alpha, verticesDrawn);
                 }
             } finally {
                 poseStack.popPose();
@@ -247,20 +337,22 @@ public class GeckoLibWereRenderer {
         } catch (Throwable ignored) {}
     }
 
-    private static void renderCubeReflect(PoseStack poseStack, VertexConsumer vc, Object cube, int packedLight, AbstractClientPlayer player, float alpha) {
+    private static void renderCubeReflect(PoseStack poseStack, VertexConsumer vc, Object cube, int packedLight, AbstractClientPlayer player, float alpha, int[] verticesDrawn) {
         if (cube == null) return;
         try {
-            Object[] quads = null;
+            Object quadsObj = null;
             try {
                 Method quadsMethod = cube.getClass().getMethod("quads");
-                quads = (Object[]) quadsMethod.invoke(cube);
+                quadsObj = quadsMethod.invoke(cube);
             } catch (Throwable ignored) {
-                Field quadsField = cube.getClass().getDeclaredField("quads");
-                quadsField.setAccessible(true);
-                quads = (Object[]) quadsField.get(cube);
+                try {
+                    Field quadsField = cube.getClass().getDeclaredField("quads");
+                    quadsField.setAccessible(true);
+                    quadsObj = quadsField.get(cube);
+                } catch (Throwable ignored2) {}
             }
 
-            if (quads == null) return;
+            if (quadsObj == null) return;
             org.joml.Matrix4f pose = poseStack.last().pose();
             org.joml.Matrix3f normal = poseStack.last().normal();
             boolean isHurt = player != null && player.hurtTime > 0;
@@ -269,7 +361,7 @@ public class GeckoLibWereRenderer {
             float gMult = isHurt ? 0.35f : 1.0f;
             float bMult = isHurt ? 0.35f : 1.0f;
 
-            for (Object quad : quads) {
+            for (Object quad : toIterable(quadsObj)) {
                 if (quad == null) continue;
                 net.minecraft.core.Direction dir = null;
                 try {
@@ -281,54 +373,46 @@ public class GeckoLibWereRenderer {
                 float ny = dir != null ? dir.getStepY() : 1.0f;
                 float nz = dir != null ? dir.getStepZ() : 0.0f;
 
-                Object[] vertices = null;
+                Object verticesObj = null;
                 try {
                     Method verticesMethod = quad.getClass().getMethod("vertices");
-                    vertices = (Object[]) verticesMethod.invoke(quad);
+                    verticesObj = verticesMethod.invoke(quad);
                 } catch (Throwable ignored) {
-                    Field verticesField = quad.getClass().getDeclaredField("vertices");
-                    verticesField.setAccessible(true);
-                    vertices = (Object[]) verticesField.get(quad);
+                    try {
+                        Field verticesField = quad.getClass().getDeclaredField("vertices");
+                        verticesField.setAccessible(true);
+                        verticesObj = verticesField.get(quad);
+                    } catch (Throwable ignored2) {}
                 }
 
-                if (vertices == null) continue;
-                for (Object vertex : vertices) {
+                if (verticesObj == null) continue;
+                for (Object vertex : toIterable(verticesObj)) {
                     if (vertex == null) continue;
-                    org.joml.Vector3f pos = null;
+                    Object posObj = null;
                     try {
                         Method posMethod = vertex.getClass().getMethod("position");
-                        pos = (org.joml.Vector3f) posMethod.invoke(vertex);
-                    } catch (Throwable ignored) {
-                        Field posField = vertex.getClass().getDeclaredField("position");
-                        posField.setAccessible(true);
-                        pos = (org.joml.Vector3f) posField.get(vertex);
-                    }
-
-                    float u = 0.0f, v = 0.0f;
-                    try {
-                        Method uMethod = vertex.getClass().getMethod("u");
-                        u = (Float) uMethod.invoke(vertex);
-                        Method vMethod = vertex.getClass().getMethod("v");
-                        v = (Float) vMethod.invoke(vertex);
+                        posObj = posMethod.invoke(vertex);
                     } catch (Throwable ignored) {
                         try {
-                            Field uField = vertex.getClass().getDeclaredField("u");
-                            uField.setAccessible(true);
-                            u = uField.getFloat(vertex);
-                            Field vField = vertex.getClass().getDeclaredField("v");
-                            vField.setAccessible(true);
-                            v = vField.getFloat(vertex);
+                            Field posField = vertex.getClass().getDeclaredField("position");
+                            posField.setAccessible(true);
+                            posObj = posField.get(vertex);
                         } catch (Throwable ignored2) {}
                     }
 
-                    if (pos != null) {
-                        vc.vertex(pose, pos.x() / 16.0f, pos.y() / 16.0f, pos.z() / 16.0f)
+                    float[] pos = extractPos(posObj);
+                    float u = getFloatReflect(vertex, "u", "getU", "u");
+                    float v = getFloatReflect(vertex, "v", "getV", "v");
+
+                    if (pos != null && pos.length >= 3) {
+                        vc.vertex(pose, pos[0] / 16.0f, pos[1] / 16.0f, pos[2] / 16.0f)
                                 .color(rMult, gMult, bMult, alpha)
                                 .uv(u, v)
                                 .overlayCoords(overlay)
                                 .uv2(packedLight)
                                 .normal(normal, nx, ny, nz)
                                 .endVertex();
+                        verticesDrawn[0]++;
                     }
                 }
             }

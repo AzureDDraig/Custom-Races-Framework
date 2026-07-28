@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b179a] - 2026-07-28
+
+### 🛡️ GeckoLib 3D Model Rendering Protection (`GeckoLibWereRenderer.java`)
+- **Universal Quad & Vertex Traversal**: Enhanced 3D model parsing to dynamically handle all GeckoLib quad and vertex collections (Arrays, Lists, and Iterables) across custom models (e.g. `tcskeleton.geo.json`), eliminating silent reflection casting errors.
+- **Zero-Vertex Invisibility Fallback**: Added a rendering verification guard. If a custom model returns 0 rendered quads or vertices, the system automatically restores the player's character skin model so players never become invisible.
+
+---
+
 ## [1.0.0-b178a] - 2026-07-28
 
 ### 🎯 Playtester-Specified Asset Resolution (`GeckoAssetResolver.java`)
