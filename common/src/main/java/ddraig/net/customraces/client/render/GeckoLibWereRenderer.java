@@ -112,29 +112,59 @@ public class GeckoLibWereRenderer {
      * Maps player state variables to configured GeckoLib keyframe animation trigger keys.
      * Priority Hierarchy: Hurt > Attack > Swimming > Flying > Walk > Idle
      */
+    private static String sanitizeAnimKey(String rawKey, String fallbackKey) {
+        if (rawKey == null || rawKey.trim().isEmpty()) {
+            return fallbackKey;
+        }
+        String key = rawKey.trim();
+        if (key.endsWith(".animation.json") || key.contains(":") || key.contains("/")) {
+            String filename = key.replaceAll(".*/", "").replaceAll(".*:", "");
+            if (filename.endsWith(".animation.json")) {
+                filename = filename.substring(0, filename.length() - ".animation.json".length());
+            }
+            if (filename.endsWith(".json")) {
+                filename = filename.substring(0, filename.length() - 5);
+            }
+            if (!filename.trim().isEmpty()) {
+                return "animation." + filename.trim() + "." + fallbackKey.replaceAll(".*\\.", "");
+            }
+            return fallbackKey;
+        }
+        return key;
+    }
+
+    /**
+     * Maps player state variables to configured GeckoLib keyframe animation trigger keys.
+     * Priority Hierarchy: Hurt > Attack > Swimming > Flying > Walk > Idle
+     */
     public static String resolveActiveAnimation(AbstractClientPlayer player, RaceData race) {
         if (player == null) {
-            return race != null ? race.getSafeWereIdleAnim() : "animation.were.idle";
+            String raw = race != null ? race.getSafeWereIdleAnim() : "animation.were.idle";
+            return sanitizeAnimKey(raw, "animation.were.idle");
         }
 
         // 1. Hurt Animation (taking damage)
         if (player.hurtTime > 0) {
-            return race != null ? race.getSafeWereHurtAnim() : "animation.were.hurt";
+            String raw = race != null ? race.getSafeWereHurtAnim() : "animation.were.hurt";
+            return sanitizeAnimKey(raw, "animation.were.hurt");
         }
 
         // 2. Attack Animation (swinging attack)
         if (player.swingTime > 0 || player.swinging) {
-            return race != null ? race.getSafeWereAttackAnim() : "animation.were.attack";
+            String raw = race != null ? race.getSafeWereAttackAnim() : "animation.were.attack";
+            return sanitizeAnimKey(raw, "animation.were.attack");
         }
 
         // 3. Swim Animation (swimming)
         if (player.isVisuallySwimming()) {
-            return race != null ? race.getSafeWereSwimAnim() : "animation.were.swim";
+            String raw = race != null ? race.getSafeWereSwimAnim() : "animation.were.swim";
+            return sanitizeAnimKey(raw, "animation.were.swim");
         }
 
         // 4. Fly Animation (flying)
         if (player.getAbilities() != null && player.getAbilities().flying) {
-            return race != null ? race.getSafeWereFlyAnim() : "animation.were.fly";
+            String raw = race != null ? race.getSafeWereFlyAnim() : "animation.were.fly";
+            return sanitizeAnimKey(raw, "animation.were.fly");
         }
 
         // 5. Walk vs Idle Animation based on movement speed threshold (0.01f)
@@ -146,9 +176,11 @@ public class GeckoLibWereRenderer {
         }
 
         if (speed >= 0.01f) {
-            return race != null ? race.getSafeWereWalkAnim() : "animation.were.walk";
+            String raw = race != null ? race.getSafeWereWalkAnim() : "animation.were.walk";
+            return sanitizeAnimKey(raw, "animation.were.walk");
         } else {
-            return race != null ? race.getSafeWereIdleAnim() : "animation.were.idle";
+            String raw = race != null ? race.getSafeWereIdleAnim() : "animation.were.idle";
+            return sanitizeAnimKey(raw, "animation.were.idle");
         }
     }
 

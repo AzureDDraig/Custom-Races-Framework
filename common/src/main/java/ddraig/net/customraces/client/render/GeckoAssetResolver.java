@@ -212,16 +212,16 @@ public class GeckoAssetResolver {
     }
 
     private static ResourceLocation getSafeDefaultTexture(AbstractClientPlayer player) {
-        if (isResourcePresentOnClient(DEFAULT_TEXTURE_LOCATION)) {
-            return DEFAULT_TEXTURE_LOCATION;
-        }
         if (player != null) {
             ResourceLocation skinLoc = player.getSkinTextureLocation();
             if (skinLoc != null) {
                 return skinLoc;
             }
         }
-        return DEFAULT_TEXTURE_LOCATION;
+        if (isResourcePresentOnClient(DEFAULT_TEXTURE_LOCATION)) {
+            return DEFAULT_TEXTURE_LOCATION;
+        }
+        return net.minecraft.client.renderer.texture.MissingTextureAtlasSprite.getLocation();
     }
 
     private static ResourceLocation loadDiskTextureDynamic(String rawPath, ParsedPath parsed) {
@@ -231,7 +231,7 @@ public class GeckoAssetResolver {
         }
 
         for (File file : getTextureDiskCandidates(parsed, rawPath)) {
-            if (file.exists() && file.isFile()) {
+            if (file != null && file.exists() && file.isFile()) {
                 try (InputStream is = new FileInputStream(file)) {
                     NativeImage nativeImage = NativeImage.read(is);
                     DynamicTexture dynamicTexture = new DynamicTexture(nativeImage);
@@ -308,24 +308,27 @@ public class GeckoAssetResolver {
     }
 
     public static ParsedPath parsePath(String rawPath, String defaultSubfolderPrefix, String defaultExtension) {
-        if (rawPath == null) rawPath = "";
-        String trimmed = rawPath.trim();
+        if (rawPath == null || rawPath.trim().isEmpty()) {
+            ResourceLocation fallback = getDefaultLocation(defaultSubfolderPrefix);
+            return new ParsedPath(DEFAULT_NAMESPACE, "", "", fallback, new ArrayList<>());
+        }
 
-        String namespace;
-        String pathWithoutNamespace;
-        int colonIdx = trimmed.indexOf(':');
+        String path = rawPath.trim();
+        String namespace = DEFAULT_NAMESPACE;
+        String pathWithoutNamespace = path;
+
+        int colonIdx = path.indexOf(':');
         if (colonIdx >= 0) {
-            namespace = trimmed.substring(0, colonIdx);
-            pathWithoutNamespace = trimmed.substring(colonIdx + 1);
-        } else {
-            namespace = DEFAULT_NAMESPACE;
-            pathWithoutNamespace = trimmed;
+            String rawNs = path.substring(0, colonIdx);
+            if (!isValidNamespace(rawNs)) {
+                ResourceLocation fallback = getDefaultLocation(defaultSubfolderPrefix);
+                return new ParsedPath(DEFAULT_NAMESPACE, pathWithoutNamespace, "", fallback, new ArrayList<>());
+            }
+            namespace = rawNs.toLowerCase(java.util.Locale.ROOT);
+            pathWithoutNamespace = path.substring(colonIdx + 1);
         }
 
-        if (namespace.trim().isEmpty()) {
-            namespace = DEFAULT_NAMESPACE;
-        }
-
+        pathWithoutNamespace = pathWithoutNamespace.replace('\\', '/').replaceAll("^/+", "");
         String lowerRel = pathWithoutNamespace.toLowerCase(java.util.Locale.ROOT);
         String lowerExt = defaultExtension.toLowerCase(java.util.Locale.ROOT);
 
@@ -379,13 +382,27 @@ public class GeckoAssetResolver {
         return new ParsedPath(namespace, normalizedRelPath, filename, primaryLoc, candidates);
     }
 
+    private static File safeDiskFile(String pathStr) {
+        if (pathStr == null || pathStr.trim().isEmpty() || pathStr.contains(":")) {
+            return null;
+        }
+        try {
+            return new File(pathStr.trim());
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
     public static List<File> getModelDiskCandidates(ParsedPath parsed) {
         List<File> files = new ArrayList<>();
         files.add(new File("config/custom_races/models/" + parsed.cleanFilename));
         files.add(new File("config/custom_races/models/were/" + parsed.cleanFilename));
         files.add(new File("config/custom_races/geo/" + parsed.cleanFilename));
-        files.add(new File("config/custom_races/" + parsed.relativePath));
-        files.add(new File(parsed.relativePath));
+        if (!parsed.relativePath.contains(":")) {
+            files.add(new File("config/custom_races/" + parsed.relativePath));
+            File direct = safeDiskFile(parsed.relativePath);
+            if (direct != null) files.add(direct);
+        }
         return files;
     }
 
@@ -393,9 +410,12 @@ public class GeckoAssetResolver {
         List<File> files = new ArrayList<>();
         files.add(new File("config/custom_races/textures/" + parsed.cleanFilename));
         files.add(new File("config/custom_races/textures/were/" + parsed.cleanFilename));
-        files.add(new File("config/custom_races/" + parsed.relativePath));
-        if (rawPath != null && !rawPath.trim().isEmpty()) {
-            files.add(new File(rawPath.trim()));
+        if (!parsed.relativePath.contains(":")) {
+            files.add(new File("config/custom_races/" + parsed.relativePath));
+        }
+        File rawFile = safeDiskFile(rawPath);
+        if (rawFile != null) {
+            files.add(rawFile);
         }
         return files;
     }
@@ -404,8 +424,11 @@ public class GeckoAssetResolver {
         List<File> files = new ArrayList<>();
         files.add(new File("config/custom_races/animations/" + parsed.cleanFilename));
         files.add(new File("config/custom_races/animations/were/" + parsed.cleanFilename));
-        files.add(new File("config/custom_races/" + parsed.relativePath));
-        files.add(new File(parsed.relativePath));
+        if (!parsed.relativePath.contains(":")) {
+            files.add(new File("config/custom_races/" + parsed.relativePath));
+            File direct = safeDiskFile(parsed.relativePath);
+            if (direct != null) files.add(direct);
+        }
         return files;
     }
 }

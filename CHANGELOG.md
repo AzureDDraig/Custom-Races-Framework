@@ -2,6 +2,15 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b180a] - 2026-07-28
+
+### ⚙️ Deep Model & Animation Path Fault Tolerance (`GeckoAssetResolver.java`, `GeckoLibWereRenderer.java`)
+- **Animation Key Sanitization**: Added automatic keyframe animation string cleaning. If a playtester accidentally pastes a full file path into an animation key field, the system extracts the animation identifier to prevent frozen models.
+- **Safe Disk File & Path Sanitization**: Sanitized colon characters and namespace strings for disk file searches on Windows, preventing file system exceptions.
+- **Player Skin Texture Priority**: Ensured missing texture lookups default to the player's own character skin texture, preventing black/purple missing texture grids.
+
+---
+
 ## [1.0.0-b179a] - 2026-07-28
 
 ### 🛡️ GeckoLib 3D Model Rendering Protection (`GeckoLibWereRenderer.java`)
