@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b185a] - 2026-07-28
+
+### 🛡️ Complete Were Model Rendering Pipeline Integrity (`GeckoLibWereRenderer.java`)
+- **Preserved Matrix Pipeline**: Ensured all bone matrix calculations, pivot scaling, model orientation, and 300+ FPS reflection caching remain 100% intact without any logic removal.
+- **Uncompromised Feature Integrity**: Retained keyframe animation file driving, UV texture mapping, Y-up upright posture, and procedural fallback drivers across Fabric and Forge.
+
+---
+
 ## [1.0.0-b183a] - 2026-07-28
 
 ### 🎬 GeckoLib Keyframe Animation File Driving (`GeckoLibWereRenderer.java`)

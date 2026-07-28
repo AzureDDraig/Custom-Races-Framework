@@ -379,61 +379,51 @@ public class GeckoLibWereRenderer {
 
             poseStack.pushPose();
             try {
-                boolean nativePrepDone = false;
-                if (ReflectionCache.prepMatrixMethod != null) {
-                    try {
-                        ReflectionCache.prepMatrixMethod.invoke(null, poseStack, bone);
-                        nativePrepDone = true;
-                    } catch (Throwable ignored) {}
+                if (Math.abs(pivX) > 4.0f || Math.abs(pivY) > 4.0f || Math.abs(pivZ) > 4.0f) {
+                    pivX /= 16.0f; pivY /= 16.0f; pivZ /= 16.0f;
+                }
+                if (Math.abs(px) > 4.0f || Math.abs(py) > 4.0f || Math.abs(pz) > 4.0f) {
+                    px /= 16.0f; py /= 16.0f; pz /= 16.0f;
                 }
 
-                if (!nativePrepDone) {
-                    if (Math.abs(pivX) > 4.0f || Math.abs(pivY) > 4.0f || Math.abs(pivZ) > 4.0f) {
-                        pivX /= 16.0f; pivY /= 16.0f; pivZ /= 16.0f;
+                poseStack.translate(px + pivX, py + pivY, pz + pivZ);
+
+                if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotation(rz));
+                if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotation(ry));
+                if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotation(rx));
+
+                if (isHeadBone(boneName)) {
+                    if (netHeadYaw != 0.0f) {
+                        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
                     }
-                    if (Math.abs(px) > 4.0f || Math.abs(py) > 4.0f || Math.abs(pz) > 4.0f) {
-                        px /= 16.0f; py /= 16.0f; pz /= 16.0f;
+                    if (headPitch != 0.0f) {
+                        poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
                     }
-
-                    poseStack.translate(px + pivX, py + pivY, pz + pivZ);
-
-                    if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotation(rz));
-                    if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotation(ry));
-                    if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotation(rx));
-
-                    if (isHeadBone(boneName)) {
-                        if (netHeadYaw != 0.0f) {
-                            poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
-                        }
-                        if (headPitch != 0.0f) {
-                            poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
-                        }
-                    }
-
-                    // Procedural limb animation swing driving when player walks
-                    if (player != null && boneName != null) {
-                        String lowerName = boneName.toLowerCase(java.util.Locale.ROOT);
-                        float limbSwing = player.walkAnimation != null ? player.walkAnimation.position() : (player.tickCount * 0.2f);
-                        float limbSwingAmount = player.walkAnimation != null ? player.walkAnimation.speed() : 0.0f;
-                        float walkAngle = (float) Math.sin(limbSwing * 0.6662f) * 1.4f * limbSwingAmount;
-
-                        if (lowerName.contains("left_leg") || lowerName.contains("leftleg") || lowerName.contains("leg2") || lowerName.contains("bipedleftleg")) {
-                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
-                        } else if (lowerName.contains("right_leg") || lowerName.contains("rightleg") || lowerName.contains("leg1") || lowerName.contains("bipedrightleg")) {
-                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
-                        } else if (lowerName.contains("left_arm") || lowerName.contains("leftarm") || lowerName.contains("arm2") || lowerName.contains("bipedleftarm")) {
-                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
-                        } else if (lowerName.contains("right_arm") || lowerName.contains("rightarm") || lowerName.contains("arm1") || lowerName.contains("bipedrightarm")) {
-                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
-                        }
-                    }
-
-                    if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
-                        poseStack.scale(sx, sy, sz);
-                    }
-
-                    poseStack.translate(-pivX, -pivY, -pivZ);
                 }
+
+                // Procedural limb animation swing driving when player walks
+                if (player != null && boneName != null) {
+                    String lowerName = boneName.toLowerCase(java.util.Locale.ROOT);
+                    float limbSwing = player.walkAnimation != null ? player.walkAnimation.position() : (player.tickCount * 0.2f);
+                    float limbSwingAmount = player.walkAnimation != null ? player.walkAnimation.speed() : 0.0f;
+                    float walkAngle = (float) Math.sin(limbSwing * 0.6662f) * 1.4f * limbSwingAmount;
+
+                    if (lowerName.contains("left_leg") || lowerName.contains("leftleg") || lowerName.contains("leg2") || lowerName.contains("bipedleftleg")) {
+                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
+                    } else if (lowerName.contains("right_leg") || lowerName.contains("rightleg") || lowerName.contains("leg1") || lowerName.contains("bipedrightleg")) {
+                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
+                    } else if (lowerName.contains("left_arm") || lowerName.contains("leftarm") || lowerName.contains("arm2") || lowerName.contains("bipedleftarm")) {
+                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
+                    } else if (lowerName.contains("right_arm") || lowerName.contains("rightarm") || lowerName.contains("arm1") || lowerName.contains("bipedrightarm")) {
+                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
+                    }
+                }
+
+                if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
+                    poseStack.scale(sx, sy, sz);
+                }
+
+                poseStack.translate(-pivX, -pivY, -pivZ);
 
                 Object cubesObj = ReflectionCache.getCubes != null ? ReflectionCache.getCubes.invoke(bone) : null;
                 for (Object cube : toIterable(cubesObj)) {
