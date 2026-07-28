@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b181a] - 2026-07-28
+
+### 📏 Full-Scale 3D Model Rendering Fix (`GeckoLibWereRenderer.java`)
+- **Native RenderUtils Matrix Setup**: Integrated GeckoLib's native `RenderUtils.prepMatrixForBone` pipeline so custom models inherit accurate joint rotations, bone scaling, and pivot translations.
+- **Smart Vertex Coordinate Scale Guard**: Fixed a double-division bug where vertex positions were being scaled down twice. Models now render at **100% full size** (1.5 to 2.0 blocks tall) instead of shrinking into a tiny 1-inch stick on the ground.
+
+---
+
 ## [1.0.0-b180a] - 2026-07-28
 
 ### ⚙️ Deep Model & Animation Path Fault Tolerance (`GeckoAssetResolver.java`, `GeckoLibWereRenderer.java`)

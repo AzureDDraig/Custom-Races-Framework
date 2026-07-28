@@ -306,31 +306,43 @@ public class GeckoLibWereRenderer {
 
             poseStack.pushPose();
             try {
-                // 1. Move to bone position + pivot origin
-                poseStack.translate((px + pivX) / 16.0f, (py + pivY) / 16.0f, (pz + pivZ) / 16.0f);
+                boolean nativePrepDone = false;
+                try {
+                    Class<?> renderUtilsClass = Class.forName("software.bernie.geckolib.util.RenderUtils");
+                    Method prepMethod = renderUtilsClass.getMethod("prepMatrixForBone", PoseStack.class, bone.getClass());
+                    prepMethod.invoke(null, poseStack, bone);
+                    nativePrepDone = true;
+                } catch (Throwable ignored) {}
 
-                // 2. Apply Euler rotations around joint pivot
-                if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(-rz));
-                if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-ry));
-                if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rx));
-
-                // Apply rotational matrix transforms when traversing head bones
-                if (isHeadBone(boneName)) {
-                    if (netHeadYaw != 0.0f) {
-                        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
+                if (!nativePrepDone) {
+                    if (Math.abs(pivX) > 4.0f || Math.abs(pivY) > 4.0f || Math.abs(pivZ) > 4.0f) {
+                        pivX /= 16.0f; pivY /= 16.0f; pivZ /= 16.0f;
                     }
-                    if (headPitch != 0.0f) {
-                        poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
+                    if (Math.abs(px) > 4.0f || Math.abs(py) > 4.0f || Math.abs(pz) > 4.0f) {
+                        px /= 16.0f; py /= 16.0f; pz /= 16.0f;
                     }
-                }
 
-                // 3. Apply bone scaling
-                if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
-                    poseStack.scale(sx, sy, sz);
-                }
+                    poseStack.translate(px + pivX, py + pivY, pz + pivZ);
 
-                // 4. Translate back by pivot offset
-                poseStack.translate(-pivX / 16.0f, -pivY / 16.0f, -pivZ / 16.0f);
+                    if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotation(rz));
+                    if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotation(ry));
+                    if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotation(rx));
+
+                    if (isHeadBone(boneName)) {
+                        if (netHeadYaw != 0.0f) {
+                            poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
+                        }
+                        if (headPitch != 0.0f) {
+                            poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
+                        }
+                    }
+
+                    if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
+                        poseStack.scale(sx, sy, sz);
+                    }
+
+                    poseStack.translate(-pivX, -pivY, -pivZ);
+                }
 
                 Object cubesObj = null;
                 try {
@@ -437,7 +449,17 @@ public class GeckoLibWereRenderer {
                     float v = getFloatReflect(vertex, "v", "getV", "v");
 
                     if (pos != null && pos.length >= 3) {
-                        vc.vertex(pose, pos[0] / 16.0f, pos[1] / 16.0f, pos[2] / 16.0f)
+                        float vx = pos[0];
+                        float vy = pos[1];
+                        float vz = pos[2];
+
+                        if (Math.abs(vx) > 4.0f || Math.abs(vy) > 4.0f || Math.abs(vz) > 4.0f) {
+                            vx /= 16.0f;
+                            vy /= 16.0f;
+                            vz /= 16.0f;
+                        }
+
+                        vc.vertex(pose, vx, vy, vz)
                                 .color(rMult, gMult, bMult, alpha)
                                 .uv(u, v)
                                 .overlayCoords(overlay)
