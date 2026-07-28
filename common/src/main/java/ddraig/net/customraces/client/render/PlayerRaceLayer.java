@@ -21,6 +21,8 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
+    private static final java.util.Map<java.util.UUID, Integer> LAST_PARTICLE_TICKS = new java.util.concurrent.ConcurrentHashMap<>();
+
     public PlayerRaceLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent) {
         super(parent);
     }
@@ -38,14 +40,38 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         try {
             poseStack.pushPose();
 
+            boolean isInvisible = player.isInvisible() || player.isSpectator();
+            if (isInvisible) {
+                net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                net.minecraft.client.player.LocalPlayer clientPlayer = mc != null ? mc.player : null;
+                if (clientPlayer != null && player.isInvisibleTo(clientPlayer)) {
+                    // Completely invisible to viewing player: skip custom layer rendering & particles
+                    return;
+                }
+            }
+
+            // 20 Hz Tick Check Guard for Particle Emission (spawns particles once per 20 Hz tick across framerates)
+            boolean canEmitTickParticle = false;
+            if (!isInvisible && player.level().isClientSide) {
+                if (LAST_PARTICLE_TICKS.size() > 1000) LAST_PARTICLE_TICKS.clear();
+                Integer lastTick = LAST_PARTICLE_TICKS.get(player.getUUID());
+                if (lastTick == null || lastTick != player.tickCount) {
+                    LAST_PARTICLE_TICKS.put(player.getUUID(), player.tickCount);
+                    canEmitTickParticle = true;
+                }
+            }
+
             boolean isWereTransformed = WereModelRenderer.isWereForm(player, race);
             int effectiveParticleCount = isWereTransformed ? race.getWereParticleCount() : race.getParticleCount();
+            float hScale = isWereTransformed ? (race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f) : 1.0f;
+            float wScale = isWereTransformed ? (race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f) : 1.0f;
+            float scaleFactor = Math.max(wScale, hScale);
 
             if (isWereTransformed) {
-                // Apply Were-Form Visual Scale Transformation
-                float hScale = race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f;
-                float wScale = race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f;
-                poseStack.scale(wScale, hScale, wScale);
+                // Apply Were-Form Visual Scale Transformation (guarded against Pehkui double-scaling)
+                if (!ddraig.net.customraces.integration.PehkuiIntegration.isPehkuiLoaded()) {
+                    poseStack.scale(wScale, hScale, wScale);
+                }
 
                 // Render custom Were model or fallback procedural beast parts
                 boolean customRendered = WereModelRenderer.renderWereForm(poseStack, buffer, packedLight, player, this.getParentModel(), race, netHeadYaw, headPitch);
@@ -53,23 +79,23 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     renderWereBeastParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
                 }
 
-                // Render Real-Time Dark Were-Form Smoke Particles (Scaled by wereParticleCount)
-                if (player.level().isClientSide && player.tickCount % 3 == 0) {
+                // Render Real-Time Dark Were-Form Smoke Particles (Scaled by player scale during transformed state, guarded by 20 Hz tick check)
+                if (canEmitTickParticle && player.tickCount % 3 == 0) {
                     int smokeLoops = Math.max(1, Math.round(effectiveParticleCount / 2.0f));
                     for (int i = 0; i < smokeLoops; i++) {
                         player.level().addParticle(
                                 net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
-                                player.getRandomX(0.6),
+                                player.getRandomX(0.6 * wScale),
                                 player.getRandomY(),
-                                player.getRandomZ(0.6),
-                                0.0, 0.05, 0.0
+                                player.getRandomZ(0.6 * wScale),
+                                0.0, 0.05 * scaleFactor, 0.0
                         );
                         player.level().addParticle(
                                 race.isWereFlyingRace ? net.minecraft.core.particles.ParticleTypes.SOUL_FIRE_FLAME : net.minecraft.core.particles.ParticleTypes.FLAME,
-                                player.getRandomX(0.4),
+                                player.getRandomX(0.4 * wScale),
                                 player.getRandomY(),
-                                player.getRandomZ(0.4),
-                                0.0, 0.02, 0.0
+                                player.getRandomZ(0.4 * wScale),
+                                0.0, 0.02 * scaleFactor, 0.0
                         );
                     }
                 }
@@ -81,20 +107,22 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                 renderPresetParts(poseStack, buffer, packedLight, player, race, netHeadYaw, headPitch);
             }
 
-            // 2. Render Particle Auras in Real-Time (Scaled by effectiveParticleCount)
-            if (player.level().isClientSide && race.particleAuras != null && !race.particleAuras.isEmpty()) {
+            // Render Particle Auras in Real-Time (Scaled by player scale during transformed state, guarded by 20 Hz tick check)
+            if (canEmitTickParticle && race.particleAuras != null && !race.particleAuras.isEmpty()) {
                 for (ParticleAuraData aura : race.particleAuras) {
                     if (player.tickCount % 4 == 0) {
                         net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.getValidParticleType()));
                         if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
                             int countToSpawn = aura.getScaledParticleCount(effectiveParticleCount);
+                            float auraSpread = aura.getSafeSpread() * wScale;
+                            float auraSpeed = aura.getSafeSpeed() * scaleFactor;
                             for (int i = 0; i < countToSpawn; i++) {
                                 player.level().addParticle(
                                         pOptions,
-                                        player.getRandomX(aura.getSafeSpread()),
-                                        player.getRandomY() + 0.5,
-                                        player.getRandomZ(aura.getSafeSpread()),
-                                        0.0, aura.getSafeSpeed(), 0.0
+                                        player.getRandomX(auraSpread),
+                                        player.getRandomY() + (0.5 * hScale),
+                                        player.getRandomZ(auraSpread),
+                                        0.0, auraSpeed, 0.0
                                 );
                             }
                         }
@@ -109,22 +137,25 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
     }
 
     private void renderWereBeastParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
-        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE));
+        boolean isInvisible = player.isInvisible() || player.isSpectator();
+        RenderType renderType = isInvisible ? RenderType.entityTranslucent(WHITE_TEXTURE) : RenderType.entityCutoutNoCull(WHITE_TEXTURE);
+        VertexConsumer vc = buffer.getBuffer(renderType);
+        float alpha = isInvisible ? 0.15f : 1.0f;
 
         poseStack.pushPose();
         try {
             this.getParentModel().getHead().translateAndRotate(poseStack);
 
             // Werewolf ears (Crimson & Dark Fur)
-            renderColoredBox(poseStack, vc, packedLight, -0.40f, -0.75f, -0.05f, -0.25f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.75f, -0.05f, 0.40f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.40f, -0.75f, -0.05f, -0.25f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, alpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.75f, -0.05f, 0.40f, -0.45f, 0.05f, 0.2f, 0.05f, 0.05f, alpha);
 
             // Werewolf snout
-            renderColoredBox(poseStack, vc, packedLight, -0.15f, -0.25f, -0.55f, 0.15f, -0.05f, -0.25f, 0.15f, 0.04f, 0.04f, 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.15f, -0.25f, -0.55f, 0.15f, -0.05f, -0.25f, 0.15f, 0.04f, 0.04f, alpha);
 
             // Glowing Crimson Eyes Overlay
-            renderColoredBox(poseStack, vc, packedLight, -0.25f, -0.42f, -0.32f, -0.08f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.08f, -0.42f, -0.32f, 0.25f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.25f, -0.42f, -0.32f, -0.08f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, alpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.08f, -0.42f, -0.32f, 0.25f, -0.30f, -0.28f, 1.0f, 0.1f, 0.1f, alpha);
         } finally {
             poseStack.popPose();
         }
@@ -148,7 +179,10 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
     }
 
     private void renderPresetParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
-        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(WHITE_TEXTURE));
+        boolean isInvisible = player.isInvisible() || player.isSpectator();
+        RenderType renderType = isInvisible ? RenderType.entityTranslucent(WHITE_TEXTURE) : RenderType.entityCutoutNoCull(WHITE_TEXTURE);
+        VertexConsumer vc = buffer.getBuffer(renderType);
+        float baseAlpha = isInvisible ? 0.15f : 1.0f;
 
         // 1. Head Attachments (Ears, Horns, Halo)
         if (!"none".equalsIgnoreCase(race.earType) || !"none".equalsIgnoreCase(race.hornType) || !"none".equalsIgnoreCase(race.haloType)) {
@@ -163,7 +197,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     poseStack.pushPose();
                     try {
                         applyPartTransforms(poseStack, pt);
-                        renderEarsGeometry(poseStack, vc, packedLight, race.earType, rgb);
+                        renderEarsGeometry(poseStack, vc, packedLight, race.earType, rgb, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -176,7 +210,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     poseStack.pushPose();
                     try {
                         applyPartTransforms(poseStack, pt);
-                        renderHornsGeometry(poseStack, vc, packedLight, race.hornType, rgb);
+                        renderHornsGeometry(poseStack, vc, packedLight, race.hornType, rgb, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -189,7 +223,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     poseStack.pushPose();
                     try {
                         applyPartTransforms(poseStack, pt);
-                        renderHaloGeometry(poseStack, vc, packedLight, race.haloType, rgb);
+                        renderHaloGeometry(poseStack, vc, packedLight, race.haloType, rgb, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -223,7 +257,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     try {
                         applyPartTransforms(poseStack, pt);
                         poseStack.mulPose(com.mojang.math.Axis.YP.rotation(flapAngle));
-                        renderWingGeometry(poseStack, vc, packedLight, race.wingType, rgb, true);
+                        renderWingGeometry(poseStack, vc, packedLight, race.wingType, rgb, true, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -233,7 +267,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     try {
                         applyPartTransforms(poseStack, pt);
                         poseStack.mulPose(com.mojang.math.Axis.YP.rotation(-flapAngle));
-                        renderWingGeometry(poseStack, vc, packedLight, race.wingType, rgb, false);
+                        renderWingGeometry(poseStack, vc, packedLight, race.wingType, rgb, false, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -246,7 +280,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     poseStack.pushPose();
                     try {
                         applyPartTransforms(poseStack, pt);
-                        renderTailGeometry(poseStack, vc, packedLight, race.tailType, rgb);
+                        renderTailGeometry(poseStack, vc, packedLight, race.tailType, rgb, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -259,7 +293,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     poseStack.pushPose();
                     try {
                         applyPartTransforms(poseStack, pt);
-                        renderExtraLegsGeometry(poseStack, vc, packedLight, race.legType, race.legCount, rgb);
+                        renderExtraLegsGeometry(poseStack, vc, packedLight, race.legType, race.legCount, rgb, baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -272,7 +306,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
                     poseStack.pushPose();
                     try {
                         applyPartTransforms(poseStack, pt);
-                        renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.20f, -0.20f, 0.20f, 0.20f, 0.20f, rgb[0], rgb[1], rgb[2], 1.0f);
+                        renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.20f, -0.20f, 0.20f, 0.20f, 0.20f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
                     } finally {
                         poseStack.popPose();
                     }
@@ -283,157 +317,157 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         }
     }
 
-    private void renderEarsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String earType, float[] rgb) {
+    private void renderEarsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String earType, float[] rgb, float baseAlpha) {
         String type = earType.toLowerCase();
         if ("dog".equals(type)) {
             // Dog: Floppy/slanted ears
-            renderColoredBox(poseStack, vc, packedLight, -0.42f, -0.50f, -0.05f, -0.25f, -0.10f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.50f, -0.05f, 0.42f, -0.10f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.42f, -0.50f, -0.05f, -0.25f, -0.10f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.50f, -0.05f, 0.42f, -0.10f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("cat".equals(type)) {
             // Cat: Pointed ears with inner ear contrast
-            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.75f, -0.05f, -0.20f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.20f, -0.75f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.75f, -0.05f, -0.20f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.20f, -0.75f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
             // Inner ear accents (slightly lighter)
-            renderColoredBox(poseStack, vc, packedLight, -0.32f, -0.70f, -0.06f, -0.23f, -0.45f, -0.05f, Math.min(1.0f, rgb[0] + 0.2f), Math.min(1.0f, rgb[1] + 0.2f), Math.min(1.0f, rgb[2] + 0.2f), 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.23f, -0.70f, -0.06f, 0.32f, -0.45f, -0.05f, Math.min(1.0f, rgb[0] + 0.2f), Math.min(1.0f, rgb[1] + 0.2f), Math.min(1.0f, rgb[2] + 0.2f), 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.32f, -0.70f, -0.06f, -0.23f, -0.45f, -0.05f, Math.min(1.0f, rgb[0] + 0.2f), Math.min(1.0f, rgb[1] + 0.2f), Math.min(1.0f, rgb[2] + 0.2f), 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.23f, -0.70f, -0.06f, 0.32f, -0.45f, -0.05f, Math.min(1.0f, rgb[0] + 0.2f), Math.min(1.0f, rgb[1] + 0.2f), Math.min(1.0f, rgb[2] + 0.2f), 1.0f * baseAlpha);
         } else if ("dragon".equals(type)) {
             // Dragon: Webbed fin-like flared ears
-            renderColoredBox(poseStack, vc, packedLight, -0.55f, -0.50f, -0.05f, -0.25f, -0.38f, 0.05f, rgb[0], rgb[1], rgb[2], 0.95f);
-            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.50f, -0.05f, 0.55f, -0.38f, 0.05f, rgb[0], rgb[1], rgb[2], 0.95f);
+            renderColoredBox(poseStack, vc, packedLight, -0.55f, -0.50f, -0.05f, -0.25f, -0.38f, 0.05f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.25f, -0.50f, -0.05f, 0.55f, -0.38f, 0.05f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
         } else if ("bunny".equals(type)) {
             // Bunny: Long upright rabbit ears
-            renderColoredBox(poseStack, vc, packedLight, -0.30f, -1.10f, -0.05f, -0.18f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.18f, -1.10f, -0.05f, 0.30f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, -1.10f, -0.05f, -0.18f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.18f, -1.10f, -0.05f, 0.30f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else {
             // Standard/Default Ear Cuboids
-            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.65f, -0.05f, -0.22f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.22f, -0.65f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.65f, -0.05f, -0.22f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.22f, -0.65f, -0.05f, 0.35f, -0.40f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         }
     }
 
-    private void renderHornsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String hornType, float[] rgb) {
+    private void renderHornsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String hornType, float[] rgb, float baseAlpha) {
         String type = hornType.toLowerCase();
         if ("demon".equals(type)) {
             // Demon: Steep curved backward horns
-            renderColoredBox(poseStack, vc, packedLight, -0.22f, -0.90f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.90f, -0.15f, 0.22f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.22f, -0.90f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.90f, -0.15f, 0.22f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("ram".equals(type)) {
             // Ram: Wide curling horns wrapping outward around head sides
-            renderColoredBox(poseStack, vc, packedLight, -0.45f, -0.60f, -0.20f, -0.18f, -0.40f, 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.18f, -0.60f, -0.20f, 0.45f, -0.40f, 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.45f, -0.60f, -0.20f, -0.18f, -0.40f, 0.10f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.18f, -0.60f, -0.20f, 0.45f, -0.40f, 0.10f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("dragon".equals(type)) {
             // Dragon: Swept-back multi-pronged spiky horns
-            renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.80f, 0.00f, -0.10f, -0.50f, 0.30f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.10f, -0.80f, 0.00f, 0.20f, -0.50f, 0.30f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.80f, 0.00f, -0.10f, -0.50f, 0.30f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.10f, -0.80f, 0.00f, 0.20f, -0.50f, 0.30f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("unicorn".equals(type)) {
             // Unicorn: Single center forehead horn
-            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.95f, -0.30f, 0.05f, -0.45f, -0.18f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.95f, -0.30f, 0.05f, -0.45f, -0.18f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else {
             // Standard Horn Cuboids
-            renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.70f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.70f, -0.15f, 0.20f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.20f, -0.70f, -0.15f, -0.12f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.12f, -0.70f, -0.15f, 0.20f, -0.50f, -0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         }
     }
 
-    private void renderHaloGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String haloType, float[] rgb) {
+    private void renderHaloGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String haloType, float[] rgb, float baseAlpha) {
         String type = haloType.toLowerCase();
         if ("angel".equals(type)) {
             // Angel: Floating luminous ring
-            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.80f, -0.35f, 0.35f, -0.76f, 0.35f, rgb[0], rgb[1], rgb[2], 0.95f);
+            renderColoredBox(poseStack, vc, packedLight, -0.35f, -0.80f, -0.35f, 0.35f, -0.76f, 0.35f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
         } else if ("flower".equals(type)) {
             // Flower: Halo ring surrounded by 4 floral petal accents
-            renderColoredBox(poseStack, vc, packedLight, -0.32f, -0.78f, -0.32f, 0.32f, -0.74f, 0.32f, rgb[0], rgb[1], rgb[2], 0.9f);
-            renderColoredBox(poseStack, vc, packedLight, -0.38f, -0.80f, -0.05f, -0.30f, -0.72f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.30f, -0.80f, -0.05f, 0.38f, -0.72f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.80f, -0.38f, 0.05f, -0.72f, -0.30f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.80f, 0.30f, 0.05f, -0.72f, 0.38f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.32f, -0.78f, -0.32f, 0.32f, -0.74f, 0.32f, rgb[0], rgb[1], rgb[2], 0.9f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, -0.38f, -0.80f, -0.05f, -0.30f, -0.72f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.30f, -0.80f, -0.05f, 0.38f, -0.72f, 0.05f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.80f, -0.38f, 0.05f, -0.72f, -0.30f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, -0.05f, -0.80f, 0.30f, 0.05f, -0.72f, 0.38f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("demon".equals(type)) {
             // Demon: Dark spiky ring halo
-            renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
-            renderColoredBox(poseStack, vc, packedLight, -0.28f, -0.82f, -0.28f, -0.24f, -0.75f, -0.24f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, 0.24f, -0.82f, -0.28f, 0.28f, -0.75f, -0.24f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, -0.28f, -0.82f, -0.28f, -0.24f, -0.75f, -0.24f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, 0.24f, -0.82f, -0.28f, 0.28f, -0.75f, -0.24f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else {
             // Standard Halo Ring
-            renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f);
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, -0.75f, -0.30f, 0.30f, -0.71f, 0.30f, rgb[0], rgb[1], rgb[2], 0.9f * baseAlpha);
         }
     }
 
-    private void renderWingGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String wingType, float[] rgb, boolean isLeft) {
+    private void renderWingGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String wingType, float[] rgb, boolean isLeft, float baseAlpha) {
         String type = wingType.toLowerCase();
         if ("feathered".equals(type)) {
             if (isLeft) {
-                renderColoredBox(poseStack, vc, packedLight, -0.85f, -0.10f, 0.15f, -0.15f, 0.70f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
-                renderColoredBox(poseStack, vc, packedLight, -0.95f, 0.20f, 0.16f, -0.25f, 0.95f, 0.21f, rgb[0] * 0.9f, rgb[1] * 0.9f, rgb[2] * 0.9f, 0.95f);
+                renderColoredBox(poseStack, vc, packedLight, -0.85f, -0.10f, 0.15f, -0.15f, 0.70f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
+                renderColoredBox(poseStack, vc, packedLight, -0.95f, 0.20f, 0.16f, -0.25f, 0.95f, 0.21f, rgb[0] * 0.9f, rgb[1] * 0.9f, rgb[2] * 0.9f, 0.95f * baseAlpha);
             } else {
-                renderColoredBox(poseStack, vc, packedLight, 0.15f, -0.10f, 0.15f, 0.85f, 0.70f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
-                renderColoredBox(poseStack, vc, packedLight, 0.25f, 0.20f, 0.16f, 0.95f, 0.95f, 0.21f, rgb[0] * 0.9f, rgb[1] * 0.9f, rgb[2] * 0.9f, 0.95f);
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, -0.10f, 0.15f, 0.85f, 0.70f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
+                renderColoredBox(poseStack, vc, packedLight, 0.25f, 0.20f, 0.16f, 0.95f, 0.95f, 0.21f, rgb[0] * 0.9f, rgb[1] * 0.9f, rgb[2] * 0.9f, 0.95f * baseAlpha);
             }
         } else if ("dragon".equals(type)) {
             if (isLeft) {
-                renderColoredBox(poseStack, vc, packedLight, -0.90f, 0.0f, 0.15f, -0.15f, 0.85f, 0.20f, rgb[0], rgb[1], rgb[2], 0.90f);
-                renderColoredBox(poseStack, vc, packedLight, -0.88f, -0.05f, 0.14f, -0.17f, 0.10f, 0.21f, rgb[0] * 0.7f, rgb[1] * 0.7f, rgb[2] * 0.7f, 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, -0.90f, 0.0f, 0.15f, -0.15f, 0.85f, 0.20f, rgb[0], rgb[1], rgb[2], 0.90f * baseAlpha);
+                renderColoredBox(poseStack, vc, packedLight, -0.88f, -0.05f, 0.14f, -0.17f, 0.10f, 0.21f, rgb[0] * 0.7f, rgb[1] * 0.7f, rgb[2] * 0.7f, 1.0f * baseAlpha);
             } else {
-                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.90f, 0.85f, 0.20f, rgb[0], rgb[1], rgb[2], 0.90f);
-                renderColoredBox(poseStack, vc, packedLight, 0.17f, -0.05f, 0.14f, 0.88f, 0.10f, 0.21f, rgb[0] * 0.7f, rgb[1] * 0.7f, rgb[2] * 0.7f, 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.90f, 0.85f, 0.20f, rgb[0], rgb[1], rgb[2], 0.90f * baseAlpha);
+                renderColoredBox(poseStack, vc, packedLight, 0.17f, -0.05f, 0.14f, 0.88f, 0.10f, 0.21f, rgb[0] * 0.7f, rgb[1] * 0.7f, rgb[2] * 0.7f, 1.0f * baseAlpha);
             }
         } else {
             if (isLeft) {
-                renderColoredBox(poseStack, vc, packedLight, -0.85f, 0.0f, 0.15f, -0.15f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                renderColoredBox(poseStack, vc, packedLight, -0.85f, 0.0f, 0.15f, -0.15f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
             } else {
-                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.85f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f);
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.0f, 0.15f, 0.85f, 0.80f, 0.20f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
             }
         }
     }
 
-    private void renderTailGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String tailType, float[] rgb) {
+    private void renderTailGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String tailType, float[] rgb, float baseAlpha) {
         String type = tailType.toLowerCase();
         if ("dog".equals(type)) {
             // Dog: Bushy upward tail
-            renderColoredBox(poseStack, vc, packedLight, -0.08f, 0.50f, 0.15f, 0.08f, 1.05f, 0.45f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.08f, 0.50f, 0.15f, 0.08f, 1.05f, 0.45f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("cat".equals(type)) {
             // Cat: Slender long tail box
-            renderColoredBox(poseStack, vc, packedLight, -0.04f, 0.60f, 0.15f, 0.04f, 1.35f, 0.35f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.04f, 0.60f, 0.15f, 0.04f, 1.35f, 0.35f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("camel".equals(type)) {
             // Camel: Hump / tail tuft
-            renderColoredBox(poseStack, vc, packedLight, -0.15f, 0.20f, 0.15f, 0.15f, 0.60f, 0.45f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.15f, 0.20f, 0.15f, 0.15f, 0.60f, 0.45f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else if ("fish".equals(type)) {
             // Fish: Tail body with caudal fin span
-            renderColoredBox(poseStack, vc, packedLight, -0.04f, 0.65f, 0.15f, 0.04f, 1.20f, 0.50f, rgb[0], rgb[1], rgb[2], 1.0f);
-            renderColoredBox(poseStack, vc, packedLight, -0.25f, 1.00f, 0.45f, 0.25f, 1.30f, 0.52f, rgb[0], rgb[1], rgb[2], 0.95f);
+            renderColoredBox(poseStack, vc, packedLight, -0.04f, 0.65f, 0.15f, 0.04f, 1.20f, 0.50f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+            renderColoredBox(poseStack, vc, packedLight, -0.25f, 1.00f, 0.45f, 0.25f, 1.30f, 0.52f, rgb[0], rgb[1], rgb[2], 0.95f * baseAlpha);
         } else if ("dragon".equals(type)) {
             // Dragon: Thick spiky tail
-            renderColoredBox(poseStack, vc, packedLight, -0.10f, 0.60f, 0.15f, 0.10f, 1.30f, 0.70f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.10f, 0.60f, 0.15f, 0.10f, 1.30f, 0.70f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else {
             // Standard rear vertical tail
-            renderColoredBox(poseStack, vc, packedLight, -0.06f, 0.65f, 0.15f, 0.06f, 1.25f, 0.65f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.06f, 0.65f, 0.15f, 0.06f, 1.25f, 0.65f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         }
     }
 
-    private void renderExtraLegsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String legType, int legCount, float[] rgb) {
+    private void renderExtraLegsGeometry(PoseStack poseStack, VertexConsumer vc, int packedLight, String legType, int legCount, float[] rgb, float baseAlpha) {
         String type = legType != null ? legType.toLowerCase() : "human";
         if ("spider".equals(type)) {
             int extraPairs = Math.max(1, (legCount - 2) / 2);
             for (int i = 0; i < extraPairs; i++) {
                 float zOff = (i - extraPairs / 2.0f + 0.5f) * 0.25f;
                 // Left spider leg
-                renderColoredBox(poseStack, vc, packedLight, -0.75f, 0.50f + (i * 0.05f), zOff, -0.15f, 1.20f, zOff + 0.08f, rgb[0], rgb[1], rgb[2], 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, -0.75f, 0.50f + (i * 0.05f), zOff, -0.15f, 1.20f, zOff + 0.08f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
                 // Right spider leg
-                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.50f + (i * 0.05f), zOff, 0.75f, 1.20f, zOff + 0.08f, rgb[0], rgb[1], rgb[2], 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.50f + (i * 0.05f), zOff, 0.75f, 1.20f, zOff + 0.08f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
             }
         } else if ("centaur".equals(type)) {
             // Rear quadruped body extension
-            renderColoredBox(poseStack, vc, packedLight, -0.30f, 0.40f, 0.20f, 0.30f, 0.85f, 1.00f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.30f, 0.40f, 0.20f, 0.30f, 0.85f, 1.00f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
             // Rear left leg
-            renderColoredBox(poseStack, vc, packedLight, -0.28f, 0.85f, 0.70f, -0.10f, 1.50f, 0.90f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, -0.28f, 0.85f, 0.70f, -0.10f, 1.50f, 0.90f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
             // Rear right leg
-            renderColoredBox(poseStack, vc, packedLight, 0.10f, 0.85f, 0.70f, 0.28f, 1.50f, 0.90f, rgb[0], rgb[1], rgb[2], 1.0f);
+            renderColoredBox(poseStack, vc, packedLight, 0.10f, 0.85f, 0.70f, 0.28f, 1.50f, 0.90f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
         } else {
             // Generic extra leg pairs
             int extraPairs = Math.max(1, (legCount - 2) / 2);
             for (int i = 0; i < extraPairs; i++) {
                 float zOff = (i + 1) * 0.25f;
-                renderColoredBox(poseStack, vc, packedLight, -0.35f, 0.60f, zOff, -0.15f, 1.30f, zOff + 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
-                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.60f, zOff, 0.35f, 1.30f, zOff + 0.10f, rgb[0], rgb[1], rgb[2], 1.0f);
+                renderColoredBox(poseStack, vc, packedLight, -0.35f, 0.60f, zOff, -0.15f, 1.30f, zOff + 0.10f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
+                renderColoredBox(poseStack, vc, packedLight, 0.15f, 0.60f, zOff, 0.35f, 1.30f, zOff + 0.10f, rgb[0], rgb[1], rgb[2], 1.0f * baseAlpha);
             }
         }
     }

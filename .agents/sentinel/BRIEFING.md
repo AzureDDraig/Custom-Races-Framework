@@ -1,22 +1,22 @@
-# BRIEFING — 2026-07-24T19:21:08Z
+# BRIEFING — 2026-07-28T16:45:25Z
 
 ## Mission
-Monitor Custom Races Framework Full Implementation (R1-R4) project implementation and audit victory claims.
+Monitor Custom Race GeckoLib Player Model Overhaul project implementation and audit victory claims.
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\sentinel
-- Orchestrator: eb64bef0-c6f3-422a-a91a-1723b2f81577
-- Victory Auditor: 6b6a3e9c-55a4-4e97-b346-2ec2c0a8ca20
+- Orchestrator: 538e6358-2c29-42d5-950e-24abce95a2ff
+- Victory Auditor: 5a0436ac-9edc-410b-af91-10e940fc9d0e
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
 - Victory Audit is MANDATORY before reporting completion
 
 ## User Context
-- **Last user request**: Custom Races Framework Full Implementation (R1: Were-Form Texture Fix, R2: VIP Permission-Locked Races, R3: autoOpenSelectionOnJoin toggle, R4: Dynamic Body Part Model Preset Audit).
+- **Last user request**: Custom Race GeckoLib Player Model Overhaul (R1: GeckoLib model override & asset resolution, R2: Base player model suppression guardrails, R3: Dynamic transformations, animations & combat effects).
 - **Pending clarifications**: none
-- **Delivered results**: Custom Races Framework Full Implementation complete and verified via independent Victory Audit.
+- **Delivered results**: Custom Race GeckoLib Player Model Overhaul completed and independently verified via Victory Audit.
 
 ## Project Status
 - **Phase**: complete

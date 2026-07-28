@@ -1,18 +1,13 @@
-## 2026-07-24T00:10:04Z
-You are Reviewer 1 (M2 Code Reviewer).
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_1
+## 2026-07-28T16:15:19Z
 
-PROJECT SCOPE:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-WORKER HANDOFF REPORT:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md
+You are Reviewer 1 for Milestone 2 (GeckoLib Asset Resolution & Rendering R1).
 
-YOUR TASK:
-Review the Were-Race Custom Model Transformation Rendering Fixes implemented by Worker M2:
-1. State Synchronization: Review `PlayerLookup.tracking(player)` broadcasting in `WereRaceTransformHandler.java` and `PlayerEvent.PLAYER_START_TRACKING` tracking listener in `CustomRaces.java` / `PlayerTracker.java`.
-2. Model Mesh Overrides: Review `PlayerRaceLayer.java` mesh part visibility toggles (`visible = false` when transformed) to ensure human skin is suppressed during Were-form rendering.
-3. Fallback Logic: Review `RaceData.java` and `WereModelRenderer.java` 3-tier fallback for null/empty/unmapped `wereModelId` / `wereModelPath`.
-4. Scale & Dimensions: Review `player.refreshDimensions()` calls upon Pehkui scale updates in `WereRaceTransformHandler.java` and `ModPackets.java`.
-5. Build Verification: Run `./gradlew build -x test` to verify zero errors across Fabric and Forge.
+Your working directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_1
+Project scope document: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+Worker M2 Handoff: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md
 
-Write your review report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_1\handoff.md` and report verdict (PASS/FAIL) via send_message to parent.
+Review Tasks:
+1. Examine Worker M2's code implementation of `GeckoAssetResolver.java` and its integration into `WereModelRenderer.java` and `GeckoLibWereRenderer.java`.
+2. Verify path normalization, namespace defaulting to `"customraces"`, subfolder prefix searching (`geo/`, `models/were/`, `animations/`), extension defaulting (`.geo.json`, `.animation.json`, `.png`), and fallback hierarchy across disk config (`config/custom_races/`) and mod resource packs (`assets/customraces/`).
+3. Verify project compilation by executing `./gradlew build -x test`.
+4. Create your working directory `.agents/teamwork_preview_reviewer_m2_1`, write `progress.md` and `handoff.md`, state your verdict (PASS/FAIL with detailed rationale), and send a completion message to parent.

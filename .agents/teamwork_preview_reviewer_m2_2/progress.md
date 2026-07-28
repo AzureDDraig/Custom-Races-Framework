@@ -1,11 +1,12 @@
-# Progress Log - M2 Reviewer 2
+# Progress Log
 
-Last visited: 2026-07-23T19:12:38Z
+Last visited: 2026-07-28T16:16:30Z
 
-- [x] Initialized workspace and briefing
-- [x] Read PROJECT.md and worker handoff report
-- [x] Inspect git status / modified files / M2 codebase
-- [x] Execute build `./gradlew build -x test` (`BUILD SUCCESSFUL in 13s`)
-- [x] Perform code review (correctness, thread safety, NPEs, model cleanup, dimension change/respawn, integrity check)
-- [x] Perform adversarial critique & edge case stress testing
-- [x] Write handoff report and send verdict (PASS) to parent
+- [x] Initialized workspace files (`ORIGINAL_REQUEST.md`, `BRIEFING.md`, `progress.md`).
+- [x] Read Worker M2 handoff (`.agents/teamwork_preview_worker_m2/handoff.md`) and project spec (`.agents/orchestrator/PROJECT.md`).
+- [x] Inspect implementation files (`GeckoLibWereRenderer.java`, `PlayerRaceLayer.java`, `WereModelRenderer.java`, `GeckoAssetResolver.java`, `PehkuiIntegration.java`).
+- [x] Verify head rotation matrix transforms, head bone targeting (`head`, `bipedHead`, `head_bone`, `headbone`), and PoseStack matrix isolation (push/pop).
+- [x] Verify Pehkui scale coordination in `PlayerRaceLayer.java` (`!PehkuiIntegration.isPehkuiLoaded()` guard).
+- [x] Run build test `./gradlew build -x test` (SUCCESSFUL in 14s).
+- [x] Write `handoff.md` with verdict PASS and detailed verification findings.
+- [ ] Notify parent via `send_message`.

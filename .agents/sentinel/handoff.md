@@ -1,21 +1,25 @@
-# Handoff Report — Project Sentinel Final Completion
+# Handoff Report — Custom Race GeckoLib Player Model Overhaul
 
 ## Observation
-- Orchestrator reported completion of all 4 requirements (R1, R2, R3, R4).
-- Sentinel spawned independent Victory Auditor (`6b6a3e9c-55a4-4e97-b346-2ec2c0a8ca20`).
-- Victory Auditor executed 3-phase audit (Phase A: Timeline & Provenance, Phase B: Forensic Integrity & Cheating Detection under Development mode, Phase C: Independent Test & Build Execution).
-- All 3 phases passed cleanly with 0 errors across `:common`, `:fabric`, and `:forge` compilation and 100% pass rate across all 10 unit test suites.
-- Victory Auditor returned verdict: **VICTORY CONFIRMED**.
+- The project requested full custom player model rendering using GeckoLib for transformed races in Custom Races Framework, with base human player model suppression when transformed and zero player invisibility.
+- All three requirement sets (R1: GeckoLib Player Model Override & Asset Resolution, R2: Base Human Player Model Suppression Guardrails, R3: Dynamic Transformations, Animations & Combat Effects) were implemented by the engineering swarm.
+- An independent post-victory audit was conducted by Victory Auditor `5a0436ac-9edc-410b-af91-10e940fc9d0e`.
 
 ## Logic Chain
-- As mandated by Sentinel role, project completion cannot be reported without a VICTORY CONFIRMED verdict from the independent Victory Auditor.
-- With the Victory Auditor confirming all claims and builds, the project is officially verified complete.
+- Milestone M1 explored architecture, matrix transformation boundaries, and asset resolution logic across Fabric and Forge.
+- Milestone M2 established `GeckoAssetResolver.java` for dual disk/resource pack asset resolution, head yaw/pitch bone alignment, and Pehkui scale guards.
+- Milestone M3 implemented complete suppression of base player model parts (all 14 cuboid meshes including `cloak` and `ear`), fail-safe fallback rendering (`renderWereBeastParts`), and spectator translucency handling.
+- Milestone M4 added keyframe animation priority mapping (Hurt > Attack > Swim > Fly > Walk > Idle), red hurt flash overlays, dynamic skin texture overrides, and 20 Hz tick-guarded particle aura rendering.
+- Independent Victory Auditor executed `./gradlew test` and `./gradlew build -x test` and inspected code integrity, returning `VICTORY CONFIRMED`.
 
 ## Caveats
-- None. All requirements independently verified.
+- Disk config models stored under `config/custom_races/models/` require valid JSON formatting and standard GeckoLib 1.19.2/1.20+ geometry specifications.
+- Custom skin keywords (`skin` or `player`) resolve dynamically from `player.getSkinTextureLocation()`.
 
 ## Conclusion
-- Project execution successfully completed and independently audited.
+- Project completed successfully with 100% requirements coverage and verified multi-platform compilation across Fabric and Forge.
 
 ## Verification Method
-- Independent audit report located at `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\victory_auditor\handoff.md`.
+- `./gradlew build -x test`: PASSED across Fabric and Forge.
+- `./gradlew test`: All verification test suites PASSED.
+- Independent Victory Audit: VICTORY CONFIRMED.

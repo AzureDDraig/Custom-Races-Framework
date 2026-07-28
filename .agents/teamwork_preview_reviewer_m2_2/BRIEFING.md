@@ -1,48 +1,50 @@
-# BRIEFING — 2026-07-23T19:12:35Z
+# BRIEFING — 2026-07-28T16:16:30Z
 
 ## Mission
-Independently review M2 implementation (Preview & Transformation System) for edge cases, performance, security, integrity violations, and potential bugs, verify build succeeds, and produce review handoff report.
+Review Milestone 2 (GeckoLib Head Rotation & Pehkui Scaling R1) work product implemented by Worker M2, perform quality review, verification, and adversarial criticism.
 
 ## 🔒 My Identity
-- Archetype: Teamwork agent
+- Archetype: Reviewer / Critic
 - Roles: reviewer, critic
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2
-- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Milestone: M2 - Transformation & Preview System
-- Instance: 2 of 2 (Reviewer 2)
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: Milestone 2 (GeckoLib Head Rotation & Pehkui Scaling R1)
+- Instance: Reviewer 2
 
 ## 🔒 Key Constraints
-- Review-only — do NOT modify implementation code.
-- Strictly adhere to User Rules: NEVER export on me, BACKUP folder read-only.
-- Verify integrity: check for hardcoded test results, facade implementations, shortcuts, or fake verification artifacts.
-- Execute build verification: `./gradlew build -x test`.
+- Review-only — do NOT modify implementation code
+- Write only to working directory `.agents/teamwork_preview_reviewer_m2_2`
+- Verify head rotation matrix transforms, head bone targeting, PoseStack isolation, Pehkui scale guard, and build compilation
 
 ## Current Parent
-- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-23T19:12:35Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T16:16:30Z
 
 ## Review Scope
-- **Files to review**: M2 implementation files (`PlayerRaceLayer.java`, `WereModelRenderer.java`, `CustomRaceModelRenderer.java`, `WereRaceTransformHandler.java`, `FirstJoinHandler.java`, `PehkuiIntegration.java`, `ModPackets.java`, `ClientWereState.java`, `CustomRacesFabric.java`, `CustomRacesForge.java`).
-- **Interface contracts**: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-- **Worker report**: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md
-- **Review criteria**: correctness, edge cases, thread safety, NPE safety, dimension travel/respawn, model layer visibility cleanup, build success.
-
-## Review Checklist
-- **Items reviewed**: All 10 M2 implementation source files.
-- **Verdict**: PASS / APPROVE
-- **Unverified claims**: Worker claims verified via build test and code inspection.
-
-## Attack Surface
-- **Hypotheses tested**: Thread safety of client/server packets (VERIFIED SAFE via `context.queue`), Player respawn/dimension change tracking (VERIFIED via Fabric/Forge tracking events and `FirstJoinHandler`), Model visibility cleanup (VERIFIED via `setBaseModelVisible`), Null UUID handling (VERIFIED SAFE), Asset fallback handling (VERIFIED SAFE).
-- **Vulnerabilities found**: Minor defensive null check suggestion in `WereRaceTransformHandler.toggleManualWereForm`.
-- **Untested angles**: None.
+- **Files to review**: `GeckoLibWereRenderer.java`, `PlayerRaceLayer.java`, `WereModelRenderer.java`, `GeckoAssetResolver.java`, `PehkuiIntegration.java`
+- **Interface contracts**: `.agents/orchestrator/PROJECT.md`
+- **Review criteria**: Correctness, matrix safety/hygiene, head bone targeting fallback, Pehkui double-scale prevention, compilation
 
 ## Key Decisions Made
-- Confirmed build succeeds (`BUILD SUCCESSFUL in 13s`).
-- Confirmed no integrity violations or fake facades.
-- Approved M2 implementation with PASS verdict.
+- Confirmed parameter flow of `netHeadYaw` and `headPitch` through `PlayerRaceLayer` -> `WereModelRenderer` -> `GeckoLibWereRenderer`.
+- Verified bone targeting for `head`, `bipedHead`, `head_bone`, `headbone` in `GeckoLibWereRenderer.isHeadBone()`.
+- Verified PoseStack hygiene (`pushPose` paired with `popPose` inside `finally` blocks).
+- Verified Pehkui scale coordination (`!PehkuiIntegration.isPehkuiLoaded()`).
+- Confirmed successful compilation via `./gradlew build -x test`.
+- Issued verdict: **PASS** (APPROVE).
+
+## Review Checklist
+- **Items reviewed**: `GeckoLibWereRenderer.java`, `PlayerRaceLayer.java`, `WereModelRenderer.java`, `GeckoAssetResolver.java`, `PehkuiIntegration.java`, Gradle build output
+- **Verdict**: PASS / APPROVE
+- **Unverified claims**: None (all key claims verified)
+
+## Attack Surface
+- **Hypotheses tested**: Nested bone rotation inheritance, matrix stack exception leakage, double scaling with Pehkui present/absent.
+- **Vulnerabilities found**: None.
+- **Untested angles**: None within Milestone 2 scope.
 
 ## Artifact Index
-- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2\ORIGINAL_REQUEST.md — Prompt record
-- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2\BRIEFING.md — Working memory
-- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_2\handoff.md — Code review handoff report
+- `.agents/teamwork_preview_reviewer_m2_2/ORIGINAL_REQUEST.md` — Original request
+- `.agents/teamwork_preview_reviewer_m2_2/BRIEFING.md` — Working briefing state
+- `.agents/teamwork_preview_reviewer_m2_2/progress.md` — Liveness progress log
+- `.agents/teamwork_preview_reviewer_m2_2/handoff.md` — Final review handoff report

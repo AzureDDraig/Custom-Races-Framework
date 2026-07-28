@@ -1,189 +1,196 @@
-# Were-Race Transformation State & Networking Analysis Report
+# Comprehensive Architecture Analysis: GeckoLib Player Model Override & Asset Resolution (R1)
 
-## Executive Summary
-This investigation analyzes the client-side transformation state (`ClientWereState`), server transformation tracking (`WereRaceTransformHandler`), network packet handlers (`ModPackets`), and tracking client synchronization across the `customraces` framework. 
-
-The primary bug causing transformed players to render as default player models on tracking clients is the **absence of a server entity-tracking listener (`PlayerEvent.PLAYER_START_TRACKING`)**. When a player transforms, the state is broadcast to currently online players. However, when other players move into rendering/chunk distance, change dimensions, or log in after transformation, the server does not transmit the transformation state to the newly tracking clients. Furthermore, client-side packet reception lacks bounding box dimension refreshing (`player.refreshDimensions()`) and scale updates.
-
----
-
-## 1. Codebase Transformation State Architecture & Flow
-
-### 1.1 Server State Storage & Logic
-- **File**: `common/src/main/java/ddraig/net/customraces/event/WereRaceTransformHandler.java`
-- **State Map**: `private static final Map<UUID, Boolean> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();` (Line 26)
-- **State Query Method**: 
-  ```java
-  public static boolean isTransformed(UUID uuid) {
-      if (uuid == null) return false;
-      if (TRANSFORMED_PLAYERS.getOrDefault(uuid, false)) return true;
-      return ddraig.net.customraces.client.ClientWereState.isTransformed(uuid);
-  }
-  ```
-  *(Lines 53–57)*
-- **Transformation Trigger**: `transformIntoWereForm(ServerPlayer player, RaceData race)` (Lines 141–187):
-  - Line 142: `TRANSFORMED_PLAYERS.put(player.getUUID(), true);`
-  - Line 143: `ModPackets.syncWereStateToAll(player.getServer(), player.getUUID(), true);`
-  - Line 183: `PehkuiIntegration.applyRaceScales(player, race);`
-- **Reversion Trigger**: `revertWereForm(ServerPlayer player, RaceData race)` (Lines 189–204):
-  - Line 190: `TRANSFORMED_PLAYERS.remove(player.getUUID());`
-  - Line 191: `ModPackets.syncWereStateToAll(player.getServer(), player.getUUID(), false);`
-  - Line 200: `PehkuiIntegration.applyRaceScales(player, race);`
-
-### 1.2 Client State Storage & Logic
-- **File**: `common/src/main/java/ddraig/net/customraces/client/ClientWereState.java`
-- **State Map**: `public static final Map<UUID, Boolean> TRANSFORMED_PLAYERS = new ConcurrentHashMap<>();` (Line 11)
-- **State Mutator**: `setTransformed(UUID uuid, boolean transformed)` (Lines 17–24):
-  - If `transformed == true`, inserts `(uuid, true)`.
-  - If `transformed == false`, removes `uuid` key.
-
-### 1.3 Client Render Layer Inspection
-- **File**: `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java`
-- **Render Check**:
-  ```java
-  boolean isWereTransformed = ddraig.net.customraces.client.ClientWereState.isTransformed(player.getUUID())
-          || ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
-  ```
-  *(Lines 39–40)*
-- If `isWereTransformed` is `true` and `race.enableWereRace` is `true`:
-  - Applies werewolf model scaling: `poseStack.scale(wScale, hScale, wScale)` (Line 46).
-  - Renders werewolf beast features: ears, snout, glowing crimson eyes (Line 49).
-- If `isWereTransformed` is `false`:
-  - Falls back to rendering base race preset parts (wings, tail, horns, halo) over the default player model (Line 70).
+**Author:** Explorer 1 (M1)  
+**Date:** 2026-07-28  
+**Focus Area:** R1 - GeckoLib Player Model Override & Asset Resolution  
+**Target Milestone:** M1 (Exploration & Architecture Analysis) -> M2 Implementation  
 
 ---
 
-## 2. Root Cause Analysis: Tracking Client Synchronization Failure
+## 1. Executive Summary
 
-### 2.1 Flaw 1 — Missing `PlayerEvent.PLAYER_START_TRACKING` Event Listener
-- **Current Behavior**: State sync packets are sent ONLY when:
-  1. A player actively triggers transform/revert (`syncWereStateToAll` in `WereRaceTransformHandler.java:143, 191`).
-  2. A player joins the server (`FirstJoinHandler.java:19`).
-- **Defect**: When Player A is transformed and Player B (already on the server) walks into entity tracking distance, teleports near Player A, or changes dimensions into Player A's world, Minecraft's tracking system starts tracking Player A for Player B.
-- **Impact**: Because no listener is registered for Architectury's `PlayerEvent.PLAYER_START_TRACKING`, Player B's client NEVER receives a `SYNC_WERE_STATE_ID` packet for Player A. On Player B's client, `ClientWereState.isTransformed(Player A.getUUID())` evaluates to `false`. Player B renders Player A as a normal player entity.
+This document provides a deep, read-only architectural analysis of the GeckoLib player model override system, dual-path asset resolution (disk config vs mod resource pack), model alignment/positioning/scaling, and texture/model binding mechanics in the Custom Races Framework.
 
-### 2.2 Flaw 2 — Missing Client Bounding Box & Scale Refresh on Packet Receipt
-- **Current Behavior**: In `ModPackets.java` (lines 41–47), receiving `SYNC_WERE_STATE_ID` updates `ClientWereState.setTransformed(pUuid, isTransformed)` on the client context queue.
-- **Defect**: The packet handler does NOT invoke `clientPlayer.refreshDimensions()` or `PehkuiIntegration.applyRaceScales(clientPlayer, race)` for the target player on the client main thread.
-- **Impact**: The client player entity retains default bounding box dimensions and scale, causing visual desynchronization between hitbox height, eye height, and rendered model scale.
-
-### 2.3 Flaw 3 — Incomplete `PLAYER_RESPAWN` Sync
-- **Current Behavior**: `FirstJoinHandler.java` registers `PLAYER_RESPAWN` (lines 30–37) to re-apply Pehkui scales, but does not re-sync active transformation states to the respawned player or update tracking clients of the respawned player entity.
-
-### 2.4 Flaw 4 — Stale Client State Lifecycle Cleanup
-- **Current Behavior**: `ClientWereState.clear()` exists in `ClientWereState.java:26`, but is not hooked to client disconnection or world unload events.
-- **Impact**: Rejoining a singleplayer world or switching servers may retain stale transformation states in `ClientWereState.TRANSFORMED_PLAYERS`.
+Key findings indicate that while reflection-based GeckoLib model rendering (`GeckoLibWereRenderer.java`) and basic model suppression (`WereModelRenderer.java`, `LivingEntityRendererMixin.java`) are functional in simple cases, there are critical gaps and architectural bugs:
+1. **Asset Resolution Deficiencies**: Path normalization is inconsistent across models, textures, and animations. `wereModelPath` and `wereAnimationPath` lack namespace defaults, subfolder prefixing (`geo/`, `animations/`), and extension fallbacks when resolving via `ResourceManager` or disk config.
+2. **Missing Head Rotation & Camera Pitch Alignment**: `GeckoLibWereRenderer` ignores `netHeadYaw` and `headPitch` parameters during bone rendering. Transformed GeckoLib models remain completely rigid when players look up/down or turn their heads.
+3. **Double Scaling Bug with Pehkui Integration**: Both `PehkuiIntegration.applyRaceScales` and `PlayerRaceLayer.render` apply height/width scaling independently, resulting in quadratic scale multiplication (`hScale^2`, `wScale^2`) when Pehkui is active.
+4. **Player Invisibility Edge Case**: If model baking succeeds in `isModelAvailable` but vertex rendering or top-level bone retrieval fails inside `renderGeckoModel`, `LivingEntityRendererMixin` has already suppressed the base player mesh, causing the player entity to become completely invisible.
+5. **Missing Animation Engine**: Keyframe animation files (`.animation.json`) are parsed into memory, but there is no animation controller or keyframe tick updater to animate bones over time for idle, walking, attacking, or hurt states.
 
 ---
 
-## 3. Networking Packet & Listener Inventory
+## 2. Current Codebase Render Pipeline & Architecture
 
-### 3.1 Existing Packets & Handlers
-| Packet ResourceLocation | Direction | Primary Purpose | File & Location |
-|---|---|---|---|
-| `customraces:sync_were_state` | S2C | Broadcasts transformation state (`UUID`, `boolean`) | `ModPackets.java:36, 41-47, 215-223` |
-| `customraces:toggle_were_form` | C2S | Client keybind request to toggle Were-form | `ModPackets.java:37, 146-151, 200-203` |
-| `customraces:sync_races` | S2C | Syncs loaded race definitions & player assignments | `ModPackets.java:29, 49-81, 154-174` |
+### 2.1 Class Structure & Interaction Chain
+The player rendering pipeline for transformed races relies on the following component chain:
 
-### 3.2 Required Server Tracking Listener Registration
-- **Event**: `dev.architectury.event.events.common.PlayerEvent.PLAYER_START_TRACKING`
-- **Trigger**: Fired by Architectury whenever a player starts tracking an entity (e.g. player enters render distance or dimension).
-- **Target Logic**: When `trackedEntity instanceof ServerPlayer targetPlayer`, check `WereRaceTransformHandler.isTransformed(targetPlayer.getUUID())`. If `true`, send `SYNC_WERE_STATE_ID` for `targetPlayer` to `trackingPlayer`.
+```
+[LivingEntityRenderer.render()]
+      │
+      ├──> [LivingEntityRendererMixin @ HEAD]
+      │        Checks WereModelRenderer.isWereForm() && isModelAvailable()
+      │        If true: calls setBaseModelVisible(playerModel, false) to hide human cuboids.
+      │
+      ├──> [PlayerModel.renderToBuffer()] (Suppressed if setBaseModelVisible(false))
+      │
+      └──> [PlayerRaceLayer.render()] (RenderLayer attached to PlayerRenderer)
+               │
+               ├──> Checks isWereTransformed
+               ├──> Applies PoseStack scale (wScale, hScale, wScale)
+               └──> Calls WereModelRenderer.renderWereForm()
+                        │
+                        └──> Calls GeckoLibWereRenderer.renderGeckoModel()
+                                 │
+                                 ├──> Resolves/bakes bakedModel via reflection
+                                 ├──> Calls topLevelBones()
+                                 └──> Recursively calls renderBoneReflect() -> renderCubeReflect()
+```
 
----
+### 2.2 Detailed Class Analysis
 
-## 4. Precise Required Code Changes
+1. **`WereModelRenderer.java`** (`common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java`):
+   - Defines default fallback resource locations:
+     - `DEFAULT_WERE_MODEL = customraces:models/were/default_werewolf.geo.json`
+     - `DEFAULT_WERE_TEXTURE = customraces:textures/were/default_werewolf.png`
+     - `DEFAULT_WERE_ANIMATION = customraces:animations/were/default_werewolf.animation.json`
+   - Handles `isWereForm(player, race)` checks combining `race.enableWereRace` and `ClientWereState` / `WereRaceTransformHandler` transformed state.
+   - Provides `setBaseModelVisible(model, visible)` to toggle visibility of standard player cuboids (`head`, `hat`, `body`, `rightArm`, `leftArm`, `rightLeg`, `leftLeg`, `jacket`, `rightSleeve`, `leftSleeve`, `rightPants`, `leftPants`).
+   - Contains `getValidWereTextureLocation(player, race)` with dynamic texture loading from `config/custom_races/textures/`.
 
-### Change 1: `common/src/main/java/ddraig/net/customraces/network/ModPackets.java`
-1. **Add `sendWereStateToPlayer` helper method**:
-   ```java
-   public static void sendWereStateToPlayer(ServerPlayer recipient, UUID playerUuid, boolean isTransformed) {
-       if (recipient == null || playerUuid == null) return;
-       FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-       buf.writeUUID(playerUuid);
-       buf.writeBoolean(isTransformed);
-       NetworkManager.sendToPlayer(recipient, SYNC_WERE_STATE_ID, buf);
-   }
-   ```
-2. **Refactor `syncWereStateToAll`** (Lines 215–223):
-   Replace internal loop byte-buf creation with calls to `sendWereStateToPlayer(p, playerUuid, isTransformed)`.
-3. **Enhance `SYNC_WERE_STATE_ID` Client Receiver** (Lines 41–47):
-   ```java
-   NetworkManager.registerReceiver(NetworkManager.Side.S2C, SYNC_WERE_STATE_ID, (buf, context) -> {
-       UUID pUuid = buf.readUUID();
-       boolean isTransformed = buf.readBoolean();
-       context.queue(() -> {
-           ddraig.net.customraces.client.ClientWereState.setTransformed(pUuid, isTransformed);
-           net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-           if (mc.level != null) {
-               net.minecraft.world.entity.player.Player target = mc.level.getPlayerByUUID(pUuid);
-               if (target != null) {
-                   target.refreshDimensions();
-                   RaceData race = RaceRegistry.getPlayerRace(pUuid);
-                   if (race != null) {
-                       PehkuiIntegration.applyRaceScales(target, race);
-                   }
-               }
-           }
-       });
-   });
-   ```
+2. **`GeckoLibWereRenderer.java`** (`common/src/main/java/ddraig/net/customraces/client/render/GeckoLibWereRenderer.java`):
+   - Uses reflection to interface with GeckoLib 4 runtime classes (`software.bernie.geckolib.cache.GeckoLibCache`, `software.bernie.geckolib.util.JsonUtil`, `software.bernie.geckolib.loading.object.BakedModelFactory`, etc.).
+   - Parses `.geo.json` model files from either disk paths (`config/custom_races/models/`) or Minecraft `ResourceManager` into `BakedModel` objects and registers them in `GeckoLibCache`.
+   - Iterates through `topLevelBones()` and renders bone hierarchies using `renderBoneReflect()` and `renderCubeReflect()`.
 
-### Change 2: `common/src/main/java/ddraig/net/customraces/event/WereRaceTransformHandler.java`
-1. **Register `PLAYER_START_TRACKING` in `init()`** (Lines 31–39):
-   ```java
-   public static void init() {
-       TickEvent.PLAYER_POST.register(player -> {
-           if (player instanceof ServerPlayer serverPlayer) {
-               if (serverPlayer.tickCount % 40 == 0) {
-                   checkTransformation(serverPlayer);
-               }
-           }
-       });
+3. **`PlayerRaceLayer.java`** (`common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java`):
+   - Extends `RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>>`.
+   - Intercepts player rendering to scale `PoseStack` by `wereHeightScale` and `wereWidthScale`, invokes `WereModelRenderer.renderWereForm`, spawns real-time ambient smoke particles, and handles fallback procedural beast parts if custom model rendering returns `false`.
 
-       dev.architectury.event.events.common.PlayerEvent.PLAYER_START_TRACKING.register((trackedEntity, trackingPlayer) -> {
-           if (trackedEntity instanceof ServerPlayer targetPlayer) {
-               if (isTransformed(targetPlayer.getUUID())) {
-                   ddraig.net.customraces.network.ModPackets.sendWereStateToPlayer(trackingPlayer, targetPlayer.getUUID(), true);
-               }
-           }
-       });
-   }
-   ```
-2. **Refactor `syncAllWereStatesTo`** (Lines 41–51):
-   Use `ModPackets.sendWereStateToPlayer(targetPlayer, entry.getKey(), true)`.
-
-### Change 3: `common/src/main/java/ddraig/net/customraces/event/FirstJoinHandler.java`
-1. **Update `PLAYER_RESPAWN` listener** (Lines 30–37):
-   ```java
-   PlayerEvent.PLAYER_RESPAWN.register((newPlayer, conqueredEnd) -> {
-       if (newPlayer != null) {
-           RaceData race = RaceRegistry.getPlayerRace(newPlayer.getUUID());
-           if (race != null) {
-               PehkuiIntegration.applyRaceScales(newPlayer, race);
-           }
-           if (newPlayer instanceof ServerPlayer serverPlayer) {
-               WereRaceTransformHandler.syncAllWereStatesTo(serverPlayer);
-               if (WereRaceTransformHandler.isTransformed(serverPlayer.getUUID())) {
-                   ModPackets.syncWereStateToAll(serverPlayer.getServer(), serverPlayer.getUUID(), true);
-               }
-           }
-       }
-   });
-   ```
+4. **`LivingEntityRendererMixin.java`** (`common/src/main/java/ddraig/net/customraces/mixin/LivingEntityRendererMixin.java`):
+   - Injects at `@At("HEAD")` of `LivingEntityRenderer.render()`.
+   - Pre-emptively suppresses base human player model mesh parts when `isWereForm` and `isModelAvailable` are `true`.
 
 ---
 
-## 5. Verification Plan
+## 3. Dual-Path Asset Resolution Analysis (Disk Config vs Mod Resource Pack)
 
-1. **Multiplayer Tracking Verification**:
-   - Spawn two players (Player A and Player B) on a dedicated server.
-   - Have Player A transform into Were-form while Player B is out of tracking range (e.g. 200 blocks away).
-   - Have Player B walk toward Player A until Player A enters tracking range.
-   - Confirm Player B immediately renders Player A's custom Were-form model without needing to re-join or toggle state.
-2. **Dimension Change Verification**:
-   - Player A transforms in the Overworld. Player B enters the Nether and returns to Overworld near Player A.
-   - Confirm `PLAYER_START_TRACKING` re-syncs state and renders Were-form.
-3. **Bounding Box & Scale Verification**:
-   - Toggle transformation state on local client and remote client.
-   - Verify `refreshDimensions()` updates bounding box dimensions without visual stutter or offset.
+### 3.1 Resolution Mechanism Breakdown
+
+Custom Race models, textures, and animations can be stored in two distinct locations:
+- **Disk Config Directory**: `config/custom_races/models/`, `config/custom_races/textures/`, `config/custom_races/animations/`
+- **Mod Resource Pack Directory**: `assets/customraces/geo/`, `assets/customraces/textures/`, `assets/customraces/animations/` (or `assets/customraces/models/were/`)
+
+#### Current Asset Resolution Paths:
+
+| Asset Type | Config Input Example | Disk Lookup Path | Resource Pack Lookup Path | Bugs / Gaps Identified |
+|------------|----------------------|------------------|---------------------------|------------------------|
+| **Texture** | `werewolf.png` or `were/werewolf` | `config/custom_races/textures/<cleanPath>` | `assets/customraces/textures/<path>.png` | Clean path stripping loses subfolder structure; keywords (`skin`, `player`) supported. |
+| **Model** | `werewolf.geo.json` or `customraces:werewolf` | `config/custom_races/models/<cleanPath>` | `assets/minecraft/werewolf.geo.json` (if no namespace) | **CRITICAL**: Missing namespace fallback; no `geo/` subfolder prefix normalization; `ResourceLocation.tryParse` defaults to `minecraft:` namespace if un-prefixed. |
+| **Animation** | `werewolf.animation.json` | `config/custom_races/animations/<cleanPath>` | `assets/minecraft/werewolf.animation.json` | **CRITICAL**: Missing namespace fallback; no `.animation.json` extension normalization; no keyframe playback engine. |
+
+### 3.2 Key Asset Resolution Flaws
+
+1. **Namespace & Path Prefix Asymmetry**:
+   - `WereModelRenderer.getValidWereTextureLocation` performs namespace normalization (defaulting to `"customraces"`), prefix normalization (adding `"textures/"`), and suffix normalization (adding `".png"`).
+   - In contrast, `getValidWereModelLocation` and `getValidWereAnimationLocation` directly call `ResourceLocation.tryParse(path)`. If a user inputs `"werewolf.geo.json"`, `tryParse` returns `ResourceLocation("minecraft", "werewolf.geo.json")`.
+   - When Minecraft's `ResourceManager` attempts to load `minecraft:werewolf.geo.json`, it looks under `assets/minecraft/werewolf.geo.json` instead of `assets/customraces/geo/werewolf.geo.json`, causing resource pack loading to fail.
+
+2. **Resource Pack Path Convention Differences**:
+   - GeckoLib standard convention for model files in resource packs is `assets/<namespace>/geo/<filename>.geo.json`.
+   - Existing code checks `models/were/` and `models/`, but does not attempt fallback candidate lookups (`geo/<filename>.geo.json`, `models/were/<filename>.geo.json`, `models/<filename>.geo.json`).
+
+3. **Dynamic Disk Model Cache Invalidation**:
+   - Dynamically baked disk models are stored in `GeckoLibCache.getBakedModels()`.
+   - When Minecraft reloads resources (e.g. F3+T), `GeckoLibCache` is cleared by GeckoLib, purging disk-baked models.
+   - Subsequent renders must re-read disk JSON files and re-bake models on the fly. `GeckoLibWereRenderer.bakeModelFromFile` handles re-baking, but lacks a dedicated file modification timestamp cache check.
+
+---
+
+## 4. Model Positioning, Scaling, Feet Alignment, and Yaw/Pitch Alignment
+
+### 4.1 Matrix Stack & Entity Feet Alignment
+
+In Minecraft entity rendering, `LivingEntityRenderer.render()` establishes the base matrix stack:
+1. `poseStack.translate(x, y, z)` positions the render origin at the entity's feet (y = 0 at feet level).
+2. `LivingEntityRenderer.setupRotations()` rotates `poseStack` by `180.0F - bodyYaw`.
+3. `PlayerRaceLayer.render()` then receives `poseStack` aligned at `(0, 0, 0)` at feet level.
+
+**Alignment Verification**:
+- In `GeckoLibWereRenderer.renderBoneReflect()`, translation transforms are calculated as:
+  `poseStack.translate((px + pivX) / 16.0f, (py + pivY) / 16.0f, (pz + pivZ) / 16.0f);`
+- In Blockbench / GeckoLib `.geo.json` format, 1 unit = 1/16th of a block.
+- For GeckoLib models designed with origin `(0, 0, 0)` at ground level, top-level bones render correctly aligned to player entity feet.
+- **Caveat**: If a custom model's root bone pivot is placed at body center (e.g. y = 12 or y = 24), the model will render elevated above the player's feet unless an origin adjustment offset is applied.
+
+### 4.2 Head Yaw & Pitch Alignment Deficiencies
+
+**Current Flaw in `GeckoLibWereRenderer`**:
+- `PlayerRaceLayer.render()` receives `netHeadYaw` (head yaw relative to body yaw) and `headPitch` (pitch angle looking up/down).
+- However, `WereModelRenderer.renderWereForm` and `GeckoLibWereRenderer.renderGeckoModel` DO NOT accept or pass `netHeadYaw` and `headPitch`.
+- As a result, when rendering GeckoLib bones in `renderBoneReflect()`, no rotational transformation is applied to head bones (`head`, `bipedHead`, `head_bone`).
+- **Visual Impact**: Transformed player models remain completely rigid when looking around. The head does not track camera movement or pitch up/down.
+
+### 4.3 Scale Integration & Pehkui Interaction
+
+**Current Flaw**:
+1. `PehkuiIntegration.applyRaceScales` applies `wereHeightScale` and `wereWidthScale` directly to Pehkui's entity scale attributes (`HEIGHT` and `WIDTH`) when transformed.
+2. In `PlayerRaceLayer.render()`, the code ALSO executes:
+   `poseStack.scale(wScale, hScale, wScale);`
+3. When Pehkui is active, `LivingEntityRenderer` scales `poseStack` by Pehkui's entity scale *before* `PlayerRaceLayer.render()` is invoked. `PlayerRaceLayer` then scales `poseStack` a second time by `(wScale, hScale, wScale)`.
+4. **Visual Impact**: Transformed players render at squared scale (`1.3 * 1.3 = 1.69x` height/width) when Pehkui is installed.
+
+---
+
+## 5. Missing Helper Classes, Resource Loaders, and Binding Bugs
+
+### 5.1 Missing Components
+
+1. **`GeckoAssetResolver.java`**:
+   - A dedicated asset resolution helper is missing. It should encapsulate dual-path resolution for models, textures, and animations, managing path normalization, namespace defaulting, candidate location search (`geo/`, `models/were/`, `animations/`), and disk file existence validation.
+
+2. **`GeckoAnimationController.java`**:
+   - An animation state controller is missing. While `bakeAnimationsFromFile` parses animation keyframe JSONs, there is no keyframe tick evaluator to calculate time-varying bone rot/pos/scale transforms during player movement (idle, walk, attack, hurt).
+
+### 5.2 Identified Binding & Rendering Bugs
+
+1. **Player Invisibility Safety Flaw**:
+   - `LivingEntityRendererMixin` suppresses base player cuboids before `PlayerRaceLayer.render()` runs.
+   - If `GeckoLibWereRenderer.renderGeckoModel()` encounters a reflection error or empty bone tree during render time, `renderWereForm` returns `false`.
+   - Because `LivingEntityRendererMixin` already suppressed the base player mesh during the HEAD phase, the base player model is not rendered, leaving the player entity **completely invisible**.
+
+2. **Red Hurt Flash Overlay**:
+   - In `GeckoLibWereRenderer.renderCubeReflect`:
+     `int overlay = (player != null && player.hurtTime > 0) ? OverlayTexture.pack(OverlayTexture.u(0.0F), OverlayTexture.v(true)) : OverlayTexture.NO_OVERLAY;`
+   - Overlay coordinates are passed into `vc.vertex(...)`. This correctly applies red hurt flash when using `RenderType.entityCutoutNoCull(textureLoc)`. However, validation tests are required to confirm color tinting across Fabric and Forge renderers.
+
+---
+
+## 6. Implementation Recommendations for M2 / R1
+
+Based on this analysis, the following implementation recommendations are provided for Milestone 2 (M2):
+
+1. **Implement `GeckoAssetResolver`**:
+   - Unify resolution for models, textures, and animations.
+   - Automatically normalize paths (e.g. `werewolf` -> `customraces:geo/werewolf.geo.json` or `customraces:models/were/werewolf.geo.json`).
+   - Build a candidate location lookup sequence:
+     1. Disk path: `config/custom_races/models/<path>` / `config/custom_races/models/were/<path>`
+     2. Resource pack path: `assets/<namespace>/geo/<path>`
+     3. Resource pack path: `assets/<namespace>/models/were/<path>`
+     4. Default fallback: `customraces:models/were/default_werewolf.geo.json`
+
+2. **Fix Head Rotation Yaw & Pitch Alignment**:
+   - Update `GeckoLibWereRenderer.renderGeckoModel` to accept `netHeadYaw` and `headPitch`.
+   - During bone hierarchy traversal, detect head bones (`head`, `bipedHead`, `head_bone`) and apply:
+     `poseStack.mulPose(Axis.YP.rotationDegrees(netHeadYaw));`
+     `poseStack.mulPose(Axis.XP.rotationDegrees(headPitch));`
+
+3. **Resolve Double Scaling with Pehkui**:
+   - Modify `PlayerRaceLayer.render()` to check if Pehkui is active (`PehkuiIntegration.isPehkuiLoaded()`).
+   - If Pehkui is active and scaling the entity, skip `poseStack.scale(wScale, hScale, wScale)` in `PlayerRaceLayer` to avoid double-scaling.
+
+4. **Harden Suppression Guardrails against Player Invisibility**:
+   - Update `LivingEntityRendererMixin` and `WereModelRenderer.isModelAvailable` to perform full model integrity verification (ensuring model is baked AND contains non-empty topLevelBones) before returning `true`.
+   - If model integrity check fails, do NOT suppress base human player model mesh.
+
+---

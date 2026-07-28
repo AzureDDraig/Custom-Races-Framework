@@ -1,55 +1,59 @@
-# BRIEFING — 2026-07-23T19:14:35Z
+# BRIEFING — 2026-07-28T11:29:49Z
 
 ## Mission
-Implement Configurable Ambient Particle Count Settings for human and were forms (`particleCount` and `wereParticleCount`) across Data Model, GUI, and Particle Emission logic.
+Implement Milestone 3: Base Human Player Model Suppression Guardrails (R2) for Custom Races Framework GeckoLib Player Model Overhaul.
 
 ## 🔒 My Identity
-- Archetype: implementer, qa, specialist
+- Archetype: implementer
 - Roles: implementer, qa, specialist
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m3
-- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Milestone: Milestone 3 - Configurable Ambient Particle Count Settings
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: Milestone 3 - Base Human Player Model Suppression Guardrails (R2)
 
 ## 🔒 Key Constraints
-- CODE_ONLY network mode: no external HTTP/downloads.
-- BACKUP FOLDER READ-ONLY: never write to BACKUP directory.
-- Minimal change principle: no unrelated refactoring.
-- Genuine implementation: no hardcoding or dummy implementations.
+- NEVER EXPORT ON ME: Under no circumstances should automatic exports occur.
+- BACKUP FOLDER READ-ONLY: Never modify BACKUP directory.
+- Minimal change principle.
+- No dummy/facade implementations or hardcoded test results.
 
 ## Current Parent
-- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-23T19:14:35Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T11:29:49Z
 
 ## Task Summary
-- **What to build**: Add `particleCount` (default: 5) and `wereParticleCount` (default: 10) to `RaceData.java`, NBT, Codec/Gson, Packet, getters/setters. Add GUI controls in `RaceCreatorScreen.java`. Dynamic scaling of particle emission in `PlayerRaceLayer.java` / `ParticleAuraData.java`.
-- **Success criteria**: Gradle build succeeds for both Fabric and Forge targets; particle count fields fully serialized, editable in GUI, and scaling active during rendering/particle tick.
-- **Interface contracts**: PROJECT.md & Explorer 3 Analysis Report
+- **What to build**: Base Human Player Model Suppression Guardrails (R2) - COMPLETE
+  1. Extended `setBaseModelVisible` in `WereModelRenderer.java` for cape (`model.cloak`) and ears (`model.ear`).
+  2. Implemented fail-safe fallback guardrails so players are NEVER invisible if GeckoLib rendering/baking fails.
+  3. Supported Invisibility status effect & Spectator mode in `GeckoLibWereRenderer.java` and `PlayerRaceLayer.java`.
+  4. Multi-platform build and test verification.
+- **Success criteria**: All requirements implemented genuinely, compilation and tests passing.
+- **Interface contracts**: PROJECT.md
+- **Code layout**: PROJECT.md
+
+## Key Decisions Made
+- Used reflection with obfuscation fallbacks (`f_103374_` and `f_103375_`) for `cloak` and `ear` fields on `PlayerModel` since they are private in Mojang mappings.
+- Conditioned `isModelAvailable` on non-empty `topLevelBones` in `GeckoLibWereRenderer.isModelPresent`.
+- Added try-catch and base model visibility restoration in `renderWereForm` to guarantee fallback to `renderWereBeastParts` on model error.
+- Implemented `player.isInvisibleTo(clientPlayer)` checks and `RenderType.entityTranslucent()` with alpha scaling for spectator/invisibility translucency.
+
+## Artifact Index
+- `.agents/teamwork_preview_worker_m3/ORIGINAL_REQUEST.md` — Original request
+- `.agents/teamwork_preview_worker_m3/BRIEFING.md` — Briefing file
+- `.agents/teamwork_preview_worker_m3/progress.md` — Progress tracker
+- `.agents/teamwork_preview_worker_m3/changes.md` — Record of code changes
+- `.agents/teamwork_preview_worker_m3/handoff.md` — Final handoff report
 
 ## Change Tracker
 - **Files modified**:
-  - `common/src/main/java/ddraig/net/customraces/data/RaceData.java`: Added `particleCount` and `wereParticleCount` fields, fallback defaults in `initDefaults()`, getters/setters, and `toNBT`/`fromNBT` serialization methods.
-  - `common/src/main/java/ddraig/net/customraces/data/ParticleAuraData.java`: Added `getScaledParticleCount(int raceParticleCount)` for dynamic aura particle emission scaling.
-  - `common/src/main/java/ddraig/net/customraces/client/gui/RaceCreatorScreen.java`: Added `particleCountBox` and `wereParticleCountBox` widgets, field resets, tab 1 widget binding, input reading, race duplicating, and text label rendering.
-  - `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java`: Scaled Were-form ambient smoke/flame particle spawning loops and particle aura emission by `effectiveParticleCount`.
-  - `common/src/test/java/ddraig/net/customraces/client/render/M3ParticleConfigVerificationTest.java`: Added empirical test suite verifying defaults, getters/setters, NBT cycle, aura scaling logic, and edge cases.
-- **Build status**: PASS (Fabric and Forge targets build successfully with zero errors).
+  - `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java` (cloak/ear suppression, fail-safe restoration)
+  - `common/src/main/java/ddraig/net/customraces/client/render/GeckoLibWereRenderer.java` (bone structure validation, invisibility translucency)
+  - `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java` (invisibility/spectator layer handling, baseAlpha passing)
+  - `common/src/test/java/ddraig/net/customraces/client/render/M3SuppressionAndFallbackVerificationTest.java` (new unit test suite)
+  - `common/build.gradle` (test task registration)
+- **Build status**: PASS (`./gradlew build -x test` and `./gradlew test`)
 - **Pending issues**: None
 
 ## Quality Status
-- **Build/test result**: PASS (`./gradlew build -x test` succeeded).
-- **Lint status**: Clean
-- **Tests added/modified**: `M3ParticleConfigVerificationTest.java` added.
-
-## Loaded Skills
-- None
-
-## Key Decisions Made
-- `RaceData` particle counts default to 5 (human) and 10 (Were form).
-- Fallback logic in `initDefaults()` ensures zero or negative values fall back to defaults for legacy JSON payloads.
-- `ParticleAuraData` calculates emission density relative to base count 5.
-- Were-form ambient smoke/flame loops scale dynamically with `wereParticleCount`.
-
-## Artifact Index
-- `.agents/teamwork_preview_worker_m3/ORIGINAL_REQUEST.md` — Original request record
-- `.agents/teamwork_preview_worker_m3/BRIEFING.md` — Agent briefing & state
-- `.agents/teamwork_preview_worker_m3/handoff.md` — Handoff report
+- **Build/test result**: PASS
+- **Lint status**: CLEAN
+- **Tests added/modified**: `M3SuppressionAndFallbackVerificationTest` added with 5 unit tests

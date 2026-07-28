@@ -1,47 +1,38 @@
-# BRIEFING — 2026-07-23T19:41:42Z
+# BRIEFING — 2026-07-28T11:24:20-05:00
 
 ## Mission
-Independently re-review IronSpellsHandler.java for recursion depth limits and container fall-through fixes, verify build via gradlew build -x test, write review.md and handoff.md, and notify parent.
+Review Milestone 2 Remediation (GeckoLib Head Rotation & Scale R1) and stress-test implementation.
 
 ## 🔒 My Identity
-- Archetype: reviewer/critic
+- Archetype: reviewer / critic
 - Roles: reviewer, critic
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_2
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Milestone: M2 Remediation Independent Review
-- Instance: 1 of 1
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: Milestone 2 Remediation
+- Instance: Reviewer 2
 
 ## 🔒 Key Constraints
 - Review-only — do NOT modify implementation code
-- Code changes in project source files are forbidden for reviewer role; flag findings in review.md
-- User rules: NEVER EXPORT ON ME; BACKUP FOLDER READ-ONLY
+- Never write to BACKUP directory
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T19:41:42Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T11:24:20-05:00
 
 ## Review Scope
-- **Files to review**: `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`
-- **Interface contracts**: PROJECT.md / SCOPE.md (if present)
-- **Review criteria**: Correctness (recursion depth limit, null handling / container fall-through), Integrity (no hardcoding, fake logic, or shortcuts), Code Quality, Build verification (`.\gradlew clean build -x test`)
-
-## Review Checklist
-- **Items reviewed**: task.md, IronSpellsHandler.java
-- **Verdict**: **APPROVE**
-- **Unverified claims**: None remaining (recursion limits, void/null unwrapping, primitive defaults, and build verified)
-
-## Attack Surface
-- **Hypotheses tested**: Deep recursion unwrapping, cyclic container references, VoidSpell/null container fall-through, primitive null unboxing in reflective calls, malformed ResourceLocation.
-- **Vulnerabilities found**: None remaining in current code.
-- **Untested angles**: None.
+- **Files to review**: GeckoLibWereRenderer.java, PlayerRaceLayer.java, WereModelRenderer.java, PehkuiIntegration.java, GeckoAssetResolver.java
+- **Interface contracts**: PROJECT.md
+- **Review criteria**: Head rotation isolation, Pehkui double scaling guard, multi-platform build integrity, code quality, integrity violations
 
 ## Key Decisions Made
-- Confirmed recursion depth limit fix (`depth > 10`) and container null propagation in `unwrapSpellHolder`.
-- Executed `.\gradlew clean build -x test` and confirmed BUILD SUCCESSFUL across `:common`, `:fabric`, `:forge`.
-- Issued verdict APPROVE in `review.md` and `handoff.md`.
+- Confirmed `isHeadBone(boneName)` correctly targets head bones (`"head"`, `"bipedhead"`, `"head_bone"`, `"headbone"`) and isolates matrix state using `poseStack.pushPose()` / `poseStack.popPose()` blocks.
+- Confirmed Pehkui scaling guard `if (!PehkuiIntegration.isPehkuiLoaded())` in `PlayerRaceLayer.java` prevents double scaling when Pehkui is active.
+- Confirmed `./gradlew build -x test` succeeds in 18s and `./gradlew test` passes all unit and adversarial test suites in 35s.
+- Evaluated codebase and test suite for integrity violations: none found.
+- Issued verdict: PASS / APPROVE.
 
 ## Artifact Index
-- `.agents/teamwork_preview_reviewer_m2_remediation_2/ORIGINAL_REQUEST.md` — Original request log
-- `.agents/teamwork_preview_reviewer_m2_remediation_2/task.md` — Task description
-- `.agents/teamwork_preview_reviewer_m2_remediation_2/review.md` — Detailed review & adversarial stress-test report
-- `.agents/teamwork_preview_reviewer_m2_remediation_2/handoff.md` — 5-component handoff report
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_2\ORIGINAL_REQUEST.md
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_2\BRIEFING.md
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_2\progress.md
+- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_2\handoff.md

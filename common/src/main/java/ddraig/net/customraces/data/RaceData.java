@@ -101,6 +101,7 @@ public class RaceData {
     public String wereIdleAnim = "animation.were.idle";
     public String wereWalkAnim = "animation.were.walk";
     public String wereAttackAnim = "animation.were.attack";
+    public String wereHurtAnim = "animation.were.hurt";
     public String wereFlyAnim = "animation.were.fly";
     public String wereSwimAnim = "animation.were.swim";
     public String wereTransformAnim = "animation.were.transform";
@@ -341,6 +342,18 @@ public class RaceData {
         return (wereAttackAnim != null && !wereAttackAnim.isEmpty()) ? wereAttackAnim : "animation.were.attack";
     }
 
+    public String getSafeWereHurtAnim() {
+        return (wereHurtAnim != null && !wereHurtAnim.isEmpty()) ? wereHurtAnim : "animation.were.hurt";
+    }
+
+    public String getSafeWereFlyAnim() {
+        return (wereFlyAnim != null && !wereFlyAnim.isEmpty()) ? wereFlyAnim : "animation.were.fly";
+    }
+
+    public String getSafeWereSwimAnim() {
+        return (wereSwimAnim != null && !wereSwimAnim.isEmpty()) ? wereSwimAnim : "animation.were.swim";
+    }
+
     public String getSafeHurtSound() {
         return hurtSound != null ? hurtSound.trim() : "";
     }
@@ -382,6 +395,12 @@ public class RaceData {
         tag.putString("wereModelPath", wereModelPath != null ? wereModelPath : "");
         tag.putString("wereTexturePath", wereTexturePath != null ? wereTexturePath : "");
         tag.putString("wereAnimationPath", wereAnimationPath != null ? wereAnimationPath : "");
+        tag.putString("wereIdleAnim", getSafeWereIdleAnim());
+        tag.putString("wereWalkAnim", getSafeWereWalkAnim());
+        tag.putString("wereAttackAnim", getSafeWereAttackAnim());
+        tag.putString("wereHurtAnim", getSafeWereHurtAnim());
+        tag.putString("wereFlyAnim", getSafeWereFlyAnim());
+        tag.putString("wereSwimAnim", getSafeWereSwimAnim());
         tag.putFloat("wereHeightScale", wereHeightScale);
         tag.putFloat("wereWidthScale", wereWidthScale);
         tag.putFloat("wereHealthBonus", wereHealthBonus);
@@ -479,6 +498,12 @@ public class RaceData {
         if (tag.contains("wereModelPath")) this.wereModelPath = tag.getString("wereModelPath");
         if (tag.contains("wereTexturePath")) this.wereTexturePath = tag.getString("wereTexturePath");
         if (tag.contains("wereAnimationPath")) this.wereAnimationPath = tag.getString("wereAnimationPath");
+        if (tag.contains("wereIdleAnim")) this.wereIdleAnim = tag.getString("wereIdleAnim");
+        if (tag.contains("wereWalkAnim")) this.wereWalkAnim = tag.getString("wereWalkAnim");
+        if (tag.contains("wereAttackAnim")) this.wereAttackAnim = tag.getString("wereAttackAnim");
+        if (tag.contains("wereHurtAnim")) this.wereHurtAnim = tag.getString("wereHurtAnim");
+        if (tag.contains("wereFlyAnim")) this.wereFlyAnim = tag.getString("wereFlyAnim");
+        if (tag.contains("wereSwimAnim")) this.wereSwimAnim = tag.getString("wereSwimAnim");
         if (tag.contains("wereHeightScale")) this.wereHeightScale = tag.getFloat("wereHeightScale");
         if (tag.contains("wereWidthScale")) this.wereWidthScale = tag.getFloat("wereWidthScale");
         if (tag.contains("wereHealthBonus")) this.wereHealthBonus = tag.getFloat("wereHealthBonus");

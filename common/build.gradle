@@ -67,7 +67,39 @@ task runM4Challenger2Tests(type: JavaExec) {
     mainClass = 'ddraig.net.customraces.client.render.M4PoseStackHygieneTest'
 }
 
-test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests
+task runM4Challenger2ParticleAndSkinTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M4Challenger2ParticleAndSkinTest'
+}
+
+task runM2ChallengerVerificationTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M2ChallengerVerificationTest'
+}
+
+task runM3SuppressionAndFallbackTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M3SuppressionAndFallbackVerificationTest'
+}
+
+task runGeckoAssetResolverTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.GeckoAssetResolverTest'
+}
+
+task runM3Challenger2InvisibilityAndReflectionTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M3Challenger2InvisibilityAndReflectionTest'
+}
+
+task runM4AnimationAndCombatEffectsTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M4AnimationAndCombatEffectsTest'
+}
+
+test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests, runM4Challenger2ParticleAndSkinTests, runM2ChallengerVerificationTests, runM3SuppressionAndFallbackTests, runM3Challenger2InvisibilityAndReflectionTests, runM4AnimationAndCombatEffectsTests
+
+
 
 
 

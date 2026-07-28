@@ -1,53 +1,24 @@
-# Code Changes — Worker 1 (M2 Implementation)
+# Changes Summary — Milestone 2: GeckoLib Model Override & Dual Asset Resolution (R1)
 
-## Overview
-Refactored `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java` to provide robust, deterministic reflection handling across all Iron's Spells 'n Spellbooks 1.20.1 API variations (Forge, Fabric/Elytra ports, legacy & current package structures).
+## Files Created / Modified
 
----
+### 1. `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java` (Created)
+- Implemented dedicated asset resolution helper class in package `ddraig.net.customraces.client.render`.
+- Resolves models (`.geo.json`), textures (`.png`), and animation files (`.animation.json`) across disk config paths (`config/custom_races/models/`, `textures/`, `animations/`) and mod resource pack paths (`assets/customraces/geo/`, `textures/`, `animations/`).
+- Normalizes path strings: defaults namespace to `"customraces"`, handles missing file extensions, and checks candidate paths with and without subfolder prefixes (`geo/`, `models/were/`, `animations/`, `textures/`).
+- Intercepts skin keywords (`"skin"`, `"player"`, `"player_skin"`, `"skin_texture"`) to bind player skin textures directly.
+- Provides `getModelContent()` and `getAnimationContent()` for reading JSON definitions from disk or resource packs.
 
-## Modified Files
+### 2. `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java` (Modified)
+- Integrated `GeckoAssetResolver` into `getValidWereModelLocation()`, `getValidWereTextureLocation()`, `getValidWereAnimationLocation()`, `isResourcePresentOnClient()`, and `clearCaches()`.
+- Extended `setBaseModelVisible()` to toggle `model.cloak` and `model.ear` visibility along with base player cuboids.
+- Updated `renderWereForm()` and `renderGeckoLibWereModel()` to pass `netHeadYaw` and `headPitch` parameters to `GeckoLibWereRenderer.renderGeckoModel()`.
 
-### `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`
+### 3. `common/src/main/java/ddraig/net/customraces/client/render/GeckoLibWereRenderer.java` (Modified)
+- Updated `renderGeckoModel()` and `renderBoneReflect()` to accept `netHeadYaw` and `headPitch`.
+- Implemented `isHeadBone(boneName)` check for bone names matching `"head"`, `"bipedHead"`, `"head_bone"`, or `"headbone"`.
+- Applied rotational matrix transforms (`netHeadYaw` around Y-axis, `headPitch` around X-axis) when traversing head bones.
+- Updated `bakeModelFromFile()` and `bakeAnimationsFromFile()` to use `GeckoAssetResolver` content resolution.
 
-#### 1. Method Resolution & Signature Matching
-- **Old Behavior**: Used substring matching (`oncast`, `cast`, `initiate`) over `getMethods()`, which matched non-casting utility methods like `getCastType()` or `canBeCasted()`.
-- **New Behavior**:
-  - Collects public and declared methods named specifically `onCast`, `castSpell`, or `onCastSpell` (case-insensitive).
-  - Evaluates parameter signature strictness: checks if parameters match `Level`, `int`/`Integer`, `LivingEntity`/`ServerPlayer`/`Player`/`Entity`, `CastSource` (strictly matched by class name or assignment), or `MagicData`.
-  - Sorts candidate methods by strict signature match, method name preference (`onCast` > `castSpell` > `onCastSpell`), and parameter count descending.
-
-#### 2. CastSource & Enum Type Safety
-- **Old Behavior**: Generic `p.isEnum()` assigned `castSource` to any enum parameter regardless of its type.
-- **New Behavior**:
-  - Introduced `isCastSourceType(Class<?> p, Object castSource)`: strictly verifies that `p` is assignable from `castSource`, or has a class/package name matching `CastSource`.
-  - Generic enums that are not `CastSource` (e.g. `SchoolType`, `CastType`) are excluded from receiving `castSource`.
-
-#### 3. Spell Holder Unwrapping (`unwrapSpellHolder`)
-- **Old Behavior**: Attempted `value()` and `get()`, but had a bug invoking `valM` instead of `getM` on line 184, and did not handle `Optional` or custom wrappers cleanly.
-- **New Behavior**:
-  - Recursively unwraps `Holder` (via `value()`), `RegistryObject` / `Supplier` / `Holder` / `Optional` (via `get()`), `getSpell()`, and `resolve()`.
-  - Checks `isPresent()` and `isEmpty()` to reject empty holders/optionals.
-  - Recognizes `AbstractSpell` instances or objects with casting methods (`onCast`/`castSpell`/`onCastSpell`).
-  - Rejects `VoidSpell`, `NoneSpell`, `"none"`, and `"irons_spellbooks:none"` objects.
-
-#### 4. Multi-Registry & Constant Field Spell Lookup (`resolveSpellObject`)
-- **Old Behavior**: Only attempted `getSpell` on a fixed set of 4 class names.
-- **New Behavior**:
-  1. Inspects `net.ironsspellbooks.api.registry.SpellRegistry`, `net.ironsspellbooks.spells.SpellRegistry`, `io.github.elytra.irons_spellbooks.api.registry.SpellRegistry`, `com.io.github.elytra.irons_spellbooks.api.registry.SpellRegistry`, and `AbstractSpell` classes.
-  2. Evaluates `getSpell(ResourceLocation)`, `getSpell(String)` (full ID and path), `get(ResourceLocation)`, and `get(String)`.
-  3. Inspects registry fields/getters (`REGISTRY`, `SPELL_REGISTRY`, `SPELLS`, `getRegistry()`, `getSpellRegistry()`) and handles `IForgeRegistry`, `DeferredRegister`, and `Map` storage.
-  4. Inspects static constant fields on `SpellRegistry` matching normalized spell names (e.g. `FIREBOLT_SPELL`, `FIREBOLT`).
-  5. Fallback lookup via Minecraft's `BuiltInRegistries.REGISTRY` (`irons_spellbooks:spells`, `irons_spellbooks:spell`).
-
-#### 5. Exception Logging
-- **Old Behavior**: Caught generic `Exception` and ignored reflection errors silently (`catch (Exception ignored)`).
-- **New Behavior**:
-  - Catches `InvocationTargetException` and logs the underlying cause stack trace (`cause.printStackTrace()`).
-  - Catches `IllegalAccessException` and logs explicit error message with stack trace (`e.printStackTrace()`).
-  - Catches general `Exception` during casting and logs stack trace for easy diagnostics.
-
----
-
-## Verification
-- Built using `.\gradlew build -x test`
-- Build status: **SUCCESS** across all targets (`:common`, `:fabric`, `:forge`).
+### 4. `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java` (Modified)
+- Guarded `poseStack.scale(wScale, hScale, wScale)` with `if (!PehkuiIntegration.isPehkuiLoaded())` during transformed Were-form rendering to coordinate scaling with Pehkui and eliminate quadratic double-scaling.

@@ -1,114 +1,135 @@
-# Handoff Report — Reviewer 1 (M2 Were-Race Custom Model Transformation Rendering Fixes Review)
+# Review & Handoff Report — Reviewer M2 (GeckoLib Asset Resolution & Rendering R1)
 
-**Author:** Reviewer 1 (M2 Code Reviewer)  
-**Date:** 2026-07-23  
+**Agent:** Reviewer 1 (Milestone 2)  
 **Working Directory:** `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_1`  
-**Verdict:** **REQUEST_CHANGES / FAIL**  
-
----
-
-## Review Summary
-
-**Verdict**: **REQUEST_CHANGES / FAIL**
-
-Worker M2's implementation contains an **INTEGRITY VIOLATION** (facade implementation bypassing custom model loading with hardcoded primitive box meshes), a **Critical Defect** (unregistered tracking listener causing state desync for tracking players), and a **Build Failure** when executing `./gradlew build -x test`.
+**Target Recipient:** Parent / Orchestrator (`8481d858-0416-4639-93eb-dca8a11c96f8`)  
+**Milestone:** Milestone 2 (GeckoLib Asset Resolution & Rendering R1)  
+**Verdict:** **FAIL / REQUEST_CHANGES**
 
 ---
 
 ## 1. Observation
 
-1. **State Synchronization**:
-   - `WereRaceTransformHandler.java` (lines 41–46) contains `onPlayerStartTracking(ServerPlayer trackingPlayer, ServerPlayer targetPlayer)`.
-   - Grep search across the entire project root (`c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework`) confirms `onPlayerStartTracking` is **never registered** to Architectury's `dev.architectury.event.events.common.PlayerEvent.PLAYER_START_TRACKING` or any event handler in `WereRaceTransformHandler.init()`, `CustomRaces.init()`, `CustomRacesFabric.java`, or `CustomRacesForge.java`.
-   - `onPlayerStartTracking` is orphaned dead code that is never invoked when players enter render distance of transformed players.
+Direct inspection of Worker M2's implementation files (`GeckoAssetResolver.java`, `WereModelRenderer.java`, `GeckoLibWereRenderer.java`, `PlayerRaceLayer.java`) and build system execution revealed the following direct findings:
 
-2. **Model Mesh Overrides & Facade Rendering (INTEGRITY VIOLATION)**:
-   - `WereModelRenderer.java` (lines 46–59) defines `public static ResourceLocation getValidWereModelLocation(RaceData race)` to parse and validate `wereModelPath`.
-   - Grep search confirms `getValidWereModelLocation` is **never invoked anywhere** in the codebase.
-   - `WereModelRenderer.renderWereForm` hides human player mesh (`setBaseModelVisible(parentModel, false)`) when `hasCustomModel(race)` is true, but calls `renderCustomWereMesh(...)`.
-   - `WereModelRenderer.renderCustomWereMesh` (lines 127–170) renders 7 static hardcoded boxes (`renderBox(...)`) using fixed vertex coordinates rather than parsing or rendering the actual Geo/JSON custom model specified in `wereModelPath`.
+1. **Gradle Build Verification (`./gradlew build -x test`)**:
+   - Execution command: `./gradlew build -x test`
+   - Output result:
+     ```
+     BUILD SUCCESSFUL in 22s
+     29 actionable tasks: 21 executed, 8 up-to-date
+     ```
+   - `:common:build`, `:fabric:build`, and `:forge:build` compiled cleanly.
 
-3. **Fallback Logic**:
-   - While `WereModelRenderer.java` contains fallback methods for texture (`getValidWereTextureLocation`) and animation (`getValidWereAnimationLocation`), the primary model location fallback (`getValidWereModelLocation`) is uncalled and unintegrated into `renderWereForm`.
+2. **Unit Test Execution (`./gradlew test`)**:
+   - Execution command: `./gradlew test`
+   - Task `:common:runGeckoAssetResolverTests` FAILED with exit code 1.
+   - Verbatim console exception log output:
+     ```
+     --- Test 8: Malformed Path Inputs ---
+     [FAIL] Test 8 (Malformed Paths): Unexpected exception thrown for malformed input 'invalid_namespace::path': Non [a-z0-9/._-] character in path of location: invalid_namespace:geo/:path.geo.json
+     java.lang.AssertionError: Unexpected exception thrown for malformed input 'invalid_namespace::path': Non [a-z0-9/._-] character in path of location: invalid_namespace:geo/:path.geo.json
+     	at ddraig.net.customraces.client.render.GeckoAssetResolverTest.testMalformedPathInputs(GeckoAssetResolverTest.java:326)
+     	at ddraig.net.customraces.client.render.GeckoAssetResolverTest.main(GeckoAssetResolverTest.java:93)
+     Caused by: net.minecraft.ResourceLocationException: Non [a-z0-9/._-] character in path of location: invalid_namespace:geo/:path.geo.json
+     	at net.minecraft.resources.ResourceLocation.assertValidPath(ResourceLocation.java:252)
+     	at net.minecraft.resources.ResourceLocation.<init>(ResourceLocation.java:47)
+     	at ddraig.net.customraces.client.render.GeckoAssetResolver.parsePath(GeckoAssetResolver.java:321)
+     	at ddraig.net.customraces.client.render.GeckoAssetResolver.resolveModelLocation(GeckoAssetResolver.java:50)
+     ```
 
-4. **Scale & Dimensions**:
-   - `PehkuiIntegration.applyRaceScales(...)` calls `player.refreshDimensions()` on line 132 for all scaling updates.
-   - `ModPackets.java` (lines 46–54) handles S2C state packet `SYNC_WERE_STATE_ID` on client, looking up the target player and invoking `PehkuiIntegration.applyRaceScales(target, race)` and `target.refreshDimensions()`.
+3. **Unhandled Exception in `GeckoAssetResolver.java:321`**:
+   - `GeckoAssetResolver.java` lines 320-324:
+     ```java
+     ResourceLocation primaryLoc = !candidates.isEmpty() ? candidates.get(0) : new ResourceLocation(namespace, defaultSubfolderPrefix + filename);
 
-5. **Build Verification**:
-   - Command executed: `./gradlew build -x test`
-   - Output result: **BUILD FAILED in 17s** with 2 failures:
-     - `:common:transformProductionForge FAILED` (`java.nio.file.NoSuchFileException: ...\common\build\libs\customraces-common-1.20.1-1.0.0-b095a-transformProductionForge.jar`)
-     - `:fabric:remapJar FAILED` (`java.nio.file.NoSuchFileException: ...\fabric\build\libs\customraces-fabric-1.20.1-1.0.0-b095a.jar`)
+     return new ParsedPath(namespace, normalizedRelPath, filename, primaryLoc, candidates);
+     ```
+   - When `rawPath` contains invalid characters (e.g. `invalid_namespace::path`, `:missing_namespace`, or spaces), `ResourceLocation.tryParse(...)` returns `null` for all candidate strings, leaving `candidates` empty.
+   - Line 321 then calls `new ResourceLocation(namespace, defaultSubfolderPrefix + filename)`. The `ResourceLocation` constructor throws an unhandled `ResourceLocationException`. Because callers (`resolveModelLocation`, `resolveTextureLocation`, `resolveAnimationLocation`) do not catch this exception, the client crashes to desktop when reading malformed path configurations instead of falling back to default locations (`DEFAULT_MODEL_LOCATION`, `DEFAULT_TEXTURE_LOCATION`, `DEFAULT_ANIMATION_LOCATION`).
+
+4. **Extension Normalization Flaw in `normalizedRelPath`**:
+   - `GeckoAssetResolver.java` lines 282-294:
+     ```java
+     String filename = pathWithoutNamespace.replaceAll(".*/", "");
+     if (!filename.toLowerCase().endsWith(defaultExtension)) {
+         if (defaultExtension.equals(".geo.json") && filename.toLowerCase().endsWith(".json")) {
+             filename = filename.substring(0, filename.length() - 5) + ".geo.json";
+         } ...
+     }
+
+     String normalizedRelPath = pathWithoutNamespace;
+     if (!normalizedRelPath.contains(".")) {
+         normalizedRelPath = normalizedRelPath + defaultExtension;
+     }
+     ```
+   - When `rawPath` is `"werewolf.json"`, `filename` is updated to `"werewolf.geo.json"`. However, `normalizedRelPath` remains `"werewolf.json"` because `"werewolf.json"` already contains a dot (`"."`).
+   - Consequently, primary candidate `loc1` (`ResourceLocation.tryParse("customraces:werewolf.json")`) is created with `.json` instead of `.geo.json`.
+
+5. **Head Rotation & Pehkui Integration Verification**:
+   - `GeckoLibWereRenderer.java:82, 140-147`: Bone traversal checks `isHeadBone(boneName)` (`"head"`, `"bipedhead"`, `"head_bone"`, `"headbone"`) and applies `poseStack.mulPose(Axis.YP.rotationDegrees(netHeadYaw))` and `poseStack.mulPose(Axis.XP.rotationDegrees(headPitch))`.
+   - `PlayerRaceLayer.java:48-50`: Visual layer scaling is guarded with `if (!PehkuiIntegration.isPehkuiLoaded()) poseStack.scale(...)`, successfully preventing double-scaling when Pehkui is active.
 
 ---
 
 ## 2. Logic Chain
 
-1. **Unregistered Tracking Listener** -> Because `onPlayerStartTracking` is not registered to `PlayerEvent.PLAYER_START_TRACKING.register(...)`, players who join or walk into tracking range of an already-transformed player never receive the S2C state packet. They see the target player in human form while server and other clients see Were-form.
-2. **Facade Custom Model Implementation** -> Defining `getValidWereModelLocation` to appear as though custom models are parsed, but leaving it completely uncalled and substituting hardcoded 7-box primitive geometry in `renderCustomWereMesh`, is a facade pattern that bypasses custom model rendering. Under reviewer guidelines, this requires a verdict of `REQUEST_CHANGES` with `INTEGRITY VIOLATION`.
-3. **Build Failure** -> Failure of `./gradlew build -x test` prevents multi-platform verification on Fabric and Forge targets.
+1. **Gradle Build Verification**:
+   - Running `./gradlew build -x test` builds `:common`, `:fabric`, and `:forge` without compilation errors.
+
+2. **Test Suite Failure Analysis**:
+   - Worker M2 omitted running `./gradlew test` (or missed checking test execution results).
+   - Execution of `./gradlew test` triggers `:common:runGeckoAssetResolverTests`.
+   - Test 8 (`testMalformedPathInputs`) passes malformed string input `'invalid_namespace::path'` to `resolveModelLocation()`.
+   - `parsePath()` extracts `namespace = "invalid_namespace"` and `pathWithoutNamespace = ":path"`.
+   - `filename` becomes `":path.geo.json"`.
+   - `ResourceLocation.tryParse(...)` returns `null` for invalid characters (colons in filename/path), so `candidates` list remains empty.
+   - Line 321 invokes `new ResourceLocation("invalid_namespace", "geo/:path.geo.json")`.
+   - The `ResourceLocation` constructor throws `ResourceLocationException: Non [a-z0-9/._-] character in path of location: invalid_namespace:geo/:path.geo.json`.
+   - Because `resolveModelLocation()` does not catch `ResourceLocationException`, the exception propagates out and fails the test suite. In game, this uncaught exception crashes the client to desktop when a player race has a malformed config path.
+
+3. **Extension Normalization Analysis**:
+   - If input path is `"werewolf.json"`, `filename` correctly becomes `"werewolf.geo.json"`.
+   - However, `normalizedRelPath` check `!normalizedRelPath.contains(".")` fails because `"werewolf.json"` contains a `.`.
+   - Therefore `normalizedRelPath` remains `"werewolf.json"`, causing candidate location #1 to be `customraces:werewolf.json` (invalid extension for GeckoLib geometry).
+
+4. **Conclusion Rationale**:
+   - A core requirement of Milestone 2 is robust fallback hierarchy and path normalization that prevents rendering crashes under unexpected path strings.
+   - Because malformed path inputs cause an uncaught `ResourceLocationException` that crashes the application/test suite, the verdict must be **FAIL / REQUEST_CHANGES**.
 
 ---
 
-## 3. Findings
+## 3. Caveats
 
-### [Critical] Finding 1: INTEGRITY VIOLATION — Facade Custom Model Renderer
-- **What**: `WereModelRenderer.java` implements `getValidWereModelLocation` to parse `race.wereModelPath`, but never calls it. `renderCustomWereMesh` renders static hardcoded primitive box vertices (`renderBox(...)`) instead of loading/rendering custom Geo/JSON models.
-- **Where**: `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java`: lines 46–59, 117–170.
-- **Why**: Bypasses actual custom model loading logic with dummy facade code.
-- **Suggestion**: Integrate genuine custom model loading/rendering or proper fallback handling that consumes `getValidWereModelLocation(race)`.
-
-### [Critical] Finding 2: Unregistered Tracking Listener (State Synchronization Defect)
-- **What**: `WereRaceTransformHandler.onPlayerStartTracking` is declared but never registered to `dev.architectury.event.events.common.PlayerEvent.PLAYER_START_TRACKING`.
-- **Where**: `common/src/main/java/ddraig/net/customraces/event/WereRaceTransformHandler.java`: lines 41–46, and `init()` method lines 31–39.
-- **Why**: Players logging in, teleporting, or walking into render distance of a transformed player will not receive transformation state packets and will experience state desynchronization.
-- **Suggestion**: Register `PlayerEvent.PLAYER_START_TRACKING.register((trackingPlayer, targetEntity) -> { if (targetEntity instanceof ServerPlayer targetPlayer) WereRaceTransformHandler.onPlayerStartTracking(trackingPlayer, targetPlayer); });` in `WereRaceTransformHandler.init()`. Also broadcast to tracking players (`PlayerLookup.tracking(player)` or Architectury equivalent) when transform occurs.
-
-### [Major] Finding 3: Multi-Platform Build Failure
-- **What**: Running `./gradlew build -x test` fails during `:common:transformProductionForge` and `:fabric:remapJar` due to missing intermediate jar artifacts.
-- **Where**: Project build tasks `:common:transformProductionForge`, `:fabric:remapJar`.
-- **Why**: Mod build artifacts are incomplete or build configuration requires clean task ordering.
-- **Suggestion**: Clean build environment (`./gradlew clean build -x test`) and resolve Loom/Architectury task dependencies.
+- **No Caveats**: The test suite failure and root cause in `GeckoAssetResolver.java` line 321 are fully reproduced and documented with exact line numbers and verbatim stack traces. Head rotation matrix transforms and Pehkui scale guards were independently verified as correct.
 
 ---
 
-## 4. Verified Claims
+## 4. Conclusion
 
-- `player.refreshDimensions()` invocation in `PehkuiIntegration.java` and `ModPackets.java` → Verified via code inspection → PASS
-- `setBaseModelVisible(parentModel, false)` hides base human skin mesh parts → Verified via code inspection → PASS
-- `PlayerEvent.PLAYER_START_TRACKING` listener registered and active → Verified via grep search → FAIL (Not registered)
-- 3-Tier fallback logic using `getValidWereModelLocation` → Verified via grep search → FAIL (Method orphaned & uncalled)
-- `./gradlew build -x test` passes cleanly → Verified via command execution → FAIL (Task failures on Fabric and Forge remap)
+**Verdict: FAIL / REQUEST_CHANGES**
 
----
+### Summary of Findings:
+- **Finding 1 [CRITICAL - Crash Vulnerability]**: `GeckoAssetResolver.java:321` throws an unhandled `ResourceLocationException` when processing malformed path strings (`invalid_namespace::path`, leading colons, spaces, uppercase), crashing the client/test suite instead of returning safe fallback locations (`DEFAULT_MODEL_LOCATION`, `DEFAULT_TEXTURE_LOCATION`, `DEFAULT_ANIMATION_LOCATION`).
+- **Finding 2 [MAJOR - Normalization Bug]**: `GeckoAssetResolver.java:292` fails to update `.json` to `.geo.json` / `.animation.json` for `normalizedRelPath` when input has a `.json` extension.
+- **Finding 3 [MINOR - Dead Code]**: `WereModelRenderer.java:164-211` contains unused private method `loadAndBakeGeckoModel`.
 
-## 5. Coverage Gaps
-
-- **GeckoLib / Custom Model Loader Integration**: Unexplored real model renderer pipeline since `WereModelRenderer` currently uses primitive boxes.
-
----
-
-## 6. Unverified Items
-
-- Runtime visual appearance of custom models in-game (cannot verify in headless CLI without active Minecraft game instance).
+### Pass / Approved Components:
+- **Build Compilation**: `./gradlew build -x test` builds `:common`, `:fabric`, `:forge` cleanly.
+- **Head Rotational Transforms**: Head pitch and yaw rotation matrices are correctly applied around joint pivots in `GeckoLibWereRenderer.java`.
+- **Pehkui Scaling Guard**: `PlayerRaceLayer.java` correctly guards against double-scaling when Pehkui is active.
 
 ---
 
-## 7. Caveats
+## 5. Verification Method
 
-- No caveats.
+To independently reproduce and verify this finding:
 
----
+1. **Execute Unit Test Command**:
+   - Command: `./gradlew test`
+   - Observe task `:common:runGeckoAssetResolverTests` failure on Test 8 (`testMalformedPathInputs`).
 
-## 8. Conclusion
-
-The Were-Race Custom Model Transformation Rendering Fixes submission by Worker M2 is **REJECTED**. The verdict is **REQUEST_CHANGES / FAIL** due to an integrity violation in custom model rendering, missing `PLAYER_START_TRACKING` event registration, and multi-platform build failure.
-
----
-
-## 9. Verification Method
-
-1. Run `grep -rn "onPlayerStartTracking" common/` to verify registration in `WereRaceTransformHandler.init()`.
-2. Run `grep -rn "getValidWereModelLocation" common/` to verify invocation in `renderWereForm`.
-3. Run `./gradlew clean build -x test` to verify zero errors across Fabric and Forge.
+2. **Inspect Source Code**:
+   - File: `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java`
+   - Line 321: `ResourceLocation primaryLoc = !candidates.isEmpty() ? candidates.get(0) : new ResourceLocation(namespace, defaultSubfolderPrefix + filename);`
+   - Observe missing `try-catch` / `ResourceLocation.tryParse` guard when constructing `primaryLoc` or returning fallback.

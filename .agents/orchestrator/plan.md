@@ -1,25 +1,30 @@
-# Execution Plan — Custom Races Framework Full Implementation
+# Execution Plan — Custom Race GeckoLib Player Model Overhaul
 
-## Overview
-This plan coordinates the implementation of Were-Form Model & Texture Rendering Fixes (R1), VIP/Permission-Locked Races (R2), Configurable First-Join Selection GUI Toggle (R3), and Dynamic Body Part Model Preset Audit & Verification (R4), concluding with Multi-Platform Build Verification across Fabric and Forge targets.
+## Objective
+Implement full custom player model rendering using GeckoLib for transformed races in Custom Races Framework, with base human player model suppression when transformed and robust fallback guardrails ensuring zero player invisibility. Support smooth keyframe animations, hurt flash overlays, dynamic textures, and particle aura effects. Verify multi-platform build (`./gradlew build -x test`).
 
-## Milestones & Execution Strategy
+## Milestones
 
 ### Milestone 1: Exploration & Architecture Analysis
-- **Goal**: Perform comprehensive code search across Fabric, Forge, and Common modules to map texture location resolution, asset paths, permission checking, GUI components, first-join config toggles, and body part presets matrix stack handling.
+- **Goal**: Analyze current GeckoLib integration (`WereModelRenderer`, `PlayerRaceLayer`, `CustomRaceModelRenderer`, `RaceData`, state syncing), asset loading paths, player model rendering pipelines on Fabric/Forge, and suppression/fallback mechanisms.
 - **Workers**: 3 Explorers in parallel.
-  - Explorer 1: Were-Form Texture & Rendering Fixes (R1) — `WereModelRenderer.java`, `wereTexturePath` parsing, `"skin"`/`"player"` keywords, fallback logic, asset path check for `default_werewolf.png`.
-  - Explorer 2: Permission Locks (R2) & First-Join Toggle (R3) — `RaceRegistry.java`, `RaceData.java`, `RaceSelectionScreen.java`, `FirstJoinHandler.java`, config JSON structure.
-  - Explorer 3: Dynamic Body Part Model Presets Audit (R4) — `PlayerRaceLayer.java`, `CustomRaceModelRenderer.java`, `PartTransformData.java`, 6 body part presets (ears, horns, tail, wings, halo, extra legs), matrix stack isolation, tinting/scale transforms.
+- **Deliverables**: Comprehensive exploration reports in `.agents/teamwork_preview_explorer_m1_gecko_*`.
 
-### Milestone 2: Were-Form Model & Texture Rendering Fix (R1)
-- **Goal**: Ensure `default_werewolf.png` dark fur texture asset exists, refine `WereModelRenderer.java` to support `"skin"` and `"player"` keywords, parse relative texture file paths, and fall back safely to `player.getSkinTextureLocation()`.
-- **Workers**: Worker -> 2 Reviewers + 2 Challengers + 1 Forensic Auditor.
+### Milestone 2: GeckoLib Model Override & Asset Resolution (R1)
+- **Goal**: Support dual path asset resolution (`config/custom_races/models/`, `textures/`, `animations/` vs `assets/customraces/`). Implement precise 3D model rendering aligned to player entity feet and yaw/pitch rotation.
+- **Workers**: Worker -> 2 Reviewers -> 2 Challengers -> Forensic Auditor.
 
-### Milestone 3: VIP Permission Lock & First-Join GUI Toggle (R2 & R3)
-- **Goal**: Implement `permissionLock` field and checking in `RaceRegistry.java` & `RaceData.java`, badge/tooltip/disabled button rendering in `RaceSelectionScreen.java`, and `autoOpenSelectionOnJoin` config setting checked by `FirstJoinHandler.java`.
-- **Workers**: Worker -> 2 Reviewers + 2 Challengers + 1 Forensic Auditor.
+### Milestone 3: Base Human Player Model Suppression Guardrails (R2)
+- **Goal**: Implement suppression of standard human player cuboid mesh parts (`head`, `body`, `arms`, `legs`, clothing overlays) when transformed with a valid custom GeckoLib model. Implement graceful fallback to standard player model + procedural features if GeckoLib model fails to load or is unassigned (NO player invisibility).
+- **Workers**: Worker -> 2 Reviewers -> 2 Challengers -> Forensic Auditor.
 
-### Milestone 4: Dynamic Body Part Model Preset Audit & Build Verification (R4)
-- **Goal**: Audit & verify dynamic rendering of all 6 body part presets (ears, horns, tail, wings, halo, extra legs) without matrix stack leakage or visual corruption, and verify clean compilation via `./gradlew build -x test`.
-- **Workers**: Worker -> 2 Reviewers + 2 Challengers + 1 Forensic Auditor.
+### Milestone 4: Dynamic Animations, Combat Effects & Multi-Platform Build Verification (R3 & Acceptance)
+- **Goal**: Implement GeckoLib animation state controller (idle, walk, attack, hurt), hurt red flash overlay rendering, dynamic skin texture overrides, and particle aura emission integration. Verify `./gradlew build -x test` builds cleanly with 0 errors across Fabric and Forge targets.
+- **Workers**: Worker -> 2 Reviewers -> 2 Challengers -> Forensic Auditor.
+
+## Integrity & Verification Gate
+- Every implementation milestone requires passing:
+  1. `./gradlew build -x test` clean build across Fabric and Forge.
+  2. Peer Code Reviews (2 Reviewers, PASS).
+  3. Empirical & Stress Testing (2 Challengers, PASS).
+  4. Forensic Integrity Audit (`teamwork_preview_auditor`, CLEAN).

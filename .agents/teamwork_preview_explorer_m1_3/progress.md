@@ -1,12 +1,10 @@
-# Progress Log
+# Progress Log - Explorer 3 (M1)
 
-Last visited: 2026-07-23T19:04:49Z
+Last visited: 2026-07-28T11:11:08-05:00
 
-- [x] Initialized ORIGINAL_REQUEST.md, BRIEFING.md, progress.md
-- [x] Locate target files in the project codebase
-- [x] Inspect RaceData.java (fields, codecs, NBT, network packets, constructors)
-- [x] Inspect RaceCreatorScreen.java & GUI components (sliders/fields binding)
-- [x] Inspect PlayerRaceLayer.java & ParticleAuraData (particle spawning logic & dynamic scaling)
-- [x] Inspect CHANGELOG.md and gradle build setup
-- [x] Write analysis.md & handoff.md
-- [x] Send completion message to parent
+- [x] Workspace initialized and briefing created.
+- [x] Inspect existing transformation handlers and GeckoLib renderers (`ClientWereState`, `WereRaceTransformHandler`, `GeckoLibWereRenderer`, `PlayerRaceLayer`, `WereModelRenderer`, `CustomRaceModelRenderer`).
+- [x] Analyze keyframe animation triggers (idle, walk, attack, hurt, crouching, swimming) and GeckoLib state manager integration.
+- [x] Analyze combat visual effects: hurt red flash overlay rendering, dynamic skin texture overrides, and particle aura scaling.
+- [x] Synthesize findings and write `analysis.md` & `handoff.md`.
+

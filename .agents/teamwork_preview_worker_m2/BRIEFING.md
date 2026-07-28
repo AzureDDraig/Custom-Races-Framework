@@ -1,59 +1,53 @@
-# BRIEFING — 2026-07-23T19:11:00Z
+# BRIEFING — 2026-07-28T16:15:10Z
 
 ## Mission
-Implement Were-Race Custom Model Transformation Rendering Fixes (Milestone 2) including tracking client state sync, model swap & render layer overrides, fallback logic for model IDs, and Pehkui scale & bounding box refreshes across Fabric and Forge.
+Implement Milestone 2: GeckoLib Model Override & Dual Asset Resolution (R1) for Custom Race GeckoLib Player Model Overhaul.
 
 ## 🔒 My Identity
-- Archetype: implementer, qa, specialist
+- Archetype: implementer
 - Roles: implementer, qa, specialist
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2
-- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Milestone: Milestone 2 (Were-Race Model Transformation Rendering Fixes)
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: Milestone 2 (GeckoLib Model Override & Dual Asset Resolution)
 
 ## 🔒 Key Constraints
-- Follow minimal change principle.
-- No dummy/facade implementations or hardcoded values.
-- Strictly read-only for BACKUP directory.
-- Verify build with gradlew build -x test.
+- DO NOT CHEAT: All implementations must be genuine.
+- Minimal change principle: edit only what is needed.
+- Write updates to progress.md, changes.md, and handoff.md.
 
 ## Current Parent
-- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-23T19:11:00Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T16:15:10Z
 
 ## Task Summary
-- **What to build**: Were-Race custom model transformation rendering fixes in Fabric and Forge subprojects and common module.
-- **Success criteria**: All 4 areas implemented genuinely, code compiles and build succeeds via `./gradlew build -x test`.
-- **Interface contracts**: PROJECT.md and Explorer 1 & 2 analysis reports.
+- **What to build**:
+  1. `GeckoAssetResolver.java` for dual asset resolution (disk config paths & resource pack paths) with path normalization.
+  2. Integration of `GeckoAssetResolver` into `WereModelRenderer.java` and `GeckoLibWereRenderer.java`.
+  3. Head rotation alignment (`netHeadYaw`, `headPitch`) passed to `GeckoLibWereRenderer.renderGeckoModel()` and applied to head bones (`head`, `bipedHead`, `head_bone`, `headbone`).
+  4. Pehkui double-scaling fix in `PlayerRaceLayer.java`: guard `poseStack.scale(wScale, hScale, wScale)` with `if (!PehkuiIntegration.isPehkuiLoaded())`.
+  5. Multi-platform build verification with `./gradlew build -x test`.
+- **Success criteria**: Code compiles cleanly across common, fabric, and forge modules.
 
 ## Change Tracker
 - **Files modified**:
-  - `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java` (Created): Were-form rendering, state checking, model part suppression, fallback asset resolution.
-  - `common/src/main/java/ddraig/net/customraces/client/render/CustomRaceModelRenderer.java` (Created): General custom model rendering, path resolution, visibility updates.
-  - `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java` (Modified): Integrated WereModelRenderer for model part suppression and custom/procedural Were rendering.
-  - `common/src/main/java/ddraig/net/customraces/event/WereRaceTransformHandler.java` (Modified): Added `onPlayerStartTracking` helper method and state broadcast sync.
-  - `common/src/main/java/ddraig/net/customraces/network/ModPackets.java` (Modified): Added `sendWereStateToPlayer` helper and updated S2C receiver to apply scales and call `refreshDimensions()`.
-  - `common/src/main/java/ddraig/net/customraces/event/FirstJoinHandler.java` (Modified): Updated `PLAYER_RESPAWN` listener to sync state for and to respawned players.
-  - `common/src/main/java/ddraig/net/customraces/integration/PehkuiIntegration.java` (Modified): Added scale fallbacks and ensured `refreshDimensions()` is called on scale updates.
-  - `fabric/src/main/java/ddraig/net/customraces/fabric/CustomRacesFabric.java` (Modified): Registered `EntityTrackingEvents.START_TRACKING` listener.
-  - `forge/src/main/java/ddraig/net/customraces/forge/CustomRacesForge.java` (Modified): Registered `PlayerEvent.StartTracking` listener.
-- **Build status**: PASS (`BUILD SUCCESSFUL`)
+  - `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java` (Created asset resolution helper)
+  - `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java` (Integrated GeckoAssetResolver, head rotation parameter passing)
+  - `common/src/main/java/ddraig/net/customraces/client/render/GeckoLibWereRenderer.java` (Applied netHeadYaw and headPitch to head bones, integrated GeckoAssetResolver)
+  - `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java` (Guarded poseStack scale against Pehkui double-scaling)
+- **Build status**: PASS (`BUILD SUCCESSFUL` across common, fabric, forge subprojects)
 - **Pending issues**: None
 
 ## Quality Status
-- **Build/test result**: Pass (`gradlew.bat build -x test`)
-- **Lint status**: OK
-- **Tests added/modified**: Verified compilation & packaging for common, fabric, forge targets.
+- **Build/test result**: PASS (`./gradlew build -x test` succeeded)
+- **Lint status**: Clean (no new lint issues)
+- **Tests added/modified**: Verified build compilation across multi-loader subprojects
 
 ## Loaded Skills
 - None
 
-## Key Decisions Made
-- Registered native platform entity tracking listeners (`EntityTrackingEvents.START_TRACKING` on Fabric, `PlayerEvent.StartTracking` on Forge) delegating to `WereRaceTransformHandler.onPlayerStartTracking`.
-- Implemented `WereModelRenderer` and `CustomRaceModelRenderer` with `setBaseModelVisible` to toggle vanilla player body parts (`head`, `body`, `arms`, `legs`) off during Were-form rendering and back on during reversion.
-- Added graceful fallback resolution for invalid/unmapped model, texture, and animation resource locations.
-- Triggered `player.refreshDimensions()` on S2C packet reception on client and on server scale updates.
-
 ## Artifact Index
-- ORIGINAL_REQUEST.md — Original request instructions
-- BRIEFING.md — Persistent context index
-- handoff.md — Final handoff report
+- `.agents/teamwork_preview_worker_m2/ORIGINAL_REQUEST.md` — Original User Request
+- `.agents/teamwork_preview_worker_m2/BRIEFING.md` — Agent Briefing State
+- `.agents/teamwork_preview_worker_m2/progress.md` — Liveness & progress log
+- `.agents/teamwork_preview_worker_m2/changes.md` — List of file changes
+- `.agents/teamwork_preview_worker_m2/handoff.md` — Final handoff report

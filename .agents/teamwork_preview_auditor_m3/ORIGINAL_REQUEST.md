@@ -1,17 +1,10 @@
-## 2026-07-23T19:12:57Z
-You are Forensic Auditor M3 (Integrity Auditor).
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m3
+## 2026-07-28T11:30:27Z
+You are the Forensic Integrity Auditor for Milestone 3 verification.
+Your working directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m3.
 
-PROJECT SCOPE:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-WORKER HANDOFF REPORT:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m3\handoff.md
-
-YOUR TASK:
-Perform forensic integrity audit on M3 implementation:
-1. Inspect code changes in `RaceData.java`, `RaceCreatorScreen.java`, `PlayerRaceLayer.java`, `ParticleAuraData.java`, and network packet handlers.
-2. Confirm all particle count configurations and emission scaling mechanisms implement genuine dynamic logic. Ensure no values, sliders, or particle emission loops are hardcoded or bypassed.
-3. Run `./gradlew build -x test` to verify build succeeds with 0 errors across Fabric and Forge targets.
-4. Render verdict: `CLEAN` or `INTEGRITY VIOLATION`.
-
-Write audit report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m3\handoff.md` and send verdict via send_message to parent.
+Your objective:
+1. Perform an independent forensic integrity audit on all Milestone 3 implementation code changes in `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java`, `LivingEntityRendererMixin.java`, `GeckoLibWereRenderer.java`, `PlayerRaceLayer.java`.
+2. Inspect for integrity violations: hardcoded test pass values, dummy/facade implementations, bypassed checks, fake guards, or unauthentic fallback logic.
+3. Run `./gradlew test` and `./gradlew build -x test` to verify clean compilation and real execution.
+4. Provide a binary verdict: CLEAN or INTEGRITY VIOLATION.
+5. Save your audit handoff report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_auditor_m3\handoff.md`.

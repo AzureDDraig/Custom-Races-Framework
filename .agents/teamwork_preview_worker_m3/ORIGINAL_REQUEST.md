@@ -1,29 +1,28 @@
-## 2026-07-23T19:12:43Z
-You are Worker M3 (Configurable Ambient Particle Count Settings Worker).
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m3
+## 2026-07-28T11:25:41Z
+You are Worker M3 for Custom Race GeckoLib Player Model Overhaul.
 
-PROJECT SCOPE:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-ORIGINAL REQUEST:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
-
-EXPLORER 3 ANALYSIS REPORT TO READ AND IMPLEMENT:
-- c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_3\analysis.md
+Your working directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m3
+Project scope document: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+Original user request: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
+Explorer 2 Report: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2\handoff.md
 
 MANDATORY INTEGRITY WARNING:
 DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.
 
-YOUR TASK (MILESTONE 3):
-Implement Configurable Ambient Particle Count Settings:
-1. **Data Model (`RaceData.java`)**:
-   - Add `particleCount` (int, default: 5) and `wereParticleCount` (int, default: 10) fields to `RaceData.java`.
-   - Update NBT serialization (`toNBT` / `fromNBT`), Codec definitions, network packet serialization/deserialization, and getters/setters.
-2. **GUI Controls (`RaceCreatorScreen.java`)**:
-   - Add input/slider controls to `RaceCreatorScreen.java` allowing users to configure `particleCount` and `wereParticleCount`.
-   - Connect the GUI components to read from and write to `RaceData` during race creation/editing.
-3. **Particle Emission Rate Scaling (`PlayerRaceLayer.java` / `ParticleAuraData.java`)**:
-   - Connect ambient particle spawning logic in `PlayerRaceLayer.java` (and/or `ParticleAuraData.java`) so particle density/emission rates dynamically scale based on `particleCount` (in human form) or `wereParticleCount` (in Were form).
-4. **Build Verification**:
-   - Run `./gradlew build -x test` to ensure 0 errors across Fabric and Forge targets.
+REQUIREMENT SCOPE — Milestone 3: Base Human Player Model Suppression Guardrails (R2)
+1. **Extend Base Model Suppression in `WereModelRenderer.java`**:
+   - In `setBaseModelVisible(PlayerModel<?> model, boolean visible)`, add suppression for `model.cloak` (Cape) and `model.ear` (Deadmau5 ears) alongside head, hat, body, arms, legs, and clothing overlays (`jacket`, `rightSleeve`, `leftSleeve`, `rightPants`, `leftPants`).
 
-Write your handoff report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m3\handoff.md` and report via send_message to parent.
+2. **Fail-Safe Fallback Guardrails ("Never Invisible")**:
+   - Verify `LivingEntityRendererMixin.java` and `WereModelRenderer.isModelAvailable()` condition base model suppression strictly on valid GeckoLib model baking and bone structure integrity.
+   - If a custom GeckoLib model fails to load, falls back, is unassigned, has empty top-level bones, or encounters a rendering error, `WereModelRenderer.renderWereForm()` MUST return `false`, restore base model visibility (`setBaseModelVisible(true)`), and fall back to `renderWereBeastParts()` (procedural ears/tail/snout), guaranteeing players are NEVER invisible under any circumstance.
+
+3. **Invisibility Effect & Spectator Handling**:
+   - In `GeckoLibWereRenderer.java` and `PlayerRaceLayer.java`, handle `player.isInvisible()` and `player.isSpectator()`.
+   - Ensure transformed players with the Invisibility status effect or in Spectator mode use translucent buffer rendering (`RenderType.entityTranslucent()`) or properly respect entity invisibility instead of rendering fully opaque.
+
+4. **Multi-Platform Build & Test Verification**:
+   - Execute `./gradlew build -x test` and `./gradlew test` to verify multi-platform compilation across Fabric and Forge.
+   - Document all file modifications and test results in `handoff.md`.
+
+Create your working directory `.agents/teamwork_preview_worker_m3`, write `progress.md`, `changes.md`, and `handoff.md`, then send a completion message to parent when finished.

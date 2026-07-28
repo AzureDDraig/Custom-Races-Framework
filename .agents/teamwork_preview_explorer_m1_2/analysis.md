@@ -1,179 +1,187 @@
-# Detailed Technical Analysis: Were-Race Model Rendering, Fallback Logic & Pehkui Scale Refresh
+# R2 Focus Analysis: Base Human Player Model Suppression Guardrails & Fallback Mechanisms
 
-## Executive Summary
-This report provides a comprehensive architectural investigation into the model rendering pipeline, transformation state checks, fallback model logic, and Pehkui dimension refresh triggers within the Custom Races Framework.
-
-Key Findings:
-1. **Default Player Model Retention**: Transformed players retain default player models because `PlayerRaceLayer` is registered merely as an additive `RenderLayer` on `PlayerRenderer` without hiding/canceling standard `PlayerModel` body parts (`getParentModel().head.visible = false`, etc.).
-2. **Missing Custom / GeckoLib Model Renderer**: While `RaceData.java` defines Were-form model paths (`wereModelPath`, `wereTexturePath`, `wereAnimationPath`), no dedicated renderer (`WereModelRenderer` or `CustomRaceModelRenderer`) exists to load `.geo.json` models or swap player models during rendering.
-3. **Unmapped Fallback Logic**: If `wereModelPath` is null, empty, or unmapped, rendering defaults to hardcoded cuboids (`renderWereBeastParts`) without validating resource locations or gracefully handling missing GeckoLib assets.
-4. **Client-Side Bounding Box & Scale Desync**: On transformation toggle, `WereRaceTransformHandler` calls `PehkuiIntegration.applyRaceScales` on the server, but client packet receivers in `ModPackets.java` fail to trigger client-side scale updates or `player.refreshDimensions()`, leading to hitbox/camera desync on client entities.
+**Explorer 2 (M1)** — Custom Race GeckoLib Player Model Overhaul  
+**Target Workspace**: `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework`  
+**Date**: 2026-07-28  
 
 ---
 
-## 1. Render Layer Architecture & Model Swapping Inspection
+## 1. Executive Summary & Core Findings
 
-### Relevant Files & Line Numbers
-- **`PlayerRaceLayer.java`**: `common/src/main/java/ddraig/net/customraces/client/render/PlayerRaceLayer.java` (lines 22-256)
-- **`CustomRacesFabric.java`**: `fabric/src/main/java/ddraig/net/customraces/fabric/CustomRacesFabric.java` (lines 21-25)
-- **`CustomRacesForge.java`**: `forge/src/main/java/ddraig/net/customraces/forge/CustomRacesForge.java` (lines 24-31)
+This analysis investigates **R2: Base Human Player Model Suppression Guardrails & Fallback Mechanisms** for the Custom Races Framework. The goal is to ensure that when a player transforms into a race with an active GeckoLib custom 3D model, the standard human player cuboid mesh is completely suppressed without clipping or skin bleeding, while guaranteeing through fail-safe guardrails that players **NEVER become invisible** if model assets fail to load, are invalid, or are missing.
 
-### Detailed Flow & State Inspection
-1. **Registration**:
-   - Fabric registers `PlayerRaceLayer` via `LivingEntityFeatureRendererRegistrationCallback` for `PlayerRenderer`.
-   - Forge registers `PlayerRaceLayer` via `EntityRenderersEvent.AddLayers` for all player skin types (`default`, `slim`).
-2. **Transformation Check in Render Loop**:
-   - `PlayerRaceLayer.render(...)` (lines 28-94) checks transformation state:
-     ```java
-     boolean isWereTransformed = ddraig.net.customraces.client.ClientWereState.isTransformed(player.getUUID())
-             || ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
-     ```
-   - If `isWereTransformed && race.enableWereRace`:
-     - Applies scale transform to `PoseStack`: `poseStack.scale(wScale, hScale, wScale)` (line 46).
-     - Renders procedural Were-form beast cuboids (ears, snout, crimson eye overlay) via `renderWereBeastParts(...)` (lines 49, 96-114).
-     - Spawns client-side smoke and flame particles (lines 52-67).
-
-### Current Limitations
-- `PlayerRaceLayer` is executed *after* `PlayerRenderer` has already rendered the vanilla `PlayerModel` (Steve/Alex skin).
-- There is no model swapping logic to suppress vanilla body parts when `isWereTransformed` is true.
-- `WereModelRenderer` and `CustomRaceModelRenderer` classes mentioned in system design do not exist in the codebase.
+### Key Discoveries:
+1. **Suppression Execution Point**: Base human player mesh parts are suppressed via `LivingEntityRendererMixin.java` injecting at `@At("HEAD")` of `LivingEntityRenderer.render()`. It invokes `WereModelRenderer.setBaseModelVisible(playerModel, false)`, which sets `.visible = false` on 12 default `PlayerModel` cuboid fields (`head`, `hat`, `body`, `rightArm`, `leftArm`, `rightLeg`, `leftLeg`, `jacket`, `rightSleeve`, `leftSleeve`, `rightPants`, `leftPants`).
+2. **Fallback Safety Guardrails**: In `WereModelRenderer.renderWereForm()` and `LivingEntityRendererMixin`, suppression is **strictly conditional** on `isWereForm(player, race) && isModelAvailable(race)`. If a GeckoLib model fails to parse, bake, or render, `renderWereForm()` immediately catches the failure, calls `setBaseModelVisible(parentModel, true)`, and falls back to procedural beast features (`renderWereBeastParts()`) on top of the default human player mesh.
+3. **Identified Deficiencies & Edge Cases**:
+   - **Missing Overlay Part Suppression**: `setBaseModelVisible()` currently omits `PlayerModel.cloak` (Cape) and `PlayerModel.ear` (Deadmau5 ears). If a player wearing a cape transforms, the cape mesh continues to render suspended in mid-air.
+   - **Pehkui Double-Scaling Defect**: `PehkuiIntegration.java` sets `BASE`, `HEIGHT`, and `WIDTH` scales on Pehkui's entity `ScaleData`. However, `PlayerRaceLayer.java` independently applies `poseStack.scale(wScale, hScale, wScale)` during transformation. When Pehkui is active, scaling occurs twice ($1.3 \times 1.3 = 1.69\times$), resulting in oversized models.
+   - **Invisibility & Spectator Handling**: `PlayerRaceLayer` currently lacks checks for `player.isInvisible()` or `player.isInvisibleTo(...)`. Active GeckoLib custom models render as fully opaque 3D models even when the player is in spectator mode or has an active Invisibility effect.
+   - **1st-Person Hand Rendering**: In 1st-person view, vanilla `PlayerRenderer.renderRightHand()` / `renderLeftHand()` forcefully sets `rightArm.visible = true` locally before drawing. While this prevents complete arm disappearance in 1st person, it draws the human skin arm instead of a transformed GeckoLib arm.
 
 ---
 
-## 2. Root Cause Analysis: Why Transformed Were-Race Players Retain Default Models
+## 2. Architecture of Player Model Rendering Pipeline
 
-| Root Cause ID | Severity | Description & Code Context |
-|---|---|---|
-| **RC-01** | High | **No Vanilla Body Part Visibility Cancellation**: `PlayerRenderer` renders base player mesh before `PlayerRaceLayer` runs. `PlayerRaceLayer` does not hide `getParentModel().head`, `body`, `rightArm`, `leftArm`, `rightLeg`, `leftLeg`. Result: The human player skin renders beneath/inside the beast features. |
-| **RC-02** | Critical | **GeckoLib Were Model Path Ignored**: `RaceData.wereModelPath`, `wereTexturePath`, `wereAnimationPath` (lines 94-103) are stored in data and GUI, but no renderer loads `.geo.json` geometry or plays GeckoLib animations for the player. |
-| **RC-03** | Medium | **Client-Side Transformation State Desync**: `ClientWereState.isTransformed` relies on receiving `SYNC_WERE_STATE_ID` from `ModPackets.java`. If packet delivery is delayed or missed by tracking clients, `isWereTransformed` returns `false`, reverting tracking clients to default player rendering. |
-| **RC-04** | Low | **Reversion State Leak**: Reverting from Were-form does not reset model part visibilities if they were modified, risking invisible or corrupt player models on return to human form. |
-
----
-
-## 3. Fallback Logic Analysis & Graceful Asset Resolution Design
-
-### Current State
-- `PlayerRaceLayer.java` lines 44-45 defaults scales to `1.3f` if `wereHeightScale` or `wereWidthScale` is <= 0.
-- If `wereModelPath` is empty or unmapped, `PlayerRaceLayer` renders hardcoded cuboids (`renderWereBeastParts`) on top of the player.
-
-### Fallback Hierarchy & Graceful Default Design
+In Minecraft 1.20.1 (Fabric and Forge):
 
 ```
-                     [Were Transformation Active]
-                                  │
-                   Is race.wereModelPath valid?
-                   (non-null, non-empty, valid RL)
-                                 ╱ ╲
-                               YES  NO
-                               ╱     ╲
-        Load GeckoLib Asset File     Fall back to Procedural Beast Overlay
-        (customraces:models/were/...)  (renderWereBeastParts + player model scaling)
-               │                                      │
-        Does asset load succeed?                      │
-             ╱ ╲                                      │
-           YES  NO (file missing/corrupt)             │
-           ╱     ╲                                    │
- Hide Base Player   Log warning & fallback ───────────┘
- Model & Render      to Procedural Beast Overlay
- GeckoLib Model
+LivingEntityRenderer.render(AbstractClientPlayer)
+  │
+  ├──► [MIXIN] LivingEntityRendererMixin.onRenderLivingHead (@At("HEAD"))
+  │      ├─► Checks WereModelRenderer.isWereForm(player, race)
+  │      └─► Checks WereModelRenderer.isModelAvailable(race)
+  │             ├── TRUE  => WereModelRenderer.setBaseModelVisible(playerModel, false)
+  │             └── FALSE => WereModelRenderer.setBaseModelVisible(playerModel, true)
+  │
+  ├──► PlayerModel.setupAnim(...)  [Calculates limb rotations / head angles]
+  │
+  ├──► PlayerModel.renderToBuffer(...)  [Renders primary player cuboid mesh]
+  │      └─► Skips cuboid parts where part.visible == false
+  │
+  └──► RenderLayer Iteration:
+         ├── HumanoidArmorLayer  [Skips armor pieces where parentModel part.visible == false]
+         ├── ItemInHandLayer     [Renders mainhand / offhand items attached to arm pose]
+         ├── CustomHeadLayer     [Renders skull / pumpkin if worn]
+         ├── ElytraLayer         [Renders elytra wings]
+         └── PlayerRaceLayer.render(...)
+                ├── isWereTransformed == true:
+                │      ├── WereModelRenderer.renderWereForm(...)
+                │      │      ├── GeckoLibWereRenderer.renderGeckoModel(...)
+                │      │      └── [FAIL] => setBaseModelVisible(true) -> renderWereBeastParts(...)
+                │      └── Real-time Were Smoke Particles
+                └── isWereTransformed == false:
+                       ├── setBaseModelVisible(true)
+                       └── renderPresetParts(...) [Ears, Wings, Tail, Horns, Halo, Legs]
 ```
 
-1. **Primary Model Resolution**:
-   - Check if `race.wereModelPath != null && !race.wereModelPath.trim().isEmpty()`.
-   - Verify `ResourceLocation.isValidResourceLocation(race.wereModelPath)`.
-2. **GeckoLib Asset Fallback**:
-   - If `wereModelPath` is missing on disk or fails parsing, log a client warning once (`[CustomRaces] Failed to load Were model asset: ...`).
-   - Gracefully default to the built-in procedural beast overlay (`renderWereBeastParts`) with scaled player model.
-3. **Scale Fallback Defaults**:
-   - `wereHeightScale`: default to `1.3f` if `<= 0.0f`.
-   - `wereWidthScale`: default to `1.3f` if `<= 0.0f`.
-   - `wereTransformSound`: default to `minecraft:entity.wolf.howl` if empty.
+---
+
+## 3. Detailed Base Player Mesh Suppression Analysis
+
+### Current Implementation (`LivingEntityRendererMixin.java` & `WereModelRenderer.java`)
+
+```java
+// LivingEntityRendererMixin.java (Lines 21-37)
+@Inject(method = "render", at = @At("HEAD"))
+private void onRenderLivingHead(T entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
+    if (entity instanceof AbstractClientPlayer player) {
+        RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
+        LivingEntityRenderer<T, M> renderer = (LivingEntityRenderer<T, M>) (Object) this;
+        M model = renderer.getModel();
+
+        if (model instanceof PlayerModel<?> playerModel) {
+            if (WereModelRenderer.isWereForm(player, race) && WereModelRenderer.isModelAvailable(race)) {
+                WereModelRenderer.setBaseModelVisible(playerModel, false);
+            } else {
+                WereModelRenderer.setBaseModelVisible(playerModel, true);
+            }
+        }
+    }
+}
+```
+
+```java
+// WereModelRenderer.java (Lines 234-248)
+public static void setBaseModelVisible(PlayerModel<?> model, boolean visible) {
+    if (model == null) return;
+    model.head.visible = visible;
+    model.hat.visible = visible;
+    model.body.visible = visible;
+    model.rightArm.visible = visible;
+    model.leftArm.visible = visible;
+    model.rightLeg.visible = visible;
+    model.leftLeg.visible = visible;
+    model.jacket.visible = visible;
+    model.rightSleeve.visible = visible;
+    model.leftSleeve.visible = visible;
+    model.rightPants.visible = visible;
+    model.leftPants.visible = visible;
+}
+```
+
+### Suppression Mechanics & Strengths:
+1. **Zero Matrix Stack Contamination**: Setting `.visible = false` on `ModelPart` instances natively bypasses vertex generation in Minecraft's `ModelPart.compile()` without mutating matrix transforms or corrupting downstream rendering layers.
+2. **Synchronized Layer Hiding**: Vanilla `HumanoidArmorLayer` checks `parentModel.head.visible`, `parentModel.body.visible`, etc., before rendering armor cuboids. Consequently, setting `setBaseModelVisible(false)` automatically suppresses vanilla helmet, chestplate, leggings, and boots rendering, eliminating clipping between Steve/Alex human armor meshes and custom 3D GeckoLib entity models.
+
+### Recommended Fix for Missing Part Suppression:
+`PlayerModel` contains two additional overlay fields: `cloak` and `ear`. `setBaseModelVisible()` must be updated as follows:
+
+```java
+public static void setBaseModelVisible(PlayerModel<?> model, boolean visible) {
+    if (model == null) return;
+    model.head.visible = visible;
+    model.hat.visible = visible;
+    model.body.visible = visible;
+    model.rightArm.visible = visible;
+    model.leftArm.visible = visible;
+    model.rightLeg.visible = visible;
+    model.leftLeg.visible = visible;
+    model.jacket.visible = visible;
+    model.rightSleeve.visible = visible;
+    model.leftSleeve.visible = visible;
+    model.rightPants.visible = visible;
+    model.leftPants.visible = visible;
+    model.cloak.visible = visible; // Prevent floating cape mesh
+    model.ear.visible = visible;   // Prevent floating Deadmau5 ears
+}
+```
 
 ---
 
-## 4. Pehkui Scale Refresh & `player.refreshDimensions()` Analysis
+## 4. Fail-Safe Guardrails & Fallback Matrix ("Never Invisible" Verification)
 
-### Relevant Files & Line Numbers
-- **`PehkuiIntegration.java`**: `common/src/main/java/ddraig/net/customraces/integration/PehkuiIntegration.java` (lines 46-127, 129-168)
-- **`WereRaceTransformHandler.java`**: `common/src/main/java/ddraig/net/customraces/event/WereRaceTransformHandler.java` (lines 160-184, 189-201)
-- **`ModPackets.java`**: `common/src/main/java/ddraig/net/customraces/network/ModPackets.java` (lines 41-47)
+To guarantee players are **NEVER INVISIBLE** under any race configuration or asset state, we audited 5 primary failure scenarios:
 
-### Scale Mechanics Analysis
-1. **Scale Multipliers**:
-   ```java
-   boolean isTransformed = WereRaceTransformHandler.isTransformed(player.getUUID());
-   float heightMult = isTransformed && race.enableWereRace ? race.wereHeightScale : race.heightScale;
-   float widthMult = isTransformed && race.enableWereRace ? race.wereWidthScale : race.widthScale;
-   float hScale = heightMult * race.baseScale;
-   float wScale = widthMult * race.baseScale;
-   ```
-2. **Pehkui Scale Application**:
-   - Applies BASE, HEIGHT, WIDTH, REACH, STEP_HEIGHT scale data via reflection.
-   - At end of `applyRaceScales` (line 125) and `resetPlayerScales` (line 166), calls `player.refreshDimensions()`.
+| Failure Scenario | Trigger Condition | System Behavior & Fallback Mechanism | Visibility Outcome |
+| :--- | :--- | :--- | :--- |
+| **1. Unassigned Model** | `wereModelPath` is `null`, `""`, or `"none"` | `hasCustomModel(race)` returns `false`. `isModelAvailable(race)` returns `false`. `setBaseModelVisible(true)` is executed. `PlayerRaceLayer` renders `renderWereBeastParts()` (procedural ears/snout/glowing eyes). | **VISIBLE** (Base Human + Procedural Beast Overlay) |
+| **2. Invalid / Corrupted Model File** | `wereModelPath` points to non-existent file or corrupted `.geo.json` | `GeckoLibWereRenderer.isModelPresent()` returns `false` or `bakeModelFromFile()` catches `Throwable` and logs warning. `LivingEntityRendererMixin` keeps base model visible (`setBaseModelVisible(true)`). | **VISIBLE** (Base Human + Procedural Beast Overlay) |
+| **3. Render-Time Exception in GeckoLib** | Exception during reflection bone rendering (`renderGeckoModel`) | `WereModelRenderer.renderWereForm()` catches `false` return from renderer, immediately invokes `setBaseModelVisible(parentModel, true)`, and falls back to `renderWereBeastParts()`. | **VISIBLE** (Base Human + Procedural Beast Overlay) |
+| **4. Missing Texture Asset** | `wereTexturePath` file missing or syntax invalid | `WereModelRenderer.getValidWereTextureLocation()` executes a 5-step fallback ladder: Custom Disk Path $\rightarrow$ Mod Resource Path $\rightarrow$ Dynamic Cache $\rightarrow$ `DEFAULT_WERE_TEXTURE` $\rightarrow$ `player.getSkinTextureLocation()`. | **VISIBLE** (Clean Texture, No Purple/Black Checkerboard) |
+| **5. GeckoLib Mod Missing / Reflection Failure** | GeckoLib library absent from runtime environment | Reflection calls catch `ClassNotFoundException` / `NoClassDefFoundError` safely in `GeckoLibWereRenderer`. System gracefully degrades to base model + procedural features. | **VISIBLE** (Base Human + Procedural Beast Overlay) |
 
-### Why `player.refreshDimensions()` is Critical
-- `player.refreshDimensions()` recalculates `EntityDimensions` (width, height, eyeHeight, bounding box).
-- Without calling `refreshDimensions()`:
-  - Transformed player bounding box remains 1.0x while visual scale is 1.3x/1.5x.
-  - Camera height remains at normal player eye level.
-  - Hitbox desync occurs on both server collisions and client rendering bounds.
+---
 
-### Identified Gap: Client-Side Dimension Refresh Missing
-- `WereRaceTransformHandler.transformIntoWereForm(...)` runs on `ServerPlayer` and invokes `PehkuiIntegration.applyRaceScales(player, race)`, which updates server-side dimensions.
-- On client side, when `ModPackets.java` receives `SYNC_WERE_STATE_ID` (lines 41-46):
+## 5. Edge Case Analysis & Technical Risks
+
+### 1. Invisibility Effects & Spectator Mode
+- **Current Behavior**: `PlayerRaceLayer.java` and `GeckoLibWereRenderer.java` render GeckoLib models using `RenderType.entityCutoutNoCull(textureLoc)` regardless of player visibility state.
+- **Risk**: Invisible players or players in spectator mode render as solid, opaque 3D beasts.
+- **Recommendation**: In `PlayerRaceLayer.render()`, check `player.isInvisible()` and `player.isSpectator()`. If `player.isInvisible()`, use `RenderType.entityTranslucent(textureLoc)` or skip rendering when completely hidden to non-team members (`player.isInvisibleTo(mc.player)`).
+
+### 2. Pehkui Double-Scaling Conflict
+- **Current Behavior**:
+  - `PehkuiIntegration.applyRaceScales()` sets Pehkui's `BASE`, `HEIGHT`, and `WIDTH` scale data on the player entity.
+  - `PlayerRaceLayer.java` (Lines 46-48) ALSO calls `poseStack.scale(wScale, hScale, wScale)`.
+- **Impact**: When Pehkui is installed, transformed players experience exponential scaling ($1.3 \times 1.3 = 1.69\times$).
+- **Recommendation**: Guard `PlayerRaceLayer` scaling with `if (!PehkuiIntegration.isPehkuiLoaded())`:
   ```java
-  NetworkManager.registerReceiver(NetworkManager.Side.S2C, SYNC_WERE_STATE_ID, (buf, context) -> {
-      UUID pUuid = buf.readUUID();
-      boolean isTransformed = buf.readBoolean();
-      context.queue(() -> {
-          ClientWereState.setTransformed(pUuid, isTransformed);
-          // MISSING: Client player scale update & refreshDimensions() call!
-      });
-  });
+  if (isWereTransformed) {
+      if (!PehkuiIntegration.isPehkuiLoaded()) {
+          float hScale = race.wereHeightScale > 0 ? race.wereHeightScale : 1.3f;
+          float wScale = race.wereWidthScale > 0 ? race.wereWidthScale : 1.3f;
+          poseStack.scale(wScale, hScale, wScale);
+      }
+      ...
+  }
   ```
-- **Fix Required**: Client receiver for `SYNC_WERE_STATE_ID` must find the client entity for `pUuid` (e.g. `Minecraft.getInstance().level.getPlayerByUUID(pUuid)`) and execute `PehkuiIntegration.applyRaceScales(player, race)` and `player.refreshDimensions()`.
+
+### 3. First-Person Hand Rendering (`ItemInHandRenderer`)
+- **Current Behavior**: In 1st-person view, Minecraft calls `PlayerRenderer.renderRightHand()`. Vanilla explicitly sets `model.rightArm.visible = true` right before rendering.
+- **Impact**: 1st-person view shows the player's default human skin arm rather than a transformed beast claw/arm.
+- **Recommendation for M3/M4**: In M3/M4, implement a hand rendering hook or mixin into `PlayerRenderer.renderRightHand` / `renderLeftHand` to render the transformed GeckoLib arm/claw bone in 1st person when transformed.
+
+### 4. Held Items & Equipment Layer Alignment
+- **Current Behavior**: Vanilla `ItemInHandLayer` renders items relative to `parentModel.rightArm` / `leftArm`.
+- **Impact**: When `setBaseModelVisible(false)` is active, `rightArm` limb rotations are still updated by `PlayerModel.setupAnim()`, so held swords and items render in the correct world space relative to the player's pose.
+- **Verification**: Held items remain visible and animated with player movement.
 
 ---
 
-## 5. Proposed Modifications for Milestone 2
+## 6. Implementation Recommendations Summary for M2 / M3
 
-### 1. `PlayerRaceLayer.java`
-- Modify `render(...)` to handle vanilla model visibility suppression when `isWereTransformed` is active:
-  - If `isWereTransformed && race.enableWereRace`:
-    - Check if custom GeckoLib model exists or fallback to procedural beast overlay.
-    - Set `getParentModel().head.visible = false`, `body.visible = false`, `rightArm.visible = false`, `leftArm.visible = false`, `rightLeg.visible = false`, `leftLeg.visible = false` when custom model is rendered.
-  - In `finally` block or when `!isWereTransformed`, restore visibility of all parent model parts to `true`.
-
-### 2. Implementation of `WereModelRenderer.java` / GeckoLib Integration
-- Create `WereModelRenderer` in `ddraig.net.customraces.client.render`:
-  - Handle loading and caching of GeckoLib model files (`wereModelPath`), textures (`wereTexturePath`), and animation state controllers (`wereIdleAnim`, `wereWalkAnim`, `wereAttackAnim`, etc.).
-  - Fall back gracefully to `PlayerRaceLayer.renderWereBeastParts(...)` if GeckoLib model path is empty or invalid.
-
-### 3. `ModPackets.java` Client Receiver Fix
-- Update `SYNC_WERE_STATE_ID` client handler:
-  ```java
-  NetworkManager.registerReceiver(NetworkManager.Side.S2C, SYNC_WERE_STATE_ID, (buf, context) -> {
-      UUID pUuid = buf.readUUID();
-      boolean isTransformed = buf.readBoolean();
-      context.queue(() -> {
-          ClientWereState.setTransformed(pUuid, isTransformed);
-          if (Minecraft.getInstance().level != null) {
-              Player target = Minecraft.getInstance().level.getPlayerByUUID(pUuid);
-              if (target != null) {
-                  RaceData race = RaceRegistry.getPlayerRace(pUuid);
-                  PehkuiIntegration.applyRaceScales(target, race);
-                  target.refreshDimensions();
-              }
-          }
-      });
-  });
-  ```
-
----
-
-## Verification Plan
-1. Compile using `./gradlew build -x test`.
-2. Inspect player model rendering during transformation toggle to ensure vanilla player mesh is hidden when custom model is active and restored on reversion.
-3. Test empty `wereModelPath` fallback to ensure procedural beast features render without crash.
-4. Verify Pehkui scale changes and `refreshDimensions()` update hitboxes and camera height on both server and client.
+1. **Update `setBaseModelVisible`**: Add `model.cloak.visible = visible` and `model.ear.visible = visible` to `WereModelRenderer.java`.
+2. **Fix Pehkui Scaling**: Wrap `poseStack.scale(wScale, hScale, wScale)` in `PlayerRaceLayer.java` with `!PehkuiIntegration.isPehkuiLoaded()`.
+3. **Add Invisibility Awareness**: Check `player.isInvisible()` in `GeckoLibWereRenderer.java` and select translucent render types or respect invisibility rules.
+4. **Maintain Fail-Safe Paradigm**: Preserve the strict fallback chain in `LivingEntityRendererMixin` and `WereModelRenderer.renderWereForm()` where any rendering error restores base model visibility and applies procedural beast parts.

@@ -21,13 +21,14 @@ import java.util.UUID;
  * base player mesh suppression, and fallback logic for unmapped/invalid model paths.
  */
 public class WereModelRenderer {
-    public static final ResourceLocation DEFAULT_WERE_MODEL = new ResourceLocation("customraces", "models/were/default_werewolf.geo.json");
-    public static final ResourceLocation DEFAULT_WERE_TEXTURE = new ResourceLocation("customraces", "textures/were/default_werewolf.png");
-    public static final ResourceLocation DEFAULT_WERE_ANIMATION = new ResourceLocation("customraces", "animations/were/default_werewolf.animation.json");
+    public static final ResourceLocation DEFAULT_WERE_MODEL = GeckoAssetResolver.DEFAULT_MODEL_LOCATION;
+    public static final ResourceLocation DEFAULT_WERE_TEXTURE = GeckoAssetResolver.DEFAULT_TEXTURE_LOCATION;
+    public static final ResourceLocation DEFAULT_WERE_ANIMATION = GeckoAssetResolver.DEFAULT_ANIMATION_LOCATION;
 
     private static final Set<String> LOGGED_WARNINGS = new HashSet<>();
 
     public static void clearCaches() {
+        GeckoAssetResolver.clearCaches();
         DYNAMIC_TEXTURE_CACHE.clear();
         LOGGED_WARNINGS.clear();
         try {
@@ -74,161 +75,29 @@ public class WereModelRenderer {
     public static boolean isModelAvailable(RaceData race) {
         if (!hasCustomModel(race)) return false;
         ResourceLocation loc = getValidWereModelLocation(race);
-        return GeckoLibWereRenderer.isModelPresent(loc);
+        return GeckoLibWereRenderer.isModelPresent(loc, race != null ? race.wereModelPath : null);
     }
 
     public static ResourceLocation getValidWereModelLocation(RaceData race) {
-        if (race == null || !hasCustomModel(race)) {
-            return DEFAULT_WERE_MODEL;
-        }
-        String path = race.wereModelPath.trim();
-        ResourceLocation loc = ResourceLocation.tryParse(path);
-        if (loc == null) {
-            if (LOGGED_WARNINGS.add("model:" + path)) {
-                System.err.println("[CustomRaces] Invalid Were model path '" + path + "', falling back to default: " + DEFAULT_WERE_MODEL);
-            }
-            return DEFAULT_WERE_MODEL;
-        }
-        return loc;
+        return GeckoAssetResolver.resolveModelLocation(race != null ? race.wereModelPath : null);
     }
 
     public static ResourceLocation getValidWereTextureLocation(AbstractClientPlayer player, RaceData race) {
-        if (race == null || race.wereTexturePath == null || race.wereTexturePath.trim().isEmpty() || "none".equalsIgnoreCase(race.wereTexturePath.trim())) {
-            return getSafeDefaultTexture(player);
-        }
-
-        String path = race.wereTexturePath.trim();
-        String lowerPath = path.toLowerCase(java.util.Locale.ROOT);
-
-        // Intercept "skin" and "player" keywords (case-insensitive, trimmed)
-        if ("skin".equals(lowerPath) || "player".equals(lowerPath) || "player_skin".equals(lowerPath) || "skin_texture".equals(lowerPath)) {
-            if (player != null) {
-                ResourceLocation skinLoc = player.getSkinTextureLocation();
-                if (skinLoc != null) {
-                    return skinLoc;
-                }
-            }
-            return getSafeDefaultTexture(player);
-        }
-
-        // Path & extension normalization (default namespace customraces, prefix textures/, suffix .png if missing)
-        String namespace;
-        String relativePath;
-        int colonIndex = path.indexOf(':');
-        if (colonIndex >= 0) {
-            namespace = path.substring(0, colonIndex);
-            relativePath = path.substring(colonIndex + 1);
-        } else {
-            namespace = "customraces";
-            relativePath = path;
-        }
-
-        if (!relativePath.startsWith("textures/")) {
-            relativePath = "textures/" + relativePath;
-        }
-        if (!relativePath.endsWith(".png")) {
-            relativePath = relativePath + ".png";
-        }
-
-        ResourceLocation loc = ResourceLocation.tryParse(namespace + ":" + relativePath);
-        if (loc == null) {
-            if (LOGGED_WARNINGS.add("texture_syntax:" + path)) {
-                System.err.println("[CustomRaces] Invalid Were texture path syntax '" + path + "', falling back to default: " + DEFAULT_WERE_TEXTURE);
-            }
-            return getSafeDefaultTexture(player);
-        }
-
-        // Client-side ResourceManager existence validation & safe fallback ladder
-        if (isResourcePresentOnClient(loc)) {
-            return loc;
-        }
-
-        // Try dynamic disk file texture loading from config directory
-        ResourceLocation diskLoc = loadDiskTextureDynamic(path);
-        if (diskLoc != null) {
-            return diskLoc;
-        }
-
-        if (LOGGED_WARNINGS.add("texture_missing:" + loc)) {
-            System.err.println("[CustomRaces] Were texture asset missing on disk/resources: '" + loc + "', falling back to default.");
-        }
-        return getSafeDefaultTexture(player);
+        return GeckoAssetResolver.resolveTextureLocation(player, race != null ? race.wereTexturePath : null);
     }
 
     private static final java.util.Map<String, ResourceLocation> DYNAMIC_TEXTURE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
-
-    private static ResourceLocation loadDiskTextureDynamic(String path) {
-        if (path == null || path.trim().isEmpty()) return null;
-        String cleanPath = path.trim().replaceAll(".*/", "");
-        if (DYNAMIC_TEXTURE_CACHE.containsKey(cleanPath)) {
-            return DYNAMIC_TEXTURE_CACHE.get(cleanPath);
-        }
-
-        java.io.File file = new java.io.File("config/custom_races/textures/" + cleanPath);
-        if (!file.exists()) {
-            file = new java.io.File("config/custom_races/textures/were/" + cleanPath);
-        }
-        if (!file.exists()) {
-            file = new java.io.File(path);
-        }
-
-        if (file.exists() && file.isFile()) {
-            try (java.io.InputStream is = new java.io.FileInputStream(file)) {
-                com.mojang.blaze3d.platform.NativeImage nativeImage = com.mojang.blaze3d.platform.NativeImage.read(is);
-                net.minecraft.client.renderer.texture.DynamicTexture dynamicTexture = new net.minecraft.client.renderer.texture.DynamicTexture(nativeImage);
-                ResourceLocation loc = new ResourceLocation("customraces", "dynamic_were_texture/" + cleanPath.toLowerCase().replaceAll("[^a-z0-9_.-]", "_"));
-                net.minecraft.client.Minecraft.getInstance().getTextureManager().register(loc, dynamicTexture);
-                DYNAMIC_TEXTURE_CACHE.put(cleanPath, loc);
-                return loc;
-            } catch (Throwable t) {
-                System.err.println("[CustomRaces] Failed to load dynamic disk texture: " + file.getAbsolutePath() + " -> " + t.getMessage());
-            }
-        }
-        return null;
-    }
 
     public static ResourceLocation getValidWereTextureLocation(RaceData race) {
         return getValidWereTextureLocation(null, race);
     }
 
     public static boolean isResourcePresentOnClient(ResourceLocation loc) {
-        if (loc == null) return false;
-        try {
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            if (mc != null && mc.getResourceManager() != null) {
-                return mc.getResourceManager().getResource(loc).isPresent();
-            }
-        } catch (Throwable ignored) {
-        }
-        return true;
-    }
-
-    private static ResourceLocation getSafeDefaultTexture(AbstractClientPlayer player) {
-        if (isResourcePresentOnClient(DEFAULT_WERE_TEXTURE)) {
-            return DEFAULT_WERE_TEXTURE;
-        }
-        if (player != null) {
-            ResourceLocation skinLoc = player.getSkinTextureLocation();
-            if (skinLoc != null) {
-                return skinLoc;
-            }
-        }
-        return DEFAULT_WERE_TEXTURE;
+        return GeckoAssetResolver.isResourcePresentOnClient(loc);
     }
 
     public static ResourceLocation getValidWereAnimationLocation(RaceData race) {
-        if (race == null || race.wereAnimationPath == null || race.wereAnimationPath.trim().isEmpty() || "none".equalsIgnoreCase(race.wereAnimationPath.trim())) {
-            return DEFAULT_WERE_ANIMATION;
-        }
-        String path = race.wereAnimationPath.trim();
-        ResourceLocation loc = ResourceLocation.tryParse(path);
-        if (loc == null) {
-            if (LOGGED_WARNINGS.add("animation:" + path)) {
-                System.err.println("[CustomRaces] Invalid Were animation path '" + path + "', falling back to default: " + DEFAULT_WERE_ANIMATION);
-            }
-            return DEFAULT_WERE_ANIMATION;
-        }
-        return loc;
+        return GeckoAssetResolver.resolveAnimationLocation(race != null ? race.wereAnimationPath : null);
     }
 
     public static void setBaseModelVisible(PlayerModel<?> model, boolean visible) {
@@ -245,6 +114,36 @@ public class WereModelRenderer {
         model.leftSleeve.visible = visible;
         model.rightPants.visible = visible;
         model.leftPants.visible = visible;
+        try {
+            java.lang.reflect.Field cloakField = null;
+            try {
+                cloakField = PlayerModel.class.getDeclaredField("cloak");
+            } catch (NoSuchFieldException e) {
+                try {
+                    cloakField = PlayerModel.class.getDeclaredField("f_103374_");
+                } catch (NoSuchFieldException ignored) {}
+            }
+            if (cloakField != null) {
+                cloakField.setAccessible(true);
+                net.minecraft.client.model.geom.ModelPart cloak = (net.minecraft.client.model.geom.ModelPart) cloakField.get(model);
+                if (cloak != null) cloak.visible = visible;
+            }
+        } catch (Throwable ignored) {}
+        try {
+            java.lang.reflect.Field earField = null;
+            try {
+                earField = PlayerModel.class.getDeclaredField("ear");
+            } catch (NoSuchFieldException e) {
+                try {
+                    earField = PlayerModel.class.getDeclaredField("f_103375_");
+                } catch (NoSuchFieldException ignored) {}
+            }
+            if (earField != null) {
+                earField.setAccessible(true);
+                net.minecraft.client.model.geom.ModelPart ear = (net.minecraft.client.model.geom.ModelPart) earField.get(model);
+                if (ear != null) ear.visible = visible;
+            }
+        } catch (Throwable ignored) {}
     }
 
     public static boolean renderWereForm(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, RaceData race, float netHeadYaw, float headPitch) {
@@ -254,19 +153,25 @@ public class WereModelRenderer {
         }
 
         if (hasCustomModel(race)) {
-            // Hide human player model mesh so skin doesn't bleed through
-            setBaseModelVisible(parentModel, false);
-
             ResourceLocation modelLoc = getValidWereModelLocation(race);
             ResourceLocation textureLoc = getValidWereTextureLocation(player, race);
             ResourceLocation animLoc = getValidWereAnimationLocation(race);
 
-            boolean rendered = renderGeckoLibWereModel(poseStack, buffer, packedLight, player, parentModel, modelLoc, textureLoc, animLoc);
+            boolean rendered = false;
+            try {
+                rendered = renderGeckoLibWereModel(poseStack, buffer, packedLight, player, parentModel, modelLoc, textureLoc, animLoc, netHeadYaw, headPitch);
+            } catch (Throwable t) {
+                rendered = false;
+            }
+
             if (!rendered) {
-                // If GeckoLib model fails to bake, restore base player model mesh safely
+                // If GeckoLib model fails to bake, load, or render, restore base player model mesh safely
                 setBaseModelVisible(parentModel, true);
                 return false;
             }
+
+            // Hide human player model mesh ONLY when custom model rendered successfully
+            setBaseModelVisible(parentModel, false);
             return true;
         } else {
             // Keep player model visible for procedural overlay fallback
@@ -275,58 +180,9 @@ public class WereModelRenderer {
         }
     }
 
-    private static boolean renderGeckoLibWereModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc) {
+    private static boolean renderGeckoLibWereModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc, float netHeadYaw, float headPitch) {
         RaceData race = ddraig.net.customraces.data.RaceRegistry.getPlayerRace(player.getUUID());
-        return GeckoLibWereRenderer.renderGeckoModel(poseStack, buffer, packedLight, player, race, modelLoc, textureLoc, animLoc);
-    }
-
-    private static Object loadAndBakeGeckoModel(ResourceLocation modelLoc) {
-        if (modelLoc == null) return null;
-        try {
-            String path = modelLoc.getPath();
-            java.io.File file = new java.io.File(path);
-            if (!file.exists()) {
-                file = new java.io.File("config/custom_races/models/" + path.replaceAll(".*/", ""));
-            }
-            if (!file.exists()) {
-                file = new java.io.File("config/custom_races/models/were/" + path.replaceAll(".*/", ""));
-            }
-            if (file.exists() && file.isFile()) {
-                String content = java.nio.file.Files.readString(file.toPath());
-                com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
-                
-                Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-                Object geoGson = jsonUtilClass.getField("GEO_GSON").get(null);
-                java.lang.reflect.Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", com.google.gson.JsonElement.class, Class.class);
-                
-                Class<?> rawModelClass = Class.forName("software.bernie.geckolib.loading.json.raw.Model");
-                Object rawModel = fromJsonMethod.invoke(geoGson, json, rawModelClass);
-                
-                Class<?> geomTreeClass = Class.forName("software.bernie.geckolib.loading.object.GeometryTree");
-                java.lang.reflect.Method fromModelMethod = geomTreeClass.getMethod("fromModel", rawModelClass);
-                Object geomTree = fromModelMethod.invoke(null, rawModel);
-                
-                Class<?> bakedFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
-                java.lang.reflect.Method getForNsMethod = bakedFactoryClass.getMethod("getForNamespace", String.class);
-                Object factory = getForNsMethod.invoke(null, modelLoc.getNamespace());
-                
-                java.lang.reflect.Method constructGeoModelMethod = factory.getClass().getMethod("constructGeoModel", geomTreeClass);
-                Object bakedModel = constructGeoModelMethod.invoke(factory, geomTree);
-                
-                if (bakedModel != null) {
-                    Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-                    java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-                    java.util.Map<Object, Object> bakedModels = (java.util.Map<Object, Object>) getModelsMethod.invoke(null);
-                    if (bakedModels != null) {
-                        bakedModels.put(modelLoc, bakedModel);
-                    }
-                    return bakedModel;
-                }
-            }
-        } catch (Throwable t) {
-            System.err.println("[CustomRaces] Failed to bake dynamic GeckoLib model: " + modelLoc + " -> " + t.getMessage());
-        }
-        return null;
+        return GeckoLibWereRenderer.renderGeckoModel(poseStack, buffer, packedLight, player, race, modelLoc, textureLoc, animLoc, netHeadYaw, headPitch);
     }
 
     private static void renderBox(PoseStack poseStack, VertexConsumer builder, int packedLight, float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {

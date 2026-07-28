@@ -1,55 +1,47 @@
-# BRIEFING — 2026-07-23T19:12:15-05:00
+# BRIEFING — 2026-07-28T11:18:20-05:00
 
 ## Mission
-Stress verification of M2 implementation: PlayerRaceLayer mesh visibility restoration, tracking packet broadcasts, Pehkui scale refresh calls, and Gradle multi-platform build integrity.
+Adversarial empirical testing and validation of Milestone 2 (GeckoLib Head Rotation & Pehkui Scaling R1).
 
 ## 🔒 My Identity
-- Archetype: Empirical Challenger
+- Archetype: EMPIRICAL CHALLENGER
 - Roles: critic, specialist
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_challenger_m2_2
-- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Milestone: M2 Stress Test Verification
-- Instance: 2 of 2
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: GeckoLib Head Rotation & Pehkui Scaling R1
+- Instance: Challenger 2
 
 ## 🔒 Key Constraints
 - Review-only — do NOT modify implementation code
-- Write strictly to assigned folder c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_challenger_m2_2
-- NEVER EXPORT ON ME rule active
-- BACKUP FOLDER READ-ONLY rule active
+- Write only to your working directory `.agents/teamwork_preview_challenger_m2_2`
+- Empirical verification required (must execute verification tests/code)
 
 ## Current Parent
-- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-23T19:12:15-05:00
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T11:18:20-05:00
 
 ## Review Scope
-- **Files to review**: PlayerRaceLayer, WereModelRenderer, CustomRaceModelRenderer, WereRaceTransformHandler, ClientWereState, ModPackets, PehkuiIntegration
-- **Interface contracts**: PROJECT.md
-- **Review criteria**: Model visibility toggling, fallback logic, network payload robustness, Pehkui dimension refresh, multi-platform build integrity
+- **Files to review**: GeckoLib Head Rotation & Pehkui Scaling implementation files (`GeckoLibWereRenderer.java`, `WereModelRenderer.java`, `PlayerRaceLayer.java`, `PehkuiIntegration.java`, `GeckoAssetResolver.java`)
+- **Interface contracts**: PROJECT.md, Worker M2 Handoff
+- **Review criteria**: Head rotation pitch/yaw extremes & NaN/Inf handling, PoseStack matrix isolation, Pehkui scale calculation logic (loaded vs unloaded), multi-platform build execution
 
 ## Key Decisions Made
-- Created and executed empirical Java stress test suite (`M2StressVerificationTest`).
-- Verified 10,000 transformation back-and-forth toggles.
-- Verified Gradle build integrity across common, fabric, and forge modules.
-- Identified tracking packet desync vulnerability when players stop/start tracking.
-- Identified lingering transformation state vulnerability when changing races via SET_PLAYER_RACE packet.
+- Created `M2ChallengerVerificationTest.java` to empirically test pitch/yaw extremes (-90°, +90°, -180°, +180°, NaN, Infinity), PoseStack hygiene, and Pehkui scale calculations.
+- Executed `./gradlew :common:runM2ChallengerVerificationTests` (4/4 PASSED).
+- Executed `./gradlew :common:runM2Tests` (5/5 PASSED).
+- Executed `./gradlew build -x test` (BUILD SUCCESSFUL in 14s).
+- Formulated verdict: PASS.
 
 ## Artifact Index
-- ORIGINAL_REQUEST.md — Initial request copy
-- BRIEFING.md — Context and briefing tracking
-- progress.md — Step-by-step progress tracking
-- cp.txt — Java classpath argument file for stress test execution
-- handoff.md — Verification handoff report
+- ORIGINAL_REQUEST.md — Task request
+- BRIEFING.md — Working memory and identity
+- progress.md — Liveness heartbeat and subtask progress
+- handoff.md — 5-component handoff report and verdict
 
 ## Attack Surface
-- **Hypotheses tested**: 
-  1. Multi-platform gradle compilation: PASSED (`./gradlew build -x test`).
-  2. Mesh visibility restoration over 10,000 transformation toggles: PASSED (no permanent model corruption).
-  3. ClientWereState thread-safety over 50,000 concurrent mutations across 50 threads: PASSED.
-  4. Pehkui scale calculation fallback under extreme/negative values: PASSED.
-  5. Tracking packet broadcast behavior: FAILED / FLAGGED (desync vulnerability when player untracked/re-tracked).
-  6. Race swap transform state cleanup: FAILED / FLAGGED (2-second state latency on race change).
-- **Vulnerabilities found**:
-  1. Tracking packet desync in `onPlayerStartTracking`: Only sends state if target is transformed. Reverting while untracked leaves client stuck in transformed state upon re-tracking.
-  2. Race swap state latency in `SET_PLAYER_RACE_ID`: Does not clear `TRANSFORMED_PLAYERS` immediately upon race swap, causing up to 2 seconds of visual desync.
-  3. Base mesh hiding timing limitation: `setBaseModelVisible(false)` in `PlayerRaceLayer` executes after `LivingEntityRenderer.renderToBuffer()`, meaning base mesh cannot be hidden via render layer alone.
-- **Untested angles**: Hardware shader compatibility with custom geometry boxes.
+- **Hypotheses tested**: Pitch/yaw extremes (-90°, +90°, -180°, +180°), NaN/Inf pitch/yaw input propagation, PoseStack stack depth isolation across 1,000 cycles and 500 exception unwinds, Pehkui loaded vs unloaded scale logic and fallback parameters.
+- **Vulnerabilities found**: No critical failures in M2 implementation. `GeckoLibWereRenderer.java` correctly applies head bone rotations; `PlayerRaceLayer.java` guards against Pehkui double-scaling; `PehkuiIntegration.java` provides robust fallback defaults.
+- **Untested angles**: Runtime client OpenGL shader rendering (requires live Minecraft GPU context).
+
+## Loaded Skills
+- None

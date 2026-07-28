@@ -1,34 +1,30 @@
-## 2026-07-23T19:06:14Z
-You are Worker M2 (Were-Race Model Transformation Rendering Fixes Implementation Worker).
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2
+## 2026-07-28T16:12:43Z
+You are Worker M2 for Custom Race GeckoLib Player Model Overhaul.
 
-PROJECT SCOPE:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-ORIGINAL REQUEST:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
-
-EXPLORER ANALYSIS REPORTS TO READ AND IMPLEMENT:
-- Explorer 1 analysis: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_1\analysis.md
-- Explorer 2 analysis: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2\analysis.md
+Your working directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2
+Project scope document: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+Original user request: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
+Explorer 1 Report: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_1\handoff.md
+Explorer 2 Report: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_2\handoff.md
 
 MANDATORY INTEGRITY WARNING:
 DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.
 
-YOUR TASK (MILESTONE 2):
-Implement Were-Race Custom Model Transformation Rendering Fixes based on Explorer 1 & 2 findings:
-1. **Tracking Client State Synchronization**:
-   - Ensure server broadcasts transformation state changes (`ClientWereState` / `WereRaceTransformHandler.isTransformed`) to all tracking clients of the player (`PlayerLookup.tracking(player)` or Forge equivalent) upon `toggleTransformation`.
-   - Register player tracking listeners on both Fabric and Forge so that when a client starts tracking a player (`EntityTrackingEvents.START_TRACKING` / `PlayerEvent.StartTracking`), the server sends the current transformation state to that client.
-2. **Model Swap & Render Layer Overrides**:
-   - Update `PlayerRaceLayer`, `WereModelRenderer`, and `CustomRaceModelRenderer` to check transformation state (`isWereForm` / `isTransformed`).
-   - Hide/suppress default player model parts (`getParentModel().head.visible = false`, body, arms, legs, etc.) when the player is in Were-form so the human skin/mesh does not render underneath the Were model.
-3. **Fallback Logic for `wereModelId` / `wereModelPath`**:
-   - Fix fallback logic when `wereModelId` / `wereModelPath` is null, empty, or unmapped in registry/assets so it defaults gracefully to a valid model or default custom GeckoLib asset rather than rendering broken assets or falling back silently without proper handling.
-4. **Pehkui Scale Updates & Bounding Box Refresh**:
-   - Ensure Pehkui scale updates (`wereHeightScale`, `wereWidthScale`) invoke `player.refreshDimensions()` on transformation state toggle on both server and client (when client receives transformation sync payload).
+REQUIREMENT SCOPE — Milestone 2: GeckoLib Model Override & Dual Asset Resolution (R1)
+1. **Implement `GeckoAssetResolver.java`**:
+   - Create a dedicated asset resolution helper class in `ddraig.net.customraces.client.render` to cleanly resolve models, textures, and animation files across both disk config paths (`config/custom_races/models/`, `textures/`, `animations/`) and mod resource pack paths (`assets/customraces/geo/`, `textures/`, `animations/`).
+   - Normalize path strings: default namespace to `"customraces"`, handle missing extension defaults (`.geo.json`, `.animation.json`, `.png`), and handle candidates with or without subfolder prefixes (`geo/`, `models/were/`, `animations/`).
+   - Integrate `GeckoAssetResolver` into `WereModelRenderer.java` and `GeckoLibWereRenderer.java`.
 
-VERIFICATION REQUIREMENTS:
-- Run `./gradlew build -x test` to verify build succeeds without errors.
-- Document all file modifications, build commands executed, and build results in your handoff report.
+2. **Head Rotation Alignment (`netHeadYaw` and `headPitch`)**:
+   - Update `WereModelRenderer.renderWereForm()` to pass `netHeadYaw` and `headPitch` to `GeckoLibWereRenderer.renderGeckoModel()`.
+   - In `GeckoLibWereRenderer`, apply rotational matrix transforms (`netHeadYaw` for Y-rotation, `headPitch` for X-rotation) when traversing head bones (`head`, `bipedHead`, `head_bone`).
 
-Write your changes summary and handoff report to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md`. When complete, report via send_message to parent.
+3. **Pehkui Double-Scaling Coordination**:
+   - In `PlayerRaceLayer.java`, guard `poseStack.scale(wScale, hScale, wScale)` with `if (!PehkuiIntegration.isPehkuiLoaded())` so that Pehkui entity scaling and layer scaling do not stack into quadratic scaling (`scale^2`).
+
+4. **Compilation & Build Verification**:
+   - Execute `./gradlew build -x test` to verify multi-platform compilation across Fabric and Forge.
+   - Document all edited files, build logs, and test outcomes in your `handoff.md`.
+
+Create your working directory `.agents/teamwork_preview_worker_m2`, write `progress.md`, `changes.md`, and `handoff.md`, then send a message to parent when completed.

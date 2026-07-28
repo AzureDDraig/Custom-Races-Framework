@@ -1,18 +1,13 @@
-## 2026-07-23T19:04:14Z
-You are Explorer 3 (Particle Configuration & GUI Explorer).
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_3
+## 2026-07-28T16:10:23Z
+You are Explorer 3 (M1) for Custom Race GeckoLib Player Model Overhaul.
 
-PROJECT SCOPE:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-ORIGINAL REQUEST:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
+Your working directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_3
+Project scope document: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+Original user request: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
 
-YOUR TASK:
-Investigate `RaceData.java`, `RaceCreatorScreen`, particle spawning in `PlayerRaceLayer.java` / `ParticleAuraData`, `CHANGELOG.md`, and build verification.
-1. Inspect `RaceData.java` fields, codecs, NBT serialization, network packets, and constructor/default values for adding `particleCount` (default: 5) and `wereParticleCount` (default: 10).
-2. Inspect `RaceCreatorScreen.java` (and related GUI components) to map how sliders or input fields are added and bound to race data properties.
-3. Inspect `PlayerRaceLayer.java` and `ParticleAuraData` particle spawning logic to see how particle emission rates can be dynamically scaled based on `particleCount` / `wereParticleCount`.
-4. Inspect `CHANGELOG.md` format and `./gradlew build -x test` multi-platform build setup across Fabric and Forge.
-5. Document exact file paths, method names, line numbers, and proposed modifications.
-
-Write your findings to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_3\analysis.md` and create a `handoff.md`. When complete, report via send_message to parent.
+FOCUS AREA: R3 - Dynamic Transformations, Keyframe Animations & Combat Effects.
+Tasks:
+1. Search and inspect GeckoLib animation state managers, transformation handlers (`ClientWereState`, `WereRaceTransformHandler`), rendering pipeline hooks, and particle systems (`ParticleAuraData`, `PlayerRaceLayer`).
+2. Analyze how to implement and trigger smooth keyframe animations (idle, walk, attack, hurt) for GeckoLib transformed models based on player state (moving, swinging arm, hurt time, crouching/swimming).
+3. Analyze combat visual effects: red hurt flash overlay rendering during entity damage ticks, dynamic skin texture overrides, and particle aura emission scaling during transformed state.
+4. Create your working directory `.agents/teamwork_preview_explorer_m1_3`, write `progress.md`, and produce detailed `analysis.md` and `handoff.md` summarizing your findings and concrete implementation recommendations. Send your completion message to parent when finished.

@@ -1,49 +1,56 @@
-# BRIEFING — 2026-07-23T19:42:30Z
+# BRIEFING — 2026-07-28T11:24:45-05:00
 
 ## Mission
-Verify all 6 remediation fixes in IronSpellsHandler.java, verify build with Gradle, stress-test the changes, and produce review.md and handoff.md.
+Review Milestone 2 Remediation (GeckoLib Asset Resolution R1) changes, verify correctness, stress-test edge cases, execute build/test suite, and render a verdict.
 
 ## 🔒 My Identity
-- Archetype: reviewer & critic
+- Archetype: reviewer / critic
 - Roles: reviewer, critic
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_1
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Milestone: M2 Remediation Review
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: M2 Remediation
 - Instance: 1 of 1
 
 ## 🔒 Key Constraints
 - Review-only — do NOT modify implementation code
-- Network Restrictions: CODE_ONLY mode
-- User Rule: NEVER EXPORT ON ME (no auto export)
-- User Rule: BACKUP FOLDER READ-ONLY
+- Evidence-based review and adversarial stress testing
+- Check for integrity violations or dummy implementations
+- Report verdict and handoff to parent
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T19:42:30Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T11:24:45-05:00
 
 ## Review Scope
-- **Files to review**: common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java
-- **Interface contracts**: PROJECT.md / task.md
-- **Review criteria**: Correctness, quality, logical completeness, edge cases, integrity check, build verification
+- **Files to review**:
+  - `src/main/java/com/customraces/client/render/GeckoAssetResolver.java`
+  - `src/main/java/com/customraces/client/render/WereModelRenderer.java`
+  - `src/test/java/com/customraces/client/render/GeckoAssetResolverTest.java`
+  - Worker Handoff: `.agents/teamwork_preview_worker_m2_remediation/handoff.md`
+- **Interface contracts**: `PROJECT.md`
+- **Review criteria**: Correctness, handling of ResourceLocationException, extension normalization, dead code removal, test suite passage, code quality, adversarial robustness.
 
 ## Key Decisions Made
-- All 6 remediation targets verified and approved (VERDICT: APPROVE).
-- Gradle multi-platform build verified (`.\gradlew build -x test` -> BUILD SUCCESSFUL in 18s).
-- Produced review.md and handoff.md.
+- Confirmed `isValidNamespace` and `isValidPath` character validation in `GeckoAssetResolver.java`.
+- Verified `addCandidate` wrapping `ResourceLocation.tryParse` in `try-catch`.
+- Verified extension normalization converting `.json` to `.geo.json` (models) and `.animation.json` (animations).
+- Confirmed removal of dead code `loadAndBakeGeckoModel` in `WereModelRenderer.java`.
+- Ran `./gradlew test` (34s, 0 failures, BUILD SUCCESSFUL).
+- Ran `./gradlew build -x test` (20s, BUILD SUCCESSFUL across :common, :fabric, :forge).
+- Rendered verdict: PASS.
 
 ## Artifact Index
-- ORIGINAL_REQUEST.md — Original task prompt
-- BRIEFING.md — Persistent context index
-- progress.md — Liveness progress log
-- review.md — Detailed review report with verdict
-- handoff.md — 5-component handoff report
+- `.agents/teamwork_preview_reviewer_m2_remediation_1/ORIGINAL_REQUEST.md`
+- `.agents/teamwork_preview_reviewer_m2_remediation_1/BRIEFING.md`
+- `.agents/teamwork_preview_reviewer_m2_remediation_1/progress.md`
+- `.agents/teamwork_preview_reviewer_m2_remediation_1/handoff.md`
 
 ## Review Checklist
-- **Items reviewed**: task.md, IronSpellsHandler.java, Gradle build execution
-- **Verdict**: APPROVE
-- **Unverified claims**: none
+- **Items reviewed**: `GeckoAssetResolver.java`, `WereModelRenderer.java`, `GeckoAssetResolverTest.java`, Worker Handoff
+- **Verdict**: PASS / APPROVE
+- **Unverified claims**: None remaining.
 
 ## Attack Surface
-- **Hypotheses tested**: Circular wrappers, null container propagation, primitive casting, root generic type assignability false positives, malformed ResourceLocation syntax.
-- **Vulnerabilities found**: None.
-- **Untested angles**: None.
+- **Hypotheses tested**: Uncaught ResourceLocationException on malformed path inputs (`invalid_namespace::path`, leading colons, spaces, uppercase), extension normalization edge cases, dead code removal impact.
+- **Vulnerabilities found**: None in remediation work; all previous findings resolved.
+- **Untested angles**: None in M2 scope.

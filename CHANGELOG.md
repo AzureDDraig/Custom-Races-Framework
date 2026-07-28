@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b159a] - 2026-07-28
+
+### 🐺 Full Custom GeckoLib Character Model Overhaul (`GeckoAssetResolver.java`, `GeckoLibWereRenderer.java`)
+- **Unified Asset Resolver (`GeckoAssetResolver.java`)**: Created unified model, texture, and keyframe animation asset resolver supporting disk configuration folders (`config/custom_races/`) as well as mod resource pack paths (`assets/customraces/`).
+- **Complete Player Model Suppression (`WereModelRenderer.java`)**: Suppresses base human character mesh cuboids (`head`, `body`, `arms`, `legs`, clothing overlays, cloak, and ears) cleanly when transformed into a custom GeckoLib 3D form, preventing human skin from bleeding through.
+- **Fail-Safe Invisibility Guardrails**: Enhanced rendering fallback to guarantee players never become invisible. If a custom model is unassigned or unreadable, the base human model renders safely with procedural beast features (ears, snout, eyes).
+- **Keyframe Animation Hierarchy & Combat FX**: Linked player action states (Hurt > Attack > Swim > Fly > Walk > Idle) directly to configured GeckoLib keyframes with red damage flash overlays, spectator translucency, and scale-adjusted particle aura effects.
+
+---
+
 ## [1.0.0-b158a] - 2026-07-27
 
 ### 🔄 Dynamic Model Cache Invalidation (`WereModelRenderer.java`, `ModPackets.java`)

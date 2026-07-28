@@ -1,47 +1,43 @@
-# Project: Custom Races Framework Full Implementation
+# Project: Custom Race GeckoLib Player Model Overhaul
 
 ## Architecture
-- Common module: Core race definitions (`RaceData.java`), registry & config (`RaceRegistry.java`), first-join event handler (`FirstJoinHandler.java`), body part transforms (`PartTransformData.java`).
-- Client module: Render layers (`PlayerRaceLayer.java`, `WereModelRenderer.java`, `CustomRaceModelRenderer.java`), GUI screens (`RaceSelectionScreen.java`, `RaceCreatorScreen.java`), custom model/texture resolution.
-- Permissions & Config: `permissionLock` checking in `RaceRegistry`/`RaceData`, `autoOpenSelectionOnJoin` toggle in config JSON.
+- Common module: Core race definitions (`RaceData.java`), registry & config (`RaceRegistry.java`), transformation state (`ClientWereState.java`, `WereRaceTransformHandler.java`).
+- Client module: Render layers (`PlayerRaceLayer.java`, `WereModelRenderer.java`, `CustomRaceModelRenderer.java`), GeckoLib asset resolution (`GeckoAssetResolver.java`), GeckoLib entity/model renderer (`GeckoLibWereRenderer.java`).
+- Fallback & Guardrails: Model suppression guardrails for base player cuboid mesh (`head`, `hat`, `body`, `arms`, `legs`, `jacket`, `sleeves`, `pants`, `cloak`, `ear`) in `LivingEntityRendererMixin` and `WereModelRenderer`; fail-safe fallback to base model + procedural features on asset load failure/missing model to prevent player invisibility. Invisibility effect handling (`player.isInvisible()`).
+- Animations & Combat Effects: GeckoLib keyframe controller (idle, walk, attack, hurt, fly, swim), red hurt tint overlay, dynamic skin texture overrides, and particle aura effects with 20 Hz tick guards.
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | M1: Exploration & Architecture Analysis | Investigate R1 (texture resolution & assets), R2/R3 (permission lock & auto-open config), R4 (body part presets & matrix stack hygiene) | none | DONE |
-| 2 | M2: Were-Form Texture & Rendering Fixes (R1) | Ensure `default_werewolf.png` asset, `"skin"`/`"player"` keywords, clean relative path parsing, fallback to `player.getSkinTextureLocation()` | M1 | DONE |
-| 3 | M3: VIP Permission Lock & First-Join Selection Toggle (R2 & R3) | Implement `permissionLock` in `RaceRegistry`/`RaceData`, GUI lock badge/tooltip/disabled button, `autoOpenSelectionOnJoin` config & `FirstJoinHandler` | M1 | DONE |
-| 4 | M4: Dynamic Body Part Model Preset Audit & Build Verification (R4) | Audit & verify 6 body part presets (ears, horns, tail, wings, halo, extra legs) for dynamic transforms, matrix isolation, and verify `./gradlew build -x test` | M2, M3 | DONE |
+| 1 | M1: Exploration & Architecture Analysis | Analyze GeckoLib player model override, dual asset loading (disk config vs resource pack), base player model suppression, and animation/combat effect hooks | none | DONE |
+| 2 | M2: GeckoLib Model Override & Dual Asset Resolution (R1) | Implement `GeckoAssetResolver` (dual path loading for disk & resource packs), `netHeadYaw`/`headPitch` head bone rotations in `GeckoLibWereRenderer`, and Pehkui double-scaling fix in `PlayerRaceLayer` | M1 | DONE |
+| 3 | M3: Base Human Player Model Suppression Guardrails (R2) | Extend `setBaseModelVisible()` for `cloak` & `ear`, verify model integrity before suppression, implement fail-safe fallback to base model + procedural features, and handle player invisibility/spectator status | M1, M2 | DONE |
+| 4 | M4: Dynamic Animations, Combat Effects & Multi-Platform Build Verification (R3) | Implement keyframe animation controller (idle/walk/attack/hurt/fly/swim), red hurt flash, dynamic skin texture overrides, 20 Hz particle aura, and multi-platform build (`./gradlew build -x test`) | M2, M3 | DONE |
 
 ## Interface Contracts
-### Were-Form Texture Resolution Contract (R1)
-- `wereTexturePath` in `WereModelRenderer`:
-  - `null`, empty, `"skin"`, or `"player"` -> resolves to `player.getSkinTextureLocation()`.
-  - Relative file paths (e.g. `"textures/were/custom.png"`) -> parsed cleanly into `ResourceLocation("customraces", path)`.
-  - Missing asset fallback -> defaults to `player.getSkinTextureLocation()` or `default_werewolf.png` (`assets/customraces/textures/were/default_werewolf.png`).
+### GeckoLib Asset Resolution & Rendering Contract (R1)
+- `GeckoAssetResolver` supports dual path loading and path normalization:
+  - Disk config paths: `config/custom_races/models/`, `config/custom_races/textures/`, `config/custom_races/animations/`
+  - Mod resource pack paths: `assets/customraces/geo/`, `assets/customraces/textures/`, `assets/customraces/animations/`
+- Render GeckoLib model at full scale aligned to entity feet and player rotation yaw/pitch. Pass `netHeadYaw` and `headPitch` to head bones (`head`, `bipedHead`, `head_bone`, `headbone`).
+- Pehkui scale coordination: avoid double-scaling by checking `!PehkuiIntegration.isPehkuiLoaded()` before applying layer scale.
 
-### Permission Lock & Selection GUI Contract (R2 & R3)
-- `RaceData` / `RaceRegistry`:
-  - `permissionLock` (String): If non-empty, evaluated via permission API / LuckPerms / player check.
-  - `autoOpenSelectionOnJoin` (boolean, default true): Config option controlling `FirstJoinHandler`.
-- `RaceSelectionScreen`:
-  - Displays `"🔒 VIP / LOCKED"` badge and tooltip `"§cRequires Permission: §e" + permissionLock` for locked races.
-  - Select button disabled when locked.
+### Base Player Model Suppression & Fallback Guardrails Contract (R2)
+- Mesh Suppression: When player is transformed AND valid custom GeckoLib model exists, suppress default player model parts (`head`, `hat`, `body`, `right_arm`, `left_arm`, `right_leg`, `left_leg`, clothing overlays `jacket`, `right_sleeve`, `left_sleeve`, `right_pants`, `left_pants`, `cloak`, `ear`).
+- Fail-Safe Fallback: If GeckoLib model is missing, invalid, or fails to parse/load, DO NOT suppress base model. Render base player model + procedural features (ears/tail/snout) so players are NEVER invisible.
+- Status Effects: Check `player.isInvisible()` to render translucency / translucent buffer or suppress model appropriately during potion invisibility.
 
-### Body Part Model Preset Contract (R4)
-- `PlayerRaceLayer` / `CustomRaceModelRenderer` / `PartTransformData`:
-  - 6 Presets: ears, horns, tail, wings, halo, extra legs.
-  - Matrix stack push/pop around each part transform to avoid leakage.
-  - Position, rotation, tint, and scale applied dynamically per race definition.
+### Dynamic Animations & Combat Effects Contract (R3)
+- Keyframe Animation Controller: Map player state (`speed`, `swingTime`, `hurtTime`, `isVisuallySwimming`, `flying`) to GeckoLib animation triggers (`wereIdleAnim`, `wereWalkAnim`, `wereAttackAnim`, `wereFlyAnim`, `wereSwimAnim`).
+- Combat Visuals: Apply hurt red flash overlay during damage tick, dynamic skin texture binding when configured, and scale particle aura emission rate with 20 Hz tick guards during transformed state.
 
 ## Code Layout
-- `common/src/main/java/ddraig/net/customraces/...` or shared directories:
+- `common/src/main/java/ddraig/net/customraces/...`:
   - `data/RaceData.java`
   - `registry/RaceRegistry.java`
-  - `handler/FirstJoinHandler.java`
+  - `handler/WereRaceTransformHandler.java`
   - `client/render/PlayerRaceLayer.java`
   - `client/render/WereModelRenderer.java`
-  - `client/render/CustomRaceModelRenderer.java`
-  - `client/render/part/PartTransformData.java`
-  - `client/gui/RaceSelectionScreen.java`
-  - `common/src/main/resources/assets/customraces/textures/were/default_werewolf.png`
+  - `client/render/GeckoLibWereRenderer.java`
+  - `client/render/GeckoAssetResolver.java`
+  - `mixin/LivingEntityRendererMixin.java`

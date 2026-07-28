@@ -1,17 +1,16 @@
-## 2026-07-23T19:04:14Z
-You are Explorer 1 (Transformation State & Networking Explorer).
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_1
+## 2026-07-28T16:10:23Z
+You are Explorer 1 (M1) for Custom Race GeckoLib Player Model Overhaul.
 
-PROJECT SCOPE:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
-ORIGINAL REQUEST:
-c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
+Your working directory is: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_1
+Project scope document: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+Original user request: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\ORIGINAL_REQUEST.md
 
-YOUR TASK:
-Investigate all codebase logic related to client-side transformation state (`ClientWereState`, `WereRaceTransformHandler`, networking packets, tracking client synchronization).
-1. Locate where `isTransformed` / `ClientWereState` is updated and synced between server and clients.
-2. Analyze why tracking clients (other players rendering a transformed player) might not receive or update transformation state.
-3. Identify packet handlers, server tracking listeners (e.g. `ServerPlayNetworking`, `PlayerTracker`, or `StartTracking` events), and S2C packets responsible for broadcasting race/were transformation state.
-4. Document precise file paths, class names, method signatures, line numbers, and exact code changes needed.
-
-Write your findings to `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_1\analysis.md` and create a `handoff.md`. When complete, report via send_message to parent.
+FOCUS AREA: R1 - GeckoLib Player Model Override & Asset Resolution.
+Tasks:
+1. Search and inspect existing `WereModelRenderer.java`, `CustomRaceModelRenderer.java`, `PlayerRaceLayer.java`, and GeckoLib model/renderer classes in the codebase.
+2. Analyze how GeckoLib models, textures, and animation files are resolved and loaded from BOTH:
+   - Disk config paths (`config/custom_races/models/`, `textures/`, `animations/`)
+   - Mod resource pack paths (`assets/customraces/geo/`, `assets/customraces/textures/`, `assets/customraces/animations/`)
+3. Analyze model positioning, scaling, feet alignment, and rotation yaw/pitch alignment relative to the player entity.
+4. Identify any missing helper classes, missing resource loaders, or texture/model binding bugs.
+5. Create your working directory `.agents/teamwork_preview_explorer_m1_1`, write `progress.md`, and produce detailed `analysis.md` and `handoff.md` summarizing your findings and concrete implementation recommendations. Send your completion message to parent when finished.

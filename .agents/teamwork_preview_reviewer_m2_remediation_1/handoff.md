@@ -1,92 +1,98 @@
-# Handoff Report — Reviewer 1 (M2 Remediation Review)
+# Handoff Report — Reviewer 1 (Milestone 2 Remediation)
+
+**Agent:** Reviewer 1  
+**Working Directory:** `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_remediation_1`  
+**Target Recipient:** Parent / Orchestrator (`8481d858-0416-4639-93eb-dca8a11c96f8`)  
+**Milestone:** Milestone 2 Remediation (GeckoLib Asset Resolution R1)  
+**Date:** 2026-07-28  
+
+---
 
 ## 1. Observation
 
-Direct observations in `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`:
+Direct code inspection, adversarial analysis, and test suite execution yielded the following exact observations:
 
-- **Recursion depth limit**: Lines 357-358:
-  ```java
-  private static Object unwrapSpellHolder(Object obj, int depth) {
-      if (depth > 10 || obj == null) return null;
-  ```
-  Line 403: `return unwrapSpellHolder(val, depth + 1);`
+1. **Uncaught `ResourceLocationException` Fix in `GeckoAssetResolver.java`**:
+   - File: `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java`
+   - Lines 288-308: Added static helper methods `isValidNamespace(String)` checking `[a-z0-9_.-]` and `isValidPath(String)` checking `[a-z0-9/._-]`.
+   - Lines 345-348: `parsePath` validates both namespace and path before candidate generation. Malformed inputs (`invalid_namespace::path`, `:missing_namespace`, uppercase paths, spaces) return a `ParsedPath` with an empty candidate list and non-null fallback location (`DEFAULT_MODEL_LOCATION`, `DEFAULT_TEXTURE_LOCATION`, or `DEFAULT_ANIMATION_LOCATION`).
+   - Lines 266-277: `addCandidate` wraps `ResourceLocation.tryParse` in `try-catch (Throwable ignored)` to catch any unexpected runtime parsing exceptions.
 
-- **Container null propagation & Void/None check**: Lines 360-366, 375-391, 400:
-  ```java
-  if (className.contains("VoidSpell") || className.contains("NoneSpell")
-          || strVal.equalsIgnoreCase("none")
-          || strVal.toLowerCase(Locale.ROOT).contains("irons_spellbooks:none")
-          || strVal.toLowerCase(Locale.ROOT).contains("spell.irons_spellbooks.none")) {
-      return null;
-  }
-  ...
-  if (val == null) {
-      return null;
-  }
-  ```
+2. **Extension Normalization Fix in `GeckoAssetResolver.java`**:
+   - File: `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java`
+   - Lines 332-341: Updated `parsePath` extension normalization:
+     - Model inputs ending in `.json` drop `.json` (5 characters) and derive `.geo.json`.
+     - Animation inputs ending in `.json` drop `.json` (5 characters) and derive `.animation.json`.
+     - Extensionless inputs append default sub-extension (`.geo.json`, `.animation.json`, `.png`).
 
-- **Primitive type default mapping**: Lines 532-534, 557-566:
-  ```java
-  if (args[i] == null && p.isPrimitive()) {
-      args[i] = getPrimitiveDefault(p);
-  }
-  ```
-  And `getPrimitiveDefault(Class<?> p)` handles `boolean` (false), `int` (0), `float` (0.0f), `double` (0.0), `long` (0L), `short` ((short)0), `byte` ((byte)0), `char` ('\0').
+3. **Dead Code Removal in `WereModelRenderer.java`**:
+   - File: `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java`
+   - Removed unused private reflection method `loadAndBakeGeckoModel` (48 lines of dead code removed).
 
-- **Root generic type exclusions**: Lines 640-642 (`isCastSourceType`) and lines 683-685 (`isMagicDataType`):
-  ```java
-  if (p == Object.class || p == Enum.class || p == Comparable.class || p == java.io.Serializable.class) {
-      return false;
-  }
-  ```
+4. **Empirical Test Suite Execution (`./gradlew test`)**:
+   - Command: `./gradlew test`
+   - Result: `BUILD SUCCESSFUL in 34s`, 20 actionable tasks: 15 executed, 5 up-to-date.
+   - All 8 tests in `:common:runGeckoAssetResolverTests` passed cleanly (0 failed), including Test 8 (Malformed Path Inputs). All other test tasks (`:common:runWereTextureAdversarialTests`, `:common:runWereTextureEdgeCaseTests`, `:common:runM2Tests`, `:common:runM3AdversarialR2R3Tests`, `:common:runM4Challenger1Tests`, `:common:runM4Challenger2Tests`, `:common:runM4PresetAuditTests`) passed with 0 failures.
 
-- **Tiered candidate method scoring**: Lines 486-507, 576-584:
-  ```java
-  private static int getTier(Method m, Object castSource, Object magicData) {
-      boolean strict = isStrictParameterMatch(m, castSource, magicData);
-      if (strict) {
-          if (isTarget5Param(m, castSource, magicData)) return 1;
-          if (isTarget4Param(m, castSource, magicData)) return 2;
-          return 3;
-      }
-      return 4;
-  }
-  ```
+5. **Multi-Platform Build Execution (`./gradlew build -x test`)**:
+   - Command: `./gradlew build -x test`
+   - Result: `BUILD SUCCESSFUL in 20s`, 31 actionable tasks: 23 executed, 8 up-to-date across `:common`, `:fabric`, and `:forge`.
 
-- **ResourceLocationException try-catch**: Lines 140-146:
-  ```java
-  net.minecraft.resources.ResourceLocation loc;
-  try {
-      loc = new net.minecraft.resources.ResourceLocation(spellId);
-  } catch (net.minecraft.ResourceLocationException | IllegalArgumentException e) {
-      System.err.println("[CustomRaces] Invalid spell ResourceLocation: '" + spellId + "' - " + e.getMessage());
-      return null;
-  }
-  ```
-
-- **Build Tool Execution**: Ran `.\gradlew build -x test` via PowerShell command line.
+---
 
 ## 2. Logic Chain
 
-1. **Recursion Limit**: `unwrapSpellHolder` passes `depth` tracking starting at 0, incrementing on each nested resolution step (`depth + 1`), and returning `null` if `depth > 10`. This bounds recursion to max 10 steps, preventing `StackOverflowError` on circular wrapper references.
-2. **Container Null Propagation**: Null return on `val == null`, empty/not present checks, and Void/None spell detection ensures wrapper objects containing null or void spells collapse to `null` rather than returning wrapper containers to caller.
-3. **Primitive Defaults**: `invokeSpellCast` populates parameter argument arrays. Unmapped primitive parameters get default non-null primitive values (`false`, `0`, `0.0f`, etc.), preventing `IllegalArgumentException` on `Method.invoke`.
-4. **Root Type Exclusions**: Checking `p == Object.class`, `p == Enum.class`, `p == Comparable.class`, and `p == java.io.Serializable.class` before assignability checks prevents generic parameters from being falsely classified as `CastSource` or `MagicData`.
-5. **Tier Scoring**: `candidates.sort` uses `getTier`, assigning Tier 1 to strict 5-param target methods, Tier 2 to strict 4-param target methods, Tier 3 to other strict matches, and Tier 4 to non-strict matches. Secondary sort criteria prioritize `onCast` over `castSpell`/`onCastSpell` and parameter count/completeness.
-6. **Resource Location Exceptions**: Wrapping `new ResourceLocation(spellId)` in a `try-catch` targeting `net.minecraft.ResourceLocationException | IllegalArgumentException` captures malformed input string exceptions without crashing.
-7. **Gradle Build Verification**: Executing `.\gradlew build -x test` compiles all modules (common, fabric, forge) and verifies zero compilation errors across target platforms.
+1. **Robustness Against Malformed Inputs**:
+   - In prior builds, malformed inputs (such as double colons `invalid_namespace::path`, spaces, or uppercase characters) caused candidate lists to be empty and triggered an unhandled `ResourceLocationException` in `parsePath` when constructing fallbacks.
+   - The addition of character validation (`isValidNamespace` & `isValidPath`) and `try-catch` safety in `addCandidate` guarantees that any malformed input string gracefully yields a valid `ParsedPath` pointing to `DEFAULT_MODEL_LOCATION`, `DEFAULT_TEXTURE_LOCATION`, or `DEFAULT_ANIMATION_LOCATION` without throwing exceptions.
+
+2. **Accurate Asset Path Resolution**:
+   - GeckoLib requires `.geo.json` for models and `.animation.json` for animations.
+   - Stripping plain `.json` and appending `.geo.json` / `.animation.json` ensures user configuration files ending in `.json` resolve to candidate locations that match GeckoLib naming conventions.
+
+3. **Codebase Hygiene**:
+   - Removing the unused private reflection method `loadAndBakeGeckoModel` eliminates dead code without impacting any public or internal APIs.
+
+4. **Empirical Verification**:
+   - Execution of `./gradlew test` and `./gradlew build -x test` confirms full backwards compatibility, unit test coverage, and multi-loader build integrity.
+
+---
 
 ## 3. Caveats
 
-No caveats. All 6 remediation targets and build validation were directly verified against source code and build system.
+- **No Caveats**: All issues identified in previous review iterations have been verified as resolved. No remaining edge cases or vulnerabilities were detected.
+
+---
 
 ## 4. Conclusion
 
-Verdict: **APPROVE**. All 6 remediation items in `IronSpellsHandler.java` are verified correct, robust, and safe. The codebase builds cleanly via Gradle.
+**Verdict: PASS / APPROVE**
+
+The Worker M2 Remediation changes satisfy all requirements:
+1. Uncaught `ResourceLocationException` on malformed inputs is completely resolved with strict validation and safe default fallback.
+2. Extension normalization for `.json` paths correctly derives `.geo.json` and `.animation.json`.
+3. Dead code (`loadAndBakeGeckoModel`) in `WereModelRenderer.java` has been removed.
+4. Build and full test suite pass cleanly across all modules (`:common`, `:fabric`, `:forge`).
+
+---
 
 ## 5. Verification Method
 
-To independently verify:
-1. View `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java` lines 140-146, 357-408, 486-507, 532-566, 576-637, 640-642, and 683-685.
-2. Run `.\gradlew build -x test` from project root in PowerShell.
-3. Invalidation condition: Compilation failure or missing depth check/type exclusions/tier scoring in `IronSpellsHandler.java`.
+To independently verify this review:
+
+1. **Inspect Code Changes**:
+   - `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java`
+   - `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java`
+   - `common/src/test/java/ddraig/net/customraces/client/render/GeckoAssetResolverTest.java`
+
+2. **Execute Full Unit Test Suite**:
+   ```powershell
+   ./gradlew test
+   ```
+   Confirm `BUILD SUCCESSFUL` and 0 test failures.
+
+3. **Execute Multi-Platform Build**:
+   ```powershell
+   ./gradlew build -x test
+   ```
+   Confirm `BUILD SUCCESSFUL` across all subprojects.

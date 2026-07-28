@@ -23,22 +23,31 @@ import java.util.Map;
  */
 public class GeckoLibWereRenderer {
 
-    public static boolean isModelPresent(ResourceLocation modelLoc) {
+    public static boolean isModelPresent(ResourceLocation modelLoc, String rawPath) {
         if (modelLoc == null) return false;
         try {
             Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
             Method getModelsMethod = cacheClass.getMethod("getBakedModels");
             Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
-            if (bakedModels != null && bakedModels.containsKey(modelLoc)) {
-                return true;
+            Object bakedModel = bakedModels != null ? bakedModels.get(modelLoc) : null;
+            if (bakedModel == null) {
+                bakedModel = bakeModelFromFile(modelLoc, rawPath);
             }
-            return bakeModelFromFile(modelLoc) != null;
+            if (bakedModel == null) return false;
+
+            Method topLevelBonesMethod = bakedModel.getClass().getMethod("topLevelBones");
+            List<?> topBones = (List<?>) topLevelBonesMethod.invoke(bakedModel);
+            return topBones != null && !topBones.isEmpty();
         } catch (Throwable t) {
             return false;
         }
     }
 
-    public static boolean renderGeckoModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc) {
+    public static boolean isModelPresent(ResourceLocation modelLoc) {
+        return isModelPresent(modelLoc, null);
+    }
+
+    public static boolean renderGeckoModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc, float netHeadYaw, float headPitch) {
         if (modelLoc == null) return false;
         try {
             Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
@@ -47,7 +56,7 @@ public class GeckoLibWereRenderer {
             
             Object bakedModel = bakedModels != null ? bakedModels.get(modelLoc) : null;
             if (bakedModel == null) {
-                bakedModel = bakeModelFromFile(modelLoc);
+                bakedModel = bakeModelFromFile(modelLoc, race != null ? race.wereModelPath : null);
             }
             if (bakedModel == null) return false;
 
@@ -55,13 +64,32 @@ public class GeckoLibWereRenderer {
             List<?> topBones = (List<?>) topLevelBonesMethod.invoke(bakedModel);
             if (topBones == null || topBones.isEmpty()) return false;
 
-            VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(textureLoc));
+            // Evaluate active keyframe animation state from player state variables
+            String activeAnim = resolveActiveAnimation(player, race);
+            if (animLoc != null) {
+                bakeAnimationsFromFile(animLoc, race != null ? race.wereAnimationPath : null);
+            }
+
+            // Invisibility Effect & Spectator Mode Handling
+            boolean isInvisible = player != null && (player.isInvisible() || player.isSpectator());
+            if (isInvisible) {
+                net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+                net.minecraft.client.player.LocalPlayer clientPlayer = mc != null ? mc.player : null;
+                if (clientPlayer != null && player.isInvisibleTo(clientPlayer)) {
+                    // Player is completely invisible to viewing player: return true (handled) drawing nothing
+                    return true;
+                }
+            }
+
+            RenderType renderType = isInvisible ? RenderType.entityTranslucent(textureLoc) : RenderType.entityCutoutNoCull(textureLoc);
+            VertexConsumer vc = buffer.getBuffer(renderType);
+            float alpha = isInvisible ? 0.15f : 1.0f;
 
             poseStack.pushPose();
             try {
                 // Align GeckoLib model origin to entity feet (0.0, 0.0, 0.0)
                 for (Object bone : topBones) {
-                    renderBoneReflect(poseStack, vc, bone, packedLight, player);
+                    renderBoneReflect(poseStack, vc, bone, packedLight, player, netHeadYaw, headPitch, alpha);
                 }
             } finally {
                 poseStack.popPose();
@@ -72,11 +100,71 @@ public class GeckoLibWereRenderer {
         }
     }
 
-    private static void renderBoneReflect(PoseStack poseStack, VertexConsumer vc, Object bone, int packedLight, AbstractClientPlayer player) {
+    /**
+     * Maps player state variables to configured GeckoLib keyframe animation trigger keys.
+     * Priority Hierarchy: Hurt > Attack > Swimming > Flying > Walk > Idle
+     */
+    public static String resolveActiveAnimation(AbstractClientPlayer player, RaceData race) {
+        if (player == null) {
+            return race != null ? race.getSafeWereIdleAnim() : "animation.were.idle";
+        }
+
+        // 1. Hurt Animation (taking damage)
+        if (player.hurtTime > 0) {
+            return race != null ? race.getSafeWereHurtAnim() : "animation.were.hurt";
+        }
+
+        // 2. Attack Animation (swinging attack)
+        if (player.swingTime > 0 || player.swinging) {
+            return race != null ? race.getSafeWereAttackAnim() : "animation.were.attack";
+        }
+
+        // 3. Swim Animation (swimming)
+        if (player.isVisuallySwimming()) {
+            return race != null ? race.getSafeWereSwimAnim() : "animation.were.swim";
+        }
+
+        // 4. Fly Animation (flying)
+        if (player.getAbilities() != null && player.getAbilities().flying) {
+            return race != null ? race.getSafeWereFlyAnim() : "animation.were.fly";
+        }
+
+        // 5. Walk vs Idle Animation based on movement speed threshold (0.01f)
+        float speed = 0.0f;
+        if (player.walkAnimation != null) {
+            speed = player.walkAnimation.speed();
+        } else if (player.getDeltaMovement() != null) {
+            speed = (float) Math.sqrt(player.getDeltaMovement().x * player.getDeltaMovement().x + player.getDeltaMovement().z * player.getDeltaMovement().z);
+        }
+
+        if (speed >= 0.01f) {
+            return race != null ? race.getSafeWereWalkAnim() : "animation.were.walk";
+        } else {
+            return race != null ? race.getSafeWereIdleAnim() : "animation.were.idle";
+        }
+    }
+
+    public static boolean renderGeckoModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc) {
+        return renderGeckoModel(poseStack, buffer, packedLight, player, race, modelLoc, textureLoc, animLoc, 0.0f, 0.0f);
+    }
+
+    private static boolean isHeadBone(String name) {
+        if (name == null) return false;
+        String lower = name.toLowerCase(java.util.Locale.ROOT);
+        return lower.equals("head") || lower.equals("bipedhead") || lower.equals("head_bone") || lower.equals("headbone");
+    }
+
+    private static void renderBoneReflect(PoseStack poseStack, VertexConsumer vc, Object bone, int packedLight, AbstractClientPlayer player, float netHeadYaw, float headPitch, float alpha) {
         if (bone == null) return;
         try {
             Method isHiddenMethod = bone.getClass().getMethod("isHidden");
             if ((Boolean) isHiddenMethod.invoke(bone)) return;
+
+            String boneName = null;
+            try {
+                Method getNameMethod = bone.getClass().getMethod("getName");
+                boneName = (String) getNameMethod.invoke(bone);
+            } catch (Throwable ignored) {}
 
             Method getPivotX = bone.getClass().getMethod("getPivotX");
             Method getPivotY = bone.getClass().getMethod("getPivotY");
@@ -120,6 +208,16 @@ public class GeckoLibWereRenderer {
                 if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-ry));
                 if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(rx));
 
+                // Apply rotational matrix transforms when traversing head bones
+                if (isHeadBone(boneName)) {
+                    if (netHeadYaw != 0.0f) {
+                        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
+                    }
+                    if (headPitch != 0.0f) {
+                        poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
+                    }
+                }
+
                 // 3. Apply bone scaling
                 if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
                     poseStack.scale(sx, sy, sz);
@@ -132,7 +230,7 @@ public class GeckoLibWereRenderer {
                 List<?> cubes = (List<?>) getCubes.invoke(bone);
                 if (cubes != null) {
                     for (Object cube : cubes) {
-                        renderCubeReflect(poseStack, vc, cube, packedLight, player);
+                        renderCubeReflect(poseStack, vc, cube, packedLight, player, alpha);
                     }
                 }
 
@@ -140,7 +238,7 @@ public class GeckoLibWereRenderer {
                 List<?> childBones = (List<?>) getChildBones.invoke(bone);
                 if (childBones != null) {
                     for (Object child : childBones) {
-                        renderBoneReflect(poseStack, vc, child, packedLight, player);
+                        renderBoneReflect(poseStack, vc, child, packedLight, player, netHeadYaw, headPitch, alpha);
                     }
                 }
             } finally {
@@ -149,7 +247,7 @@ public class GeckoLibWereRenderer {
         } catch (Throwable ignored) {}
     }
 
-    private static void renderCubeReflect(PoseStack poseStack, VertexConsumer vc, Object cube, int packedLight, AbstractClientPlayer player) {
+    private static void renderCubeReflect(PoseStack poseStack, VertexConsumer vc, Object cube, int packedLight, AbstractClientPlayer player, float alpha) {
         if (cube == null) return;
         try {
             Object[] quads = null;
@@ -165,7 +263,11 @@ public class GeckoLibWereRenderer {
             if (quads == null) return;
             org.joml.Matrix4f pose = poseStack.last().pose();
             org.joml.Matrix3f normal = poseStack.last().normal();
-            int overlay = (player != null && player.hurtTime > 0) ? OverlayTexture.pack(OverlayTexture.u(0.0F), OverlayTexture.v(true)) : OverlayTexture.NO_OVERLAY;
+            boolean isHurt = player != null && player.hurtTime > 0;
+            int overlay = isHurt ? OverlayTexture.pack(OverlayTexture.u(0.0F), OverlayTexture.v(true)) : OverlayTexture.NO_OVERLAY;
+            float rMult = 1.0f;
+            float gMult = isHurt ? 0.35f : 1.0f;
+            float bMult = isHurt ? 0.35f : 1.0f;
 
             for (Object quad : quads) {
                 if (quad == null) continue;
@@ -221,7 +323,7 @@ public class GeckoLibWereRenderer {
 
                     if (pos != null) {
                         vc.vertex(pose, pos.x() / 16.0f, pos.y() / 16.0f, pos.z() / 16.0f)
-                                .color(1.0f, 1.0f, 1.0f, 1.0f)
+                                .color(rMult, gMult, bMult, alpha)
                                 .uv(u, v)
                                 .overlayCoords(overlay)
                                 .uv2(packedLight)
@@ -233,36 +335,10 @@ public class GeckoLibWereRenderer {
         } catch (Throwable ignored) {}
     }
 
-    private static Object bakeModelFromFile(ResourceLocation modelLoc) {
+    public static Object bakeModelFromFile(ResourceLocation modelLoc, String rawPath) {
         if (modelLoc == null) return null;
         try {
-            String content = null;
-            String cleanPath = modelLoc.getPath();
-            File file = new File(cleanPath);
-            if (!file.exists()) {
-                file = new File("config/custom_races/models/" + cleanPath.replaceAll(".*/", ""));
-            }
-            if (!file.exists()) {
-                file = new File("config/custom_races/models/were/" + cleanPath.replaceAll(".*/", ""));
-            }
-
-            if (file.exists() && file.isFile()) {
-                content = Files.readString(file.toPath());
-            } else {
-                try {
-                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-                    if (mc != null && mc.getResourceManager() != null) {
-                        var resOpt = mc.getResourceManager().getResource(modelLoc);
-                        if (resOpt.isPresent()) {
-                            try (java.io.InputStream is = resOpt.get().open();
-                                 java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
-                                content = br.lines().collect(java.util.stream.Collectors.joining("\n"));
-                            }
-                        }
-                    }
-                } catch (Throwable ignored) {}
-            }
-
+            String content = GeckoAssetResolver.getModelContent(modelLoc, rawPath);
             if (content != null && !content.trim().isEmpty()) {
                 com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
                 Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
@@ -299,36 +375,14 @@ public class GeckoLibWereRenderer {
         return null;
     }
 
-    public static Object bakeAnimationsFromFile(ResourceLocation animLoc) {
+    public static Object bakeModelFromFile(ResourceLocation modelLoc) {
+        return bakeModelFromFile(modelLoc, null);
+    }
+
+    public static Object bakeAnimationsFromFile(ResourceLocation animLoc, String rawPath) {
         if (animLoc == null) return null;
         try {
-            String content = null;
-            String cleanPath = animLoc.getPath();
-            File file = new File(cleanPath);
-            if (!file.exists()) {
-                file = new File("config/custom_races/animations/" + cleanPath.replaceAll(".*/", ""));
-            }
-            if (!file.exists()) {
-                file = new File("config/custom_races/animations/were/" + cleanPath.replaceAll(".*/", ""));
-            }
-
-            if (file.exists() && file.isFile()) {
-                content = Files.readString(file.toPath());
-            } else {
-                try {
-                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-                    if (mc != null && mc.getResourceManager() != null) {
-                        var resOpt = mc.getResourceManager().getResource(animLoc);
-                        if (resOpt.isPresent()) {
-                            try (java.io.InputStream is = resOpt.get().open();
-                                 java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
-                                content = br.lines().collect(java.util.stream.Collectors.joining("\n"));
-                            }
-                        }
-                    }
-                } catch (Throwable ignored) {}
-            }
-
+            String content = GeckoAssetResolver.getAnimationContent(animLoc, rawPath);
             if (content != null && !content.trim().isEmpty()) {
                 com.google.gson.JsonObject json = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
                 Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
@@ -352,5 +406,9 @@ public class GeckoLibWereRenderer {
             System.err.println("[CustomRaces] Dynamic GeckoLib animation baking failed for " + animLoc + ": " + t.getMessage());
         }
         return null;
+    }
+
+    public static Object bakeAnimationsFromFile(ResourceLocation animLoc) {
+        return bakeAnimationsFromFile(animLoc, null);
     }
 }

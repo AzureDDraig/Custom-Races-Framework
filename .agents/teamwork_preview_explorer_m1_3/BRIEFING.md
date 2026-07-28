@@ -1,35 +1,38 @@
-# BRIEFING — 2026-07-23T19:04:49Z
+# BRIEFING — 2026-07-28T11:10:23-05:00
 
 ## Mission
-Investigate Particle Configuration & GUI components for adding particle count controls (`particleCount` default: 5, `wereParticleCount` default: 10), dynamic particle scaling, CHANGELOG formatting, and multi-platform build setup.
+Analyze GeckoLib dynamic transformations, keyframe animations, and combat visual effects (R3) for Custom Race Player Model Overhaul.
 
 ## 🔒 My Identity
 - Archetype: Explorer
-- Roles: Explorer 3 (Particle Configuration & GUI Explorer)
+- Roles: Explorer 3 (M1)
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_explorer_m1_3
-- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Milestone: M1 / Particle Configuration & GUI Explorer
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: M1
 
 ## 🔒 Key Constraints
-- Read-only investigation — do NOT implement source code changes
-- Document findings in `analysis.md` and `handoff.md`
-- Use `send_message` to report back to parent when complete
+- Read-only investigation — do NOT implement
+- NO automatic exports or writing outside .agents/teamwork_preview_explorer_m1_3
+- BACKUP FOLDER READ-ONLY
 
 ## Current Parent
-- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-23T19:04:49Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T11:10:23-05:00
 
 ## Investigation State
-- **Explored paths**: RaceData.java, RaceCreatorScreen.java, PlayerRaceLayer.java, ParticleAuraData.java, RaceRegistry.java, ModPackets.java, CHANGELOG.md, build.gradle
-- **Key findings**: Mapped field additions in RaceData, EditBox GUI bindings in RaceCreatorScreen, dynamic loop scaling in PlayerRaceLayer, Gson serialization in RaceRegistry/ModPackets, and CHANGELOG format.
-- **Unexplored areas**: None (investigation complete).
+- **Explored paths**: `GeckoLibWereRenderer.java`, `WereModelRenderer.java`, `PlayerRaceLayer.java`, `LivingEntityRendererMixin.java`, `ParticleAuraData.java`, `RaceData.java`, `ClientWereState.java`, `WereRaceTransformHandler.java`.
+- **Key findings**:
+  1. `GeckoLibWereRenderer.java` bakes GeckoLib models and animations but lacks an animation step evaluator, rendering models in static T-pose / rest pose.
+  2. Player state signals (`walkAnimation.speed()`, `swingTime`, `hurtTime`, `isVisuallySwimming()`, `flying`) can drive keyframe animation triggers (`wereIdleAnim`, `wereWalkAnim`, `wereAttackAnim`, `wereFlyAnim`, `wereSwimAnim`) via a priority matrix.
+  3. Red hurt flash overlay is correctly wired in `GeckoLibWereRenderer` using `OverlayTexture.v(true)`. Dynamic skin texture overrides resolve `"skin"` and `"player"` keywords cleanly with safe fallbacks.
+  4. Particle aura emission in `PlayerRaceLayer.render(...)` requires a 20 Hz client tick guard to prevent multi-frame particle duplication on high-refresh displays.
+- **Unexplored areas**: None within R3 scope.
 
 ## Key Decisions Made
-- Completed read-only investigation and produced analysis.md and handoff.md.
+- Completed M1 R3 investigation and produced detailed blueprints for `GeckoKeyframeEvaluator` and tick-guarded particle emission.
+
 
 ## Artifact Index
-- ORIGINAL_REQUEST.md — Original task prompt log
-- BRIEFING.md — Working memory state
-- progress.md — Task execution log / heartbeat
-- analysis.md — Full investigation analysis report
-- handoff.md — 5-component handoff report
+- `.agents/teamwork_preview_explorer_m1_3/ORIGINAL_REQUEST.md` — Original request copy
+- `.agents/teamwork_preview_explorer_m1_3/BRIEFING.md` — State index
+- `.agents/teamwork_preview_explorer_m1_3/progress.md` — Heartbeat log

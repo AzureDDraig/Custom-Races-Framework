@@ -1,53 +1,48 @@
-# BRIEFING — 2026-07-23T14:40:35Z
+# BRIEFING — 2026-07-28T11:22:30-05:00
 
 ## Mission
-Apply 6 required remediation fixes to IronSpellsHandler.java and verify clean compilation across Fabric and Forge. [COMPLETED]
+Remediate issues in Milestone 2 for Custom Race GeckoLib Player Model Overhaul: fix uncaught ResourceLocationException in GeckoAssetResolver, fix extension normalization for .json files, clean up dead code in WereModelRenderer, and verify compilation and tests.
 
 ## 🔒 My Identity
-- Archetype: implementer/qa/specialist
+- Archetype: implementer, qa, specialist
 - Roles: implementer, qa, specialist
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2_remediation
-- Original parent: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Milestone: M2 Remediation & Refinement
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: Milestone 2 Remediation
 
 ## 🔒 Key Constraints
-- NEVER EXPORT ON ME (No automatic exports/overwriting renders)
-- BACKUP FOLDER READ-ONLY
-- Code-only network restrictions
+- Fix uncaught ResourceLocationException in GeckoAssetResolver.java (parsePath and tryParse safety).
+- Fix extension normalization in GeckoAssetResolver.java so .json (e.g. werewolf.json) normalizes to .geo.json for models and .animation.json for animations.
+- Clean up unused dead code `loadAndBakeGeckoModel` in `WereModelRenderer.java`.
+- Run build and test commands to verify.
+- NO hardcoded test results, facade implementations, or cheating.
 
 ## Current Parent
-- Conversation ID: 7c1416cf-ae80-4ccc-834e-20fff661e538
-- Updated: 2026-07-23T14:40:35Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T11:22:30-05:00
 
 ## Task Summary
-- **What to build**: Fix 6 issues in IronSpellsHandler.java:
-  1. Unbounded Recursion Guard in unwrapSpellHolder (depth > 10 returns null) [DONE]
-  2. Container Fall-Through Fix for VoidSpell / null [DONE]
-  3. Primitive Parameter Defaults in invokeSpellCast [DONE]
-  4. Strict Type Assignability Guards in isCastSourceType and isMagicDataType [DONE]
-  5. Candidate Method Scoring Optimization [DONE]
-  6. ResourceLocation Safety in resolveSpellObject [DONE]
-- **Success criteria**: Clean compilation with `.\gradlew build -x test` across Common, Fabric, Forge. Write changes.md and handoff.md. Message parent when done. [ALL PASSED]
-- **Interface contracts**: PROJECT.md / IronSpellsHandler.java
-- **Code layout**: common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java
+- **What to build**: Remediation fixes for GeckoAssetResolver.java and WereModelRenderer.java.
+- **Success criteria**: All ResourceLocation parsing safely handles invalid paths without throwing ResourceLocationException; .json correctly normalizes to .geo.json or .animation.json; unused method removed; gradle build and tests succeed.
+- **Interface contracts**: PROJECT.md
+- **Code layout**: PROJECT.md
+
+## Key Decisions Made
+- Implemented `isValidNamespace` and `isValidPath` character validation helpers in `GeckoAssetResolver.java` to detect malformed path inputs (spaces, uppercase namespaces, illegal symbols) prior to `ResourceLocation` parsing and safely fall back to default locations (`DEFAULT_MODEL_LOCATION`, `DEFAULT_TEXTURE_LOCATION`, `DEFAULT_ANIMATION_LOCATION`).
+- Fixed `parsePath` extension normalization for `.json` inputs to derive `.geo.json` for models and `.animation.json` for animations.
+- Removed unused private method `loadAndBakeGeckoModel` from `WereModelRenderer.java`.
+
+## Loaded Skills
+- None required directly.
 
 ## Change Tracker
-- **Files modified**: `common/src/main/java/ddraig/net/customraces/integration/IronSpellsHandler.java`
-- **Build status**: BUILD SUCCESSFUL (`.\gradlew build -x test`)
+- **Files modified**:
+  - `common/src/main/java/ddraig/net/customraces/client/render/GeckoAssetResolver.java`: Added safe candidate generation and namespace/path validation helpers; fixed `.json` extension normalization.
+  - `common/src/main/java/ddraig/net/customraces/client/render/WereModelRenderer.java`: Removed dead code `loadAndBakeGeckoModel`.
+- **Build status**: PASS (`./gradlew test` and `./gradlew build -x test` both PASSED)
 - **Pending issues**: None
 
 ## Quality Status
-- **Build/test result**: Pass (Gradle build successful across Common, Fabric, Forge)
-- **Lint status**: Pass
-- **Tests added/modified**: Verified via clean Gradle compilation
-
-## Loaded Skills
-- None
-
-## Key Decisions Made
-- Implemented 4-tier candidate scoring (`getTier`) prioritizing 5-param and 4-param target signatures over unmapped generic overloads.
-- Mapped all Java primitives to non-null defaults when resolving invocation arguments.
-
-## Artifact Index
-- changes.md
-- handoff.md
+- **Build/test result**: PASS (all unit and adversarial test suites passed cleanly)
+- **Lint status**: Clean (no new lint errors introduced)
+- **Tests added/modified**: Verified against all existing test suites (`GeckoAssetResolverTest`, `WereTextureAdversarialTest`, `WereTextureEdgeCaseTest`, `M2StressVerificationTest`, etc.)

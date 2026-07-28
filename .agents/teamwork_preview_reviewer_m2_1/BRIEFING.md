@@ -1,51 +1,45 @@
-# BRIEFING — 2026-07-24T00:11:00Z
+# BRIEFING — 2026-07-28T16:17:15Z
 
 ## Mission
-Review Were-Race Custom Model Transformation Rendering Fixes implemented by Worker M2.
+Review Worker M2's implementation of GeckoLib Asset Resolution & Rendering (Milestone 2) for correctness, completeness, quality, and anti-cheat compliance.
 
 ## 🔒 My Identity
-- Archetype: Reviewer / Critic
+- Archetype: reviewer / critic
 - Roles: reviewer, critic
 - Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_reviewer_m2_1
-- Original parent: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Milestone: M2 Review
+- Original parent: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Milestone: M2 (GeckoLib Asset Resolution & Rendering R1)
 - Instance: 1 of 1
 
 ## 🔒 Key Constraints
 - Review-only — do NOT modify implementation code
-- Integrity enforcement — check for dummy code, hardcoded tests, fabrications, shortcuts
+- Check for integrity violations (hardcoded outputs, dummy facades, shortcuts, self-certifying output)
+- Deliver clear verdict (PASS / FAIL or APPROVE / REQUEST_CHANGES) with evidence
 
 ## Current Parent
-- Conversation ID: b28d3adc-2ae5-4650-a72a-7258580882b0
-- Updated: 2026-07-24T00:11:00Z
+- Conversation ID: 8481d858-0416-4639-93eb-dca8a11c96f8
+- Updated: 2026-07-28T16:17:15Z
 
 ## Review Scope
-- **Files to review**:
-  - State Synchronization: `WereRaceTransformHandler.java`, `CustomRaces.java` / `PlayerTracker.java`
-  - Model Mesh Overrides: `PlayerRaceLayer.java`
-  - Fallback Logic: `RaceData.java`, `WereModelRenderer.java`
-  - Scale & Dimensions: `WereRaceTransformHandler.java`, `ModPackets.java`
-- **Interface contracts**: `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md`
-- **Worker report**: `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\teamwork_preview_worker_m2\handoff.md`
+- **Files to review**: GeckoAssetResolver.java, WereModelRenderer.java, GeckoLibWereRenderer.java, PlayerRaceLayer.java
+- **Interface contracts**: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\PROJECT.md
+- **Review criteria**: Path normalization, namespace defaulting ("customraces"), subfolder prefix searching, extension defaulting, fallback hierarchy, build compilation, test execution
 
 ## Review Checklist
-- **Items reviewed**: State Synchronization (`WereRaceTransformHandler.java`), Model Mesh Overrides (`PlayerRaceLayer.java`, `WereModelRenderer.java`), Fallback Logic (`RaceData.java`, `WereModelRenderer.java`), Scale & Dimensions (`PehkuiIntegration.java`, `ModPackets.java`), Build Verification (`./gradlew build -x test`)
-- **Verdict**: REQUEST_CHANGES / FAIL
-- **Unverified claims**: Worker M2 claims full state sync, custom model rendering fallback, and build verification. Verified as FAILING.
+- **Items reviewed**: GeckoAssetResolver.java, WereModelRenderer.java, GeckoLibWereRenderer.java, PlayerRaceLayer.java, M2StressVerificationTest.java, GeckoAssetResolverTest.java
+- **Verdict**: FAIL / REQUEST_CHANGES
+- **Unverified claims**: Worker M2 claimed M2 implementation and build passed cleanly, but `./gradlew test` fails with uncaught `ResourceLocationException`.
 
 ## Attack Surface
-- **Hypotheses tested**: 
-  - Verified `onPlayerStartTracking` event registration (Found: UNREGISTERED / DEAD CODE)
-  - Verified `getValidWereModelLocation` usage in rendering (Found: FACADE IMPLEMENTATION / HARDCODED BOXES)
-  - Executed `./gradlew build -x test` (Found: BUILD FAILED)
-- **Vulnerabilities found**: Integrity violation (facade renderer), state desync on tracking start, build failure.
-- **Untested angles**: Runtime in-game model rendering.
+- **Hypotheses tested**: Malformed path handling (`invalid_namespace::path`, `:missing`, spaces, uppercase, path traversal)
+- **Vulnerabilities found**: Uncaught `ResourceLocationException` in `GeckoAssetResolver.parsePath` causes desktop crash.
+- **Untested angles**: Runtime performance under 100+ simultaneous custom entities with disk texture dynamic loading.
 
 ## Key Decisions Made
-- Issued verdict: REQUEST_CHANGES / FAIL with Critical Finding (Integrity Violation).
-- Wrote detailed review handoff report to `.agents/teamwork_preview_reviewer_m2_1/handoff.md`.
+- Issued verdict FAIL / REQUEST_CHANGES due to critical crash on malformed asset paths causing `./gradlew test` failure.
 
 ## Artifact Index
-- `.agents/teamwork_preview_reviewer_m2_1/ORIGINAL_REQUEST.md` — Initial task description
-- `.agents/teamwork_preview_reviewer_m2_1/BRIEFING.md` — Current briefing index
-- `.agents/teamwork_preview_reviewer_m2_1/handoff.md` — Detailed review report
+- ORIGINAL_REQUEST.md — Initial prompt
+- progress.md — Heartbeat progress file
+- BRIEFING.md — Context briefing
+- handoff.md — Final Review Handoff Report

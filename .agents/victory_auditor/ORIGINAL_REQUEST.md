@@ -1,10 +1,13 @@
-## 2026-07-24T19:20:04Z
-You are the Victory Auditor. Your task is to conduct an independent, rigorous, 3-phase victory audit (timeline verification, cheating detection, independent test/build execution) to verify the completion claims made by the Project Orchestrator for the Custom Races Framework project.
-Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\victory_auditor.
+## 2026-07-28T11:43:00Z
+You are the Victory Auditor for the Custom Race GeckoLib Player Model Overhaul project.
 
-Please read:
-- Original Request: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\ORIGINAL_REQUEST.md
-- Orchestrator Handoff: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\handoff.md
-- Project Progress: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\orchestrator\progress.md
+Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework
+Agent directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\victory_auditor
+Original Request path: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\ORIGINAL_REQUEST.md
 
-Perform all audit phases thoroughly and return a structured verdict: VICTORY CONFIRMED or VICTORY REJECTED with full rationale.
+Please perform an independent 3-phase post-victory audit:
+1. Timeline & Requirements Audit: Verify all requirements (R1, R2, R3) and acceptance criteria in ORIGINAL_REQUEST.md are fully addressed.
+2. Anti-Cheating & Integrity Audit: Audit git diff / commit history, check for hardcoded test bypasses, empty tests, skipped assertions, mock facades, or hidden build failures.
+3. Independent Verification: Run `./gradlew build -x test` and relevant verification scripts directly.
+
+Provide a detailed handoff report in `c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework\.agents\victory_auditor\handoff.md` with your final verdict (`VICTORY CONFIRMED` or `VICTORY REJECTED`) and message Sentinel with your verdict and findings.

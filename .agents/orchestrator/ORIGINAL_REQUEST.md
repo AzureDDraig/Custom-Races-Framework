@@ -72,3 +72,36 @@ Integrity mode: development
 - [ ] autoOpenSelectionOnJoin configuration option functions as intended on first join.
 - [ ] All 6 body part attachments apply dynamically per race definition.
 
+## Follow-up — 2026-07-28T16:09:24Z
+
+# Teamwork Project — Custom Race GeckoLib Player Model Overhaul
+
+Working directory: c:\Users\Ddraig__\Downloads\MODS_CREATION\Custom Races Framework
+Integrity mode: development
+
+## Description
+Implement full custom player model rendering using GeckoLib for transformed races in Custom Races Framework, while completely overriding and suppressing the base human player model when transformed without leaving players invisible.
+
+## Requirements
+
+### R1. GeckoLib Player Model Override & Asset Resolution
+- Implement robust model, texture, and animation resolution for transformed races supporting both disk config paths (`config/custom_races/models/`, `textures/`, `animations/`) and mod resource pack paths (`assets/customraces/`).
+- Ensure custom GeckoLib 3D models render correctly at full size aligned to player entity feet and rotation yaw/pitch.
+
+### R2. Base Human Player Model Suppression Guardrails
+- Suppress standard human player cuboid mesh parts (`head`, `body`, `arms`, `legs`, clothing overlays) when player is transformed into a race with a valid custom GeckoLib model.
+- If a custom GeckoLib model fails to load, falls back, or is unassigned, ensure base human player model renders safely with procedural race features (ears/tail/snout) so players are NEVER invisible.
+
+### R3. Dynamic Transformations, Animations & Combat Effects
+- Maintain smooth keyframe animations (idle, walk, attack, hurt) for GeckoLib transformed models.
+- Support hurt red flash overlays, dynamic skin texture overrides, and particle aura effects during transformed state.
+
+## Acceptance Criteria
+
+### Verification & Build Integrity
+- [ ] `./gradlew build -x test` completes with 0 errors across Fabric and Forge.
+- [ ] Transformed player models render custom GeckoLib models accurately without player model invisibility.
+- [ ] Fallback handling ensures player model is always visible under all race configurations.
+- [ ] Code changes committed and pushed cleanly to remote repository.
+
+
