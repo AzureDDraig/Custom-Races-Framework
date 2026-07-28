@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b177a] - 2026-07-28
+
+### 🐺 Bundled Default GeckoLib Werewolf Model Assets (`GeckoAssetResolver.java`)
+- **Bundled Default 3D Model Assets**: Included ready-to-use sample GeckoLib werewolf files (`default_werewolf.geo.json`, `default_werewolf.png`, `default_werewolf.animation.json`) directly inside the mod JAR resources (`assets/customraces/`).
+- **Automatic Config Unpacking**: Added automatic asset unpacking on client launch. Extracts template `.geo.json`, `.png`, and `.animation.json` files directly into `config/custom_races/models/`, `textures/`, and `animations/`, providing playtesters with working reference files to test or inspect immediately.
+
+---
+
 ## [1.0.0-b159a] - 2026-07-28
 
 ### 🐺 Full Custom GeckoLib Character Model Overhaul (`GeckoAssetResolver.java`, `GeckoLibWereRenderer.java`)
