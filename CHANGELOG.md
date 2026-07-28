@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b183a] - 2026-07-28
+
+### 🎬 GeckoLib Keyframe Animation File Driving (`GeckoLibWereRenderer.java`)
+- **Custom Keyframe Animation Engine (`applyKeyframeAnimation`)**: Integrated active `.animation.json` keyframe sampling directly into the 3D model rendering pipeline.
+- **Dynamic Action Channels**: Custom animations for walking, idling, attacking, hurt flashes, swimming, and flying now sample keyframe bone channels (rotation, translation, scale) directly from the playtester's defined `.animation.json` files and apply them to the model every frame.
+
+---
+
 ## [1.0.0-b182a] - 2026-07-28
 
 ### ⚡ 300+ FPS Performance & Model Upright Alignment Fix (`GeckoLibWereRenderer.java`)

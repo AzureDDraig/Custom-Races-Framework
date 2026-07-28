@@ -149,6 +149,9 @@ public class GeckoLibWereRenderer {
 
             if (animLoc != null) {
                 bakeAnimationsFromFile(animLoc, race != null ? race.wereAnimationPath : null);
+                String activeAnimKey = resolveActiveAnimation(player, race);
+                float animTick = player != null ? (player.tickCount + net.minecraft.client.Minecraft.getInstance().getFrameTime()) : 0.0f;
+                applyKeyframeAnimation(bakedModel, animLoc, activeAnimKey, animTick);
             }
 
             boolean isInvisible = player != null && (player.isInvisible() || player.isSpectator());
@@ -534,6 +537,130 @@ public class GeckoLibWereRenderer {
                         verticesDrawn[0]++;
                     }
                 }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    public static void applyKeyframeAnimation(Object bakedModel, ResourceLocation animLoc, String activeAnimKey, float animTick) {
+        if (bakedModel == null || animLoc == null) return;
+        try {
+            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
+            Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
+            Map<?, ?> bakedAnims = (Map<?, ?>) getAnimsMethod.invoke(null);
+            Object animFileObj = bakedAnims != null ? bakedAnims.get(animLoc) : null;
+            if (animFileObj == null) return;
+
+            Map<?, ?> animationsMap = null;
+            try {
+                Method animsMethod = animFileObj.getClass().getMethod("animations");
+                animationsMap = (Map<?, ?>) animsMethod.invoke(animFileObj);
+            } catch (Throwable t1) {
+                try {
+                    Field f = animFileObj.getClass().getDeclaredField("animations");
+                    f.setAccessible(true);
+                    animationsMap = (Map<?, ?>) f.get(animFileObj);
+                } catch (Throwable ignored) {}
+            }
+            if (animationsMap == null || animationsMap.isEmpty()) return;
+
+            Object activeAnimObj = animationsMap.get(activeAnimKey);
+            if (activeAnimObj == null) {
+                for (Map.Entry<?, ?> entry : animationsMap.entrySet()) {
+                    String key = String.valueOf(entry.getKey());
+                    if (key.toLowerCase().contains("walk") || key.toLowerCase().contains("idle") || key.toLowerCase().contains("run")) {
+                        activeAnimObj = entry.getValue();
+                        break;
+                    }
+                }
+                if (activeAnimObj == null && !animationsMap.isEmpty()) {
+                    activeAnimObj = animationsMap.values().iterator().next();
+                }
+            }
+            if (activeAnimObj == null) return;
+
+            Map<?, ?> boneAnimsMap = null;
+            try {
+                Method boneAnimsMethod = activeAnimObj.getClass().getMethod("boneAnimations");
+                boneAnimsMap = (Map<?, ?>) boneAnimsMethod.invoke(activeAnimObj);
+            } catch (Throwable t1) {
+                try {
+                    Field f = activeAnimObj.getClass().getDeclaredField("boneAnimations");
+                    f.setAccessible(true);
+                    boneAnimsMap = (Map<?, ?>) f.get(activeAnimObj);
+                } catch (Throwable ignored) {}
+            }
+            if (boneAnimsMap == null || boneAnimsMap.isEmpty()) return;
+
+            Method topLevelBonesMethod = bakedModel.getClass().getMethod("topLevelBones");
+            List<?> topBones = (List<?>) topLevelBonesMethod.invoke(bakedModel);
+            if (topBones != null) {
+                for (Object bone : topBones) {
+                    applyBoneKeyframesReflect(bone, boneAnimsMap, animTick);
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    private static void applyBoneKeyframesReflect(Object bone, Map<?, ?> boneAnimsMap, float animTick) {
+        if (bone == null || boneAnimsMap == null) return;
+        try {
+            String name = null;
+            if (ReflectionCache.getName != null) {
+                name = (String) ReflectionCache.getName.invoke(bone);
+            } else {
+                Method m = bone.getClass().getMethod("getName");
+                name = (String) m.invoke(bone);
+            }
+
+            if (name != null) {
+                Object boneAnimObj = boneAnimsMap.get(name);
+                if (boneAnimObj == null) {
+                    for (Map.Entry<?, ?> entry : boneAnimsMap.entrySet()) {
+                        if (name.equalsIgnoreCase(String.valueOf(entry.getKey()))) {
+                            boneAnimObj = entry.getValue();
+                            break;
+                        }
+                    }
+                }
+
+                if (boneAnimObj != null) {
+                    Object rotationFramesObj = null;
+                    try {
+                        Method rotFramesM = boneAnimObj.getClass().getMethod("rotationKeyFrames");
+                        rotationFramesObj = rotFramesM.invoke(boneAnimObj);
+                    } catch (Throwable t1) {
+                        try {
+                            Field rotFramesF = boneAnimObj.getClass().getDeclaredField("rotationKeyFrames");
+                            rotFramesF.setAccessible(true);
+                            rotationFramesObj = rotFramesF.get(boneAnimObj);
+                        } catch (Throwable ignored) {}
+                    }
+
+                    if (rotationFramesObj != null) {
+                        for (Object kf : toIterable(rotationFramesObj)) {
+                            float[] rotVals = extractPos(kf);
+                            if (rotVals != null && rotVals.length >= 3) {
+                                try {
+                                    Field rotXF = bone.getClass().getDeclaredField("rotX");
+                                    rotXF.setAccessible(true);
+                                    rotXF.setFloat(bone, rotVals[0]);
+                                    Field rotYF = bone.getClass().getDeclaredField("rotY");
+                                    rotYF.setAccessible(true);
+                                    rotYF.setFloat(bone, rotVals[1]);
+                                    Field rotZF = bone.getClass().getDeclaredField("rotZ");
+                                    rotZF.setAccessible(true);
+                                    rotZF.setFloat(bone, rotVals[2]);
+                                } catch (Throwable ignored) {}
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Object childBonesObj = ReflectionCache.getChildBones != null ? ReflectionCache.getChildBones.invoke(bone) : null;
+            for (Object child : toIterable(childBonesObj)) {
+                applyBoneKeyframesReflect(child, boneAnimsMap, animTick);
             }
         } catch (Throwable ignored) {}
     }
