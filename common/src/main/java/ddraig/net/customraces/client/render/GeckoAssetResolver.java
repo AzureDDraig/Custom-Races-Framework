@@ -35,41 +35,6 @@ public class GeckoAssetResolver {
 
     public static void clearCaches() {
         DYNAMIC_TEXTURE_CACHE.clear();
-        ensureSampleAssetsExtracted();
-    }
-
-    public static void ensureSampleAssetsExtracted() {
-        try {
-            File modelsFolder = new File("config/custom_races/models");
-            File texturesFolder = new File("config/custom_races/textures");
-            File animationsFolder = new File("config/custom_races/animations");
-
-            modelsFolder.mkdirs();
-            texturesFolder.mkdirs();
-            animationsFolder.mkdirs();
-
-            extractSampleFile(DEFAULT_MODEL_LOCATION, new File(modelsFolder, "default_werewolf.geo.json"));
-            extractSampleFile(DEFAULT_TEXTURE_LOCATION, new File(texturesFolder, "default_werewolf.png"));
-            extractSampleFile(DEFAULT_ANIMATION_LOCATION, new File(animationsFolder, "default_werewolf.animation.json"));
-        } catch (Throwable t) {
-            System.err.println("[CustomRaces] Failed to extract sample GeckoLib assets to config: " + t.getMessage());
-        }
-    }
-
-    private static void extractSampleFile(ResourceLocation resourceLoc, File targetFile) {
-        if (targetFile.exists()) return;
-        try {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc != null && mc.getResourceManager() != null) {
-                var resOpt = mc.getResourceManager().getResource(resourceLoc);
-                if (resOpt.isPresent()) {
-                    try (InputStream is = resOpt.get().open()) {
-                        Files.copy(is, targetFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        System.out.println("[CustomRaces] Extracted sample GeckoLib asset: " + targetFile.getAbsolutePath());
-                    }
-                }
-            }
-        } catch (Throwable ignored) {}
     }
 
     /**
@@ -78,7 +43,7 @@ public class GeckoAssetResolver {
      */
     public static ResourceLocation resolveModelLocation(String rawPath) {
         if (rawPath == null || rawPath.trim().isEmpty() || "none".equalsIgnoreCase(rawPath.trim())) {
-            return DEFAULT_MODEL_LOCATION;
+            return null;
         }
 
         String path = rawPath.trim();
@@ -98,7 +63,7 @@ public class GeckoAssetResolver {
             }
         }
 
-        return parsed.primaryLocation != null ? parsed.primaryLocation : DEFAULT_MODEL_LOCATION;
+        return parsed.primaryLocation;
     }
 
     /**
@@ -144,7 +109,7 @@ public class GeckoAssetResolver {
      */
     public static ResourceLocation resolveAnimationLocation(String rawPath) {
         if (rawPath == null || rawPath.trim().isEmpty() || "none".equalsIgnoreCase(rawPath.trim())) {
-            return DEFAULT_ANIMATION_LOCATION;
+            return null;
         }
 
         String path = rawPath.trim();
@@ -162,7 +127,7 @@ public class GeckoAssetResolver {
             }
         }
 
-        return parsed.primaryLocation != null ? parsed.primaryLocation : DEFAULT_ANIMATION_LOCATION;
+        return parsed.primaryLocation;
     }
 
     /**

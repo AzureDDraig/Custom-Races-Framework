@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b178a] - 2026-07-28
+
+### 🎯 Playtester-Specified Asset Resolution (`GeckoAssetResolver.java`)
+- **Strict Custom Path Resolution**: Updated `GeckoAssetResolver.java` so model resolution strictly loads the exact `.geo.json`, `.png`, and `.animation.json` files specified by playtesters in their race configuration without forcing hardcoded default werewolf models.
+- **Fail-Safe Character Skin Fallback**: When no custom model is configured or if a model file is missing, the player's base human character model remains visible with procedural beast overlay features (ears, snout, eyes), preventing forced default model overrides and eliminating player invisibility.
+
+---
+
 ## [1.0.0-b177a] - 2026-07-28
 
 ### 🐺 Bundled Default GeckoLib Werewolf Model Assets (`GeckoAssetResolver.java`)

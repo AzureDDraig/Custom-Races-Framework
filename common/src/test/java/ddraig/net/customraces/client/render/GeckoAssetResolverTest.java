@@ -114,13 +114,13 @@ public class GeckoAssetResolverTest {
 
         for (String input : nullAndEmpty) {
             ResourceLocation modelLoc = GeckoAssetResolver.resolveModelLocation(input);
-            if (!GeckoAssetResolver.DEFAULT_MODEL_LOCATION.equals(modelLoc)) {
-                throw new AssertionError("resolveModelLocation failed to return default for input: '" + input + "', got: " + modelLoc);
+            if (modelLoc != null) {
+                throw new AssertionError("resolveModelLocation expected null for input: '" + input + "', got: " + modelLoc);
             }
 
             ResourceLocation animLoc = GeckoAssetResolver.resolveAnimationLocation(input);
-            if (!GeckoAssetResolver.DEFAULT_ANIMATION_LOCATION.equals(animLoc)) {
-                throw new AssertionError("resolveAnimationLocation failed to return default for input: '" + input + "', got: " + animLoc);
+            if (animLoc != null) {
+                throw new AssertionError("resolveAnimationLocation expected null for input: '" + input + "', got: " + animLoc);
             }
 
             ResourceLocation texLoc = GeckoAssetResolver.resolveTextureLocation(null, input);
