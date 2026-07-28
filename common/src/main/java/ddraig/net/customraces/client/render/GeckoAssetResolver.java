@@ -431,4 +431,22 @@ public class GeckoAssetResolver {
         }
         return files;
     }
+
+    public static File resolveModelDiskFile(String rawPath) {
+        if (rawPath == null || rawPath.trim().isEmpty()) return null;
+        ParsedPath parsed = parsePath(rawPath.trim(), "geo/", ".geo.json");
+        for (File f : getModelDiskCandidates(parsed)) {
+            if (f != null && f.exists() && f.isFile()) return f;
+        }
+        return null;
+    }
+
+    public static File resolveAnimationDiskFile(String rawPath) {
+        if (rawPath == null || rawPath.trim().isEmpty()) return null;
+        ParsedPath parsed = parsePath(rawPath.trim(), "animations/", ".animation.json");
+        for (File f : getAnimationDiskCandidates(parsed)) {
+            if (f != null && f.exists() && f.isFile()) return f;
+        }
+        return null;
+    }
 }

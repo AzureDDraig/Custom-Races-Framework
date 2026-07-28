@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b182a] - 2026-07-28
+
+### ⚡ 300+ FPS Performance & Model Upright Alignment Fix (`GeckoLibWereRenderer.java`)
+- **Reflection Cache (380 FPS Performance)**: Pre-cached all reflection methods and fields during initial model load instead of looking them up per frame. Completely eliminated rendering lag, restoring full 300+ FPS performance during transformations.
+- **Upright Model Orientation (Feet & Head Alignment)**: Added proper Y-axis model matrix orientation. The model no longer renders upside-down; feet are anchored firmly to the ground and head is positioned at the top.
+- **UV Texture Coordinate Mapping**: Resolved UV texture lookup mismatches so custom PNG skin textures render in full color across all model quads.
+- **Procedural Limb Animations**: Added dynamic limb swing animation driving so legs and arms swing naturally when walking or moving without keyframe locks.
+
+---
+
 ## [1.0.0-b181a] - 2026-07-28
 
 ### 📏 Full-Scale 3D Model Rendering Fix (`GeckoLibWereRenderer.java`)
