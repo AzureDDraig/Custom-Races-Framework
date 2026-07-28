@@ -149,9 +149,6 @@ public class GeckoLibWereRenderer {
 
             if (animLoc != null) {
                 bakeAnimationsFromFile(animLoc, race != null ? race.wereAnimationPath : null);
-                String activeAnimKey = resolveActiveAnimation(player, race);
-                float animTick = player != null ? (player.tickCount + net.minecraft.client.Minecraft.getInstance().getFrameTime()) : 0.0f;
-                applyKeyframeAnimation(bakedModel, animLoc, activeAnimKey, animTick);
             }
 
             boolean isInvisible = player != null && (player.isInvisible() || player.isSpectator());
@@ -379,51 +376,61 @@ public class GeckoLibWereRenderer {
 
             poseStack.pushPose();
             try {
-                if (Math.abs(pivX) > 4.0f || Math.abs(pivY) > 4.0f || Math.abs(pivZ) > 4.0f) {
-                    pivX /= 16.0f; pivY /= 16.0f; pivZ /= 16.0f;
+                boolean nativePrepDone = false;
+                if (ReflectionCache.prepMatrixMethod != null) {
+                    try {
+                        ReflectionCache.prepMatrixMethod.invoke(null, poseStack, bone);
+                        nativePrepDone = true;
+                    } catch (Throwable ignored) {}
                 }
-                if (Math.abs(px) > 4.0f || Math.abs(py) > 4.0f || Math.abs(pz) > 4.0f) {
-                    px /= 16.0f; py /= 16.0f; pz /= 16.0f;
-                }
 
-                poseStack.translate(px + pivX, py + pivY, pz + pivZ);
-
-                if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotation(rz));
-                if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotation(ry));
-                if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotation(rx));
-
-                if (isHeadBone(boneName)) {
-                    if (netHeadYaw != 0.0f) {
-                        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
+                if (!nativePrepDone) {
+                    if (Math.abs(pivX) > 4.0f || Math.abs(pivY) > 4.0f || Math.abs(pivZ) > 4.0f) {
+                        pivX /= 16.0f; pivY /= 16.0f; pivZ /= 16.0f;
                     }
-                    if (headPitch != 0.0f) {
-                        poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
+                    if (Math.abs(px) > 4.0f || Math.abs(py) > 4.0f || Math.abs(pz) > 4.0f) {
+                        px /= 16.0f; py /= 16.0f; pz /= 16.0f;
                     }
-                }
 
-                // Procedural limb animation swing driving when player walks
-                if (player != null && boneName != null) {
-                    String lowerName = boneName.toLowerCase(java.util.Locale.ROOT);
-                    float limbSwing = player.walkAnimation != null ? player.walkAnimation.position() : (player.tickCount * 0.2f);
-                    float limbSwingAmount = player.walkAnimation != null ? player.walkAnimation.speed() : 0.0f;
-                    float walkAngle = (float) Math.sin(limbSwing * 0.6662f) * 1.4f * limbSwingAmount;
+                    poseStack.translate(px + pivX, py + pivY, pz + pivZ);
 
-                    if (lowerName.contains("left_leg") || lowerName.contains("leftleg") || lowerName.contains("leg2") || lowerName.contains("bipedleftleg")) {
-                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
-                    } else if (lowerName.contains("right_leg") || lowerName.contains("rightleg") || lowerName.contains("leg1") || lowerName.contains("bipedrightleg")) {
-                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
-                    } else if (lowerName.contains("left_arm") || lowerName.contains("leftarm") || lowerName.contains("arm2") || lowerName.contains("bipedleftarm")) {
-                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
-                    } else if (lowerName.contains("right_arm") || lowerName.contains("rightarm") || lowerName.contains("arm1") || lowerName.contains("bipedrightarm")) {
-                        poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
+                    if (rz != 0.0f) poseStack.mulPose(com.mojang.math.Axis.ZP.rotation(rz));
+                    if (ry != 0.0f) poseStack.mulPose(com.mojang.math.Axis.YP.rotation(ry));
+                    if (rx != 0.0f) poseStack.mulPose(com.mojang.math.Axis.XP.rotation(rx));
+
+                    if (isHeadBone(boneName)) {
+                        if (netHeadYaw != 0.0f) {
+                            poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(netHeadYaw));
+                        }
+                        if (headPitch != 0.0f) {
+                            poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(headPitch));
+                        }
                     }
-                }
 
-                if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
-                    poseStack.scale(sx, sy, sz);
-                }
+                    // Procedural limb animation swing driving when player walks
+                    if (player != null && boneName != null) {
+                        String lowerName = boneName.toLowerCase(java.util.Locale.ROOT);
+                        float limbSwing = player.walkAnimation != null ? player.walkAnimation.position() : (player.tickCount * 0.2f);
+                        float limbSwingAmount = player.walkAnimation != null ? player.walkAnimation.speed() : 0.0f;
+                        float walkAngle = (float) Math.sin(limbSwing * 0.6662f) * 1.4f * limbSwingAmount;
 
-                poseStack.translate(-pivX, -pivY, -pivZ);
+                        if (lowerName.contains("left_leg") || lowerName.contains("leftleg") || lowerName.contains("leg2") || lowerName.contains("bipedleftleg")) {
+                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
+                        } else if (lowerName.contains("right_leg") || lowerName.contains("rightleg") || lowerName.contains("leg1") || lowerName.contains("bipedrightleg")) {
+                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
+                        } else if (lowerName.contains("left_arm") || lowerName.contains("leftarm") || lowerName.contains("arm2") || lowerName.contains("bipedleftarm")) {
+                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(-walkAngle));
+                        } else if (lowerName.contains("right_arm") || lowerName.contains("rightarm") || lowerName.contains("arm1") || lowerName.contains("bipedrightarm")) {
+                            poseStack.mulPose(com.mojang.math.Axis.XP.rotation(walkAngle));
+                        }
+                    }
+
+                    if (sx != 1.0f || sy != 1.0f || sz != 1.0f) {
+                        poseStack.scale(sx, sy, sz);
+                    }
+
+                    poseStack.translate(-pivX, -pivY, -pivZ);
+                }
 
                 Object cubesObj = ReflectionCache.getCubes != null ? ReflectionCache.getCubes.invoke(bone) : null;
                 for (Object cube : toIterable(cubesObj)) {
@@ -531,130 +538,6 @@ public class GeckoLibWereRenderer {
         } catch (Throwable ignored) {}
     }
 
-    public static void applyKeyframeAnimation(Object bakedModel, ResourceLocation animLoc, String activeAnimKey, float animTick) {
-        if (bakedModel == null || animLoc == null) return;
-        try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
-            Map<?, ?> bakedAnims = (Map<?, ?>) getAnimsMethod.invoke(null);
-            Object animFileObj = bakedAnims != null ? bakedAnims.get(animLoc) : null;
-            if (animFileObj == null) return;
-
-            Map<?, ?> animationsMap = null;
-            try {
-                Method animsMethod = animFileObj.getClass().getMethod("animations");
-                animationsMap = (Map<?, ?>) animsMethod.invoke(animFileObj);
-            } catch (Throwable t1) {
-                try {
-                    Field f = animFileObj.getClass().getDeclaredField("animations");
-                    f.setAccessible(true);
-                    animationsMap = (Map<?, ?>) f.get(animFileObj);
-                } catch (Throwable ignored) {}
-            }
-            if (animationsMap == null || animationsMap.isEmpty()) return;
-
-            Object activeAnimObj = animationsMap.get(activeAnimKey);
-            if (activeAnimObj == null) {
-                for (Map.Entry<?, ?> entry : animationsMap.entrySet()) {
-                    String key = String.valueOf(entry.getKey());
-                    if (key.toLowerCase().contains("walk") || key.toLowerCase().contains("idle") || key.toLowerCase().contains("run")) {
-                        activeAnimObj = entry.getValue();
-                        break;
-                    }
-                }
-                if (activeAnimObj == null && !animationsMap.isEmpty()) {
-                    activeAnimObj = animationsMap.values().iterator().next();
-                }
-            }
-            if (activeAnimObj == null) return;
-
-            Map<?, ?> boneAnimsMap = null;
-            try {
-                Method boneAnimsMethod = activeAnimObj.getClass().getMethod("boneAnimations");
-                boneAnimsMap = (Map<?, ?>) boneAnimsMethod.invoke(activeAnimObj);
-            } catch (Throwable t1) {
-                try {
-                    Field f = activeAnimObj.getClass().getDeclaredField("boneAnimations");
-                    f.setAccessible(true);
-                    boneAnimsMap = (Map<?, ?>) f.get(activeAnimObj);
-                } catch (Throwable ignored) {}
-            }
-            if (boneAnimsMap == null || boneAnimsMap.isEmpty()) return;
-
-            Method topLevelBonesMethod = bakedModel.getClass().getMethod("topLevelBones");
-            List<?> topBones = (List<?>) topLevelBonesMethod.invoke(bakedModel);
-            if (topBones != null) {
-                for (Object bone : topBones) {
-                    applyBoneKeyframesReflect(bone, boneAnimsMap, animTick);
-                }
-            }
-        } catch (Throwable ignored) {}
-    }
-
-    private static void applyBoneKeyframesReflect(Object bone, Map<?, ?> boneAnimsMap, float animTick) {
-        if (bone == null || boneAnimsMap == null) return;
-        try {
-            String name = null;
-            if (ReflectionCache.getName != null) {
-                name = (String) ReflectionCache.getName.invoke(bone);
-            } else {
-                Method m = bone.getClass().getMethod("getName");
-                name = (String) m.invoke(bone);
-            }
-
-            if (name != null) {
-                Object boneAnimObj = boneAnimsMap.get(name);
-                if (boneAnimObj == null) {
-                    for (Map.Entry<?, ?> entry : boneAnimsMap.entrySet()) {
-                        if (name.equalsIgnoreCase(String.valueOf(entry.getKey()))) {
-                            boneAnimObj = entry.getValue();
-                            break;
-                        }
-                    }
-                }
-
-                if (boneAnimObj != null) {
-                    Object rotationFramesObj = null;
-                    try {
-                        Method rotFramesM = boneAnimObj.getClass().getMethod("rotationKeyFrames");
-                        rotationFramesObj = rotFramesM.invoke(boneAnimObj);
-                    } catch (Throwable t1) {
-                        try {
-                            Field rotFramesF = boneAnimObj.getClass().getDeclaredField("rotationKeyFrames");
-                            rotFramesF.setAccessible(true);
-                            rotationFramesObj = rotFramesF.get(boneAnimObj);
-                        } catch (Throwable ignored) {}
-                    }
-
-                    if (rotationFramesObj != null) {
-                        for (Object kf : toIterable(rotationFramesObj)) {
-                            float[] rotVals = extractPos(kf);
-                            if (rotVals != null && rotVals.length >= 3) {
-                                try {
-                                    Field rotXF = bone.getClass().getDeclaredField("rotX");
-                                    rotXF.setAccessible(true);
-                                    rotXF.setFloat(bone, rotVals[0]);
-                                    Field rotYF = bone.getClass().getDeclaredField("rotY");
-                                    rotYF.setAccessible(true);
-                                    rotYF.setFloat(bone, rotVals[1]);
-                                    Field rotZF = bone.getClass().getDeclaredField("rotZ");
-                                    rotZF.setAccessible(true);
-                                    rotZF.setFloat(bone, rotVals[2]);
-                                } catch (Throwable ignored) {}
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            Object childBonesObj = ReflectionCache.getChildBones != null ? ReflectionCache.getChildBones.invoke(bone) : null;
-            for (Object child : toIterable(childBonesObj)) {
-                applyBoneKeyframesReflect(child, boneAnimsMap, animTick);
-            }
-        } catch (Throwable ignored) {}
-    }
-
     public static Object bakeModelFromFile(ResourceLocation modelLoc, String rawPath) {
         if (modelLoc == null) return null;
         try {
@@ -665,15 +548,14 @@ public class GeckoLibWereRenderer {
                 return bakedModels.get(modelLoc);
             }
 
-            File modelFile = GeckoAssetResolver.resolveModelDiskFile(rawPath);
-            if (modelFile == null || !modelFile.exists() || !modelFile.isFile()) {
+            String content = GeckoAssetResolver.getModelContent(modelLoc, rawPath);
+            if (content == null || content.trim().isEmpty()) {
                 return null;
             }
 
-            String jsonString = Files.readString(modelFile.toPath());
             Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
             Method parseJsonMethod = jsonUtilClass.getMethod("parse", String.class);
-            Object rawJsonObj = parseJsonMethod.invoke(null, jsonString);
+            Object rawJsonObj = parseJsonMethod.invoke(null, content);
 
             Class<?> modelFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
             Method getFactoryMethod = modelFactoryClass.getMethod("getForNamespace", String.class);
@@ -691,6 +573,10 @@ public class GeckoLibWereRenderer {
         }
     }
 
+    public static Object bakeModelFromFile(ResourceLocation modelLoc) {
+        return bakeModelFromFile(modelLoc, null);
+    }
+
     public static Object bakeAnimationsFromFile(ResourceLocation animLoc, String rawPath) {
         if (animLoc == null) return null;
         try {
@@ -701,15 +587,14 @@ public class GeckoLibWereRenderer {
                 return bakedAnims.get(animLoc);
             }
 
-            File animFile = GeckoAssetResolver.resolveAnimationDiskFile(rawPath);
-            if (animFile == null || !animFile.exists() || !animFile.isFile()) {
+            String content = GeckoAssetResolver.getAnimationContent(animLoc, rawPath);
+            if (content == null || content.trim().isEmpty()) {
                 return null;
             }
 
-            String jsonString = Files.readString(animFile.toPath());
             Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
             Method parseJsonMethod = jsonUtilClass.getMethod("parse", String.class);
-            Object rawJsonObj = parseJsonMethod.invoke(null, jsonString);
+            Object rawJsonObj = parseJsonMethod.invoke(null, content);
 
             Class<?> animLoaderClass = Class.forName("software.bernie.geckolib.loading.FileLoader");
             Method loadAnimationsMethod = animLoaderClass.getMethod("loadAnimations", rawJsonObj.getClass());
@@ -722,5 +607,9 @@ public class GeckoLibWereRenderer {
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    public static Object bakeAnimationsFromFile(ResourceLocation animLoc) {
+        return bakeAnimationsFromFile(animLoc, null);
     }
 }

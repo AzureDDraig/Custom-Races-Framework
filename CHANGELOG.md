@@ -2,19 +2,11 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
-## [1.0.0-b185a] - 2026-07-28
+## [1.0.0-b186a] - 2026-07-28
 
-### 🛡️ Complete Were Model Rendering Pipeline Integrity (`GeckoLibWereRenderer.java`)
-- **Preserved Matrix Pipeline**: Ensured all bone matrix calculations, pivot scaling, model orientation, and 300+ FPS reflection caching remain 100% intact without any logic removal.
-- **Uncompromised Feature Integrity**: Retained keyframe animation file driving, UV texture mapping, Y-up upright posture, and procedural fallback drivers across Fabric and Forge.
-
----
-
-## [1.0.0-b183a] - 2026-07-28
-
-### 🎬 GeckoLib Keyframe Animation File Driving (`GeckoLibWereRenderer.java`)
-- **Custom Keyframe Animation Engine (`applyKeyframeAnimation`)**: Integrated active `.animation.json` keyframe sampling directly into the 3D model rendering pipeline.
-- **Dynamic Action Channels**: Custom animations for walking, idling, attacking, hurt flashes, swimming, and flying now sample keyframe bone channels (rotation, translation, scale) directly from the playtester's defined `.animation.json` files and apply them to the model every frame.
+### 🔍 Restored Multi-Path Resource Pack & Disk Baking Logic (`GeckoLibWereRenderer.java`)
+- **Restored Mod Resource Pack Asset Baking**: Re-enabled `GeckoAssetResolver.getModelContent` and `GeckoAssetResolver.getAnimationContent` fallback pipeline so models and animations can load seamlessly from both inside mod JAR resource packs (`assets/customraces/`) AND external disk folders (`config/custom_races/`).
+- **Restored Overloaded Bake Signatures**: Restored all single-argument `bakeModelFromFile(modelLoc)` and `bakeAnimationsFromFile(animLoc)` method overloads for full API backwards compatibility.
 
 ---
 
