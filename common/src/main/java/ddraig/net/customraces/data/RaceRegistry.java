@@ -160,16 +160,9 @@ public class RaceRegistry {
 
             CACHED_DIMENSIONS.clear();
             CACHED_DIMENSIONS.addAll(java.util.List.of("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"));
-            try {
-                if (net.minecraft.client.Minecraft.getInstance().level != null) {
-                    var registry = net.minecraft.client.Minecraft.getInstance().level.registryAccess().registry(net.minecraft.core.registries.Registries.DIMENSION_TYPE);
-                    if (registry.isPresent()) {
-                        for (net.minecraft.resources.ResourceLocation dim : registry.get().keySet()) {
-                            if (!CACHED_DIMENSIONS.contains(dim.toString())) CACHED_DIMENSIONS.add(dim.toString());
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
+            if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
+                ddraig.net.customraces.client.ClientSuggestionsHelper.addClientDimensions(CACHED_DIMENSIONS);
+            }
             java.util.Collections.sort(CACHED_DIMENSIONS);
 
             CACHED_BIOMES.clear();
@@ -178,16 +171,9 @@ public class RaceRegistry {
                 "minecraft:taiga", "minecraft:jungle", "minecraft:ocean", "minecraft:nether_wastes",
                 "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:the_end", "minecraft:lush_caves"
             ));
-            try {
-                if (net.minecraft.client.Minecraft.getInstance().level != null) {
-                    var registry = net.minecraft.client.Minecraft.getInstance().level.registryAccess().registry(net.minecraft.core.registries.Registries.BIOME);
-                    if (registry.isPresent()) {
-                        for (net.minecraft.resources.ResourceLocation biome : registry.get().keySet()) {
-                            if (!CACHED_BIOMES.contains(biome.toString())) CACHED_BIOMES.add(biome.toString());
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
+            if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
+                ddraig.net.customraces.client.ClientSuggestionsHelper.addClientBiomes(CACHED_BIOMES);
+            }
             java.util.Collections.sort(CACHED_BIOMES);
 
             CACHED_PROJECTILES.clear();
@@ -321,30 +307,9 @@ public class RaceRegistry {
         }
 
         // 2. Try reading from Minecraft Client Resource Manager if on client
-        try {
-            if (net.minecraft.client.Minecraft.getInstance() != null) {
-                net.minecraft.resources.ResourceLocation rl = null;
-                if (cleanPath.contains(":")) {
-                    rl = new net.minecraft.resources.ResourceLocation(cleanPath);
-                } else {
-                    rl = new net.minecraft.resources.ResourceLocation("customraces", "animations/" + cleanPath);
-                }
-                var res = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(rl);
-                if (res.isPresent()) {
-                    try (java.io.InputStreamReader isr = new java.io.InputStreamReader(res.get().open(), java.nio.charset.StandardCharsets.UTF_8)) {
-                        com.google.gson.JsonObject json = GSON.fromJson(isr, com.google.gson.JsonObject.class);
-                        if (json != null && json.has("animations") && json.get("animations").isJsonObject()) {
-                            com.google.gson.JsonObject animsObj = json.getAsJsonObject("animations");
-                            for (String key : animsObj.keySet()) {
-                                if (!results.contains(key)) {
-                                    results.add(key);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignored) {}
+        if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
+            ddraig.net.customraces.client.ClientSuggestionsHelper.addClientAnimationSuggestions(cleanPath, results, GSON);
+        }
 
         java.util.Collections.sort(results);
         return results;

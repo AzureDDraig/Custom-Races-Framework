@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b189a] - 2026-07-29
+
+### 🛡️ Complete Dedicated Server Crash Prevention (`RaceRegistry.java`, `ModPackets.java`)
+- **Isolated Client-Side Callbacks**: Isolated all client-only dimension, biome, and animation suggestions (`ClientSuggestionsHelper`) and network packet receivers (`ClientPacketHandler`).
+- **Dedicated Server Boot Stability**: Completely eliminated all server-side `NoClassDefFoundError: net/minecraft/client/Minecraft` crashes on dedicated servers (MohistMC, Forge Server, Fabric Server). Servers now load 100% cleanly on startup.
+
+---
+
 ## [1.0.0-b188a] - 2026-07-29
 
 ### 🎨 Official Minecraft Pixel Art Mod Icon Deployment
