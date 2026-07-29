@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b188a] - 2026-07-29
+
+### 🎨 Official Minecraft Pixel Art Mod Icon Deployment
+- **Official Mod Icon**: Integrated official 16-bit Minecraft pixel art `icon.png` into mod JAR resource assets (`assets/customraces/icon.png`).
+- **Modpack & Menu Asset Branding**: Both Fabric and Forge JAR builds now package the official icon for display in CurseForge, Modrinth, and in-game mod selection menus.
+
+---
+
 ## [1.0.0-b187a] - 2026-07-29
 
 ### 🛡️ Dedicated Server Crash Fix (`CustomRacesForge.java`, `CustomRacesFabric.java`)
