@@ -1,14 +1,11 @@
 package ddraig.net.customraces.forge;
 
 import ddraig.net.customraces.CustomRaces;
-import ddraig.net.customraces.client.CustomRacesClient;
-import ddraig.net.customraces.client.render.PlayerRaceLayer;
 import ddraig.net.customraces.event.WereRaceTransformHandler;
+import ddraig.net.customraces.forge.client.CustomRacesForgeClient;
 import dev.architectury.platform.forge.EventBuses;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -29,16 +26,6 @@ public class CustomRacesForge {
             }
         });
 
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            CustomRacesClient.init();
-            modEventBus.addListener((EntityRenderersEvent.AddLayers event) -> {
-                for (String skinName : event.getSkins()) {
-                    PlayerRenderer renderer = event.getSkin(skinName);
-                    if (renderer != null) {
-                        renderer.addLayer(new PlayerRaceLayer(renderer));
-                    }
-                }
-            });
-        });
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CustomRacesForgeClient.init(modEventBus));
     }
 }

@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b187a] - 2026-07-29
+
+### 🛡️ Dedicated Server Crash Fix (`CustomRacesForge.java`, `CustomRacesFabric.java`)
+- **Strict Client-Side Layer Isolation**: Moved all client renderer registration code (`PlayerRaceLayer`, `PlayerRenderer`, `RenderLayerParent`) into dedicated client-only initializer classes (`CustomRacesForgeClient` and `CustomRacesFabricClient`).
+- **Dedicated Server Compatibility**: Prevented server-side classloader crashes on MohistMC, Forge, and Fabric dedicated servers. Servers now boot cleanly with zero `NoClassDefFoundError` exceptions.
+
+---
+
 ## [1.0.0-b186a] - 2026-07-28
 
 ### 🔍 Restored Multi-Path Resource Pack & Disk Baking Logic (`GeckoLibWereRenderer.java`)
