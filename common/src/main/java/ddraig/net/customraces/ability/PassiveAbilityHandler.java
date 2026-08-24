@@ -320,7 +320,24 @@ public class PassiveAbilityHandler {
         if (passives.contains("lightning_immunity")) player.clearFire();
         if (passives.contains("poison_immunity") && player.hasEffect(MobEffects.POISON)) player.removeEffect(MobEffects.POISON);
         if (passives.contains("wither_immunity") && player.hasEffect(MobEffects.WITHER)) player.removeEffect(MobEffects.WITHER);
-        if (passives.contains("arrow_deflection")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
+        if (passives.contains("arrow_deflection")) {
+            AABB projBox = player.getBoundingBox().inflate(3.0);
+            for (net.minecraft.world.entity.projectile.Projectile proj : player.level().getEntitiesOfClass(net.minecraft.world.entity.projectile.Projectile.class, projBox)) {
+                if (proj != null && proj.isAlive() && proj.getOwner() != player) {
+                    net.minecraft.world.phys.Vec3 vel = proj.getDeltaMovement();
+                    net.minecraft.world.phys.Vec3 toPlayer = player.position().subtract(proj.position());
+                    if (vel.dot(toPlayer) > 0) {
+                        proj.setDeltaMovement(vel.x * -1.2, vel.y * -0.5 + 0.2, vel.z * -1.2);
+                        proj.hasImpulse = true;
+                        if (player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
+                            sLevel.sendParticles(ParticleTypes.CRIT, proj.getX(), proj.getY(), proj.getZ(), 8, 0.2, 0.2, 0.2, 0.1);
+                            sLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, proj.getX(), proj.getY(), proj.getZ(), 6, 0.2, 0.2, 0.2, 0.05);
+                            sLevel.playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK, net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 1.4f);
+                        }
+                    }
+                }
+            }
+        }
         if (passives.contains("explosion_resistance")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
         if (passives.contains("magic_resistance")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
         if (passives.contains("knockback_immunity")) {
@@ -351,15 +368,28 @@ public class PassiveAbilityHandler {
         if (passives.contains("dual_wield_mastery")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 40, 0, false, false, true));
         if (passives.contains("auto_smelt")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
         if (passives.contains("double_mining_drops")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
-        if (passives.contains("magnet_aura")) {
-            AABB area = player.getBoundingBox().inflate(7.0);
+        if (passives.contains("magnet_aura") && !player.isShiftKeyDown()) {
+            AABB area = player.getBoundingBox().inflate(4.5);
             for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, area)) {
-                item.teleportTo(player.getX(), player.getY() + 0.5, player.getZ());
+                if (item != null && item.isAlive() && !item.hasPickUpDelay()) {
+                    net.minecraft.world.phys.Vec3 itemPos = item.position();
+                    net.minecraft.world.phys.Vec3 playerPos = player.position().add(0, 0.5, 0);
+                    net.minecraft.world.phys.Vec3 pullVec = playerPos.subtract(itemPos).normalize().scale(0.22);
+                    item.setDeltaMovement(item.getDeltaMovement().scale(0.6).add(pullVec));
+                    item.hasImpulse = true;
+                }
             }
         }
         if (passives.contains("luck_of_the_sea")) player.addEffect(new MobEffectInstance(MobEffects.LUCK, 40, 1, false, false, true));
         if (passives.contains("haste_passive")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
-        if (passives.contains("night_miner") && !player.level().isDay()) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 1, false, false, true));
+        if (passives.contains("night_miner")) {
+            boolean isNight = !player.level().isDay();
+            boolean isUnderground = player.getY() < 55;
+            boolean isDark = player.level().getMaxLocalRawBrightness(player.blockPosition()) < 8;
+            if (isNight || isUnderground || isDark) {
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 60, 1, false, false, true));
+            }
+        }
         if (passives.contains("silk_touch_hands")) player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 40, 0, false, false, true));
         if (passives.contains("xp_boost")) player.addEffect(new MobEffectInstance(MobEffects.LUCK, 40, 1, false, false, true));
         if (passives.contains("hunger_less_drain") && player.tickCount % 60 == 0) player.getFoodData().eat(1, 0.5f);

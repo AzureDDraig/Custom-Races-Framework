@@ -102,7 +102,12 @@ task runIssue1FeaturesTests(type: JavaExec) {
     mainClass = 'ddraig.net.customraces.data.Issue1FeaturesVerificationTest'
 }
 
-test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests, runM4Challenger2ParticleAndSkinTests, runM2ChallengerVerificationTests, runM3SuppressionAndFallbackTests, runM3Challenger2InvisibilityAndReflectionTests, runM4AnimationAndCombatEffectsTests, runIssue1FeaturesTests
+task runIssue2FeaturesTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.data.Issue2FeaturesVerificationTest'
+}
+
+test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests, runM4Challenger2ParticleAndSkinTests, runM2ChallengerVerificationTests, runM3SuppressionAndFallbackTests, runM3Challenger2InvisibilityAndReflectionTests, runM4AnimationAndCombatEffectsTests, runIssue1FeaturesTests, runIssue2FeaturesTests
 
 
 

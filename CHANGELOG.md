@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b192a] - 2026-08-24
+
+### 🏹 Passives & Drawbacks Overhaul (GitHub Issue #2)
+- **Active Arrow & Projectile Deflection**: The `Arrow Deflection` passive now physically detects incoming enemy arrows and projectiles within 3 blocks, actively deflecting and reversing their trajectory away from the player with spark particles and a shield-block clash sound.
+- **Night & Underground Cave Miner**: The `Night Miner` passive now activates when mining underground (`Y < 55`) or inside dark caves regardless of surface daytime, ensuring miners always receive their Haste mining speed boost.
+- **Smooth Magnet Aura with Drop-Delay Protection**: The `Magnet Aura` passive now uses smooth magnetic pull velocity toward the player rather than instant snapping. Freshly dropped items (`Q`) now respect vanilla pickup delay so players can drop items without them being sucked back instantly, and sneaking pauses the magnetic pull.
+- **Dynamic Desert Dehydration**: `Desert Dehydration` now accurately triggers across all hot and arid biomes (including modded desert dimensions) using temperature thresholds (`>= 1.5f`), applying exhaustion when exposed to the sun and clearing instantly when in water.
+
+---
+
 ## [1.0.0-b191a] - 2026-08-24
 
 ### 🌟 GitHub Issue #1 Features & Improvements Release

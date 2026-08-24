@@ -158,10 +158,19 @@ public class DrawbackEventHandler {
         }
 
         // 10. Biome & Climate Vulnerabilities (61-70)
-        String biomePath = player.level().getBiome(player.blockPosition()).unwrapKey().map(k -> k.location().getPath()).orElse("");
-        if (drawbacks.contains("desert_dehydration") && (biomePath.contains("desert") || biomePath.contains("badlands"))) {
+        net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biomeHolder = player.level().getBiome(player.blockPosition());
+        String biomePath = biomeHolder.unwrapKey().map(k -> k.location().getPath()).orElse("").toLowerCase();
+        float temp = biomeHolder.value().getBaseTemperature();
+        boolean isHotArid = biomePath.contains("desert") || biomePath.contains("badlands") || biomePath.contains("mesa") || biomePath.contains("savanna") || temp >= 1.5f;
+
+        if (drawbacks.contains("desert_dehydration") && isHotArid && !player.isInWaterOrRain()) {
             if (player.tickCount % 20 == 0) {
-                player.causeFoodExhaustion(player.isSprinting() ? 0.6f : 0.2f);
+                float exhaust = player.isSprinting() ? 1.5f : 0.6f;
+                player.causeFoodExhaustion(exhaust);
+                if (player.getFoodData().getFoodLevel() <= 6) {
+                    player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0, false, false, true));
+                    player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 0, false, false, true));
+                }
             }
         }
         if (drawbacks.contains("snow_hypothermia") && (biomePath.contains("snow") || biomePath.contains("ice"))) {
