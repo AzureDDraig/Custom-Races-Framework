@@ -134,11 +134,41 @@ public class PassiveAbilityDescriptions {
         add("radiation_immunity", "Hazmat Shielding", "Tech", "Complete immunity to radiation, poisonous clouds, and wither gas.", "+Radiation Immunity");
         add("energy_core_boost", "Fusion Reactor", "Tech", "Empowers all technological energy and electric skills with double power.", "+Tech Damage Buff");
 
+        // Active Abilities
+        add("flame_breath", "Flame Breath", "Active", "Emits a concentrated cone of fiery particles dealing continuous fire damage.", "Active Skill");
+        add("fireball_volley", "Fireball Volley", "Active", "Launches a rapid volley of explosive fireballs forward.", "Active Skill");
+        add("web_trap_throw", "Web Trap", "Active", "Launches sticky cobwebs that entangle nearby enemies.", "Active Skill");
+        add("shadow_step", "Shadow Step", "Active", "Instantly teleports forward through physical blocks and terrain.", "Active Skill");
+        add("teleport_dash", "Teleport Dash", "Active", "Blinks forward 8 blocks through physical obstacles.", "Active Skill");
+        add("were_howl", "Apex Howl", "Active", "Emits a 360-degree sonic roar pushing back enemies and inflicting weakness.", "Active Skill");
+        add("wolf_pack_summon", "Wolf Pack Summon", "Active", "Summons loyal wolf minions to fight by your side.", "Active Skill");
+        add("minion_summon", "Summon Minions", "Active", "Summons allied battle minions to fight alongside you.", "Active Skill");
+        add("summon_minions", "Summon Minions", "Active", "Summons allied battle minions to fight alongside you.", "Active Skill");
+        add("healing_surge", "Healing Surge", "Active", "Instantly restores 50% max health and cures negative potion effects.", "Active Skill");
+        add("divine_heal", "Divine Heal", "Active", "Restores substantial health to self and nearby allies.", "Active Skill");
+        add("transform_were", "Were-Transformation", "Active", "Toggles were-beast transformation form at will.", "Active Skill");
+
+        // Spell Masteries
+        add("arcane_amplification", "Arcane Amplification", "Magic", "Increases overall spell power by +25%.", "+25% Spell Power");
+        add("spell_ward", "Spell Ward", "Magic", "Grants +25% resistance against all magic damage.", "+25% Magic Resist");
+        add("fire_spell_mastery", "Fire Spell Mastery", "Magic", "Increases Fire Spell Power by +25%.", "+25% Fire Power");
+        add("ice_spell_mastery", "Ice Spell Mastery", "Magic", "Increases Ice Spell Power by +25%.", "+25% Ice Power");
+        add("lightning_spell_mastery", "Lightning Spell Mastery", "Magic", "Increases Lightning Spell Power by +25%.", "+25% Lightning Power");
+        add("holy_spell_mastery", "Holy Spell Mastery", "Divine", "Increases Holy Spell Power by +25%.", "+25% Holy Power");
+        add("ender_spell_mastery", "Ender Spell Mastery", "Magic", "Increases Ender Spell Power by +25%.", "+25% Ender Power");
+        add("blood_spell_mastery", "Blood Spell Mastery", "Vampiric", "Increases Blood Spell Power by +25%.", "+25% Blood Power");
+        add("evocation_spell_mastery", "Evocation Mastery", "Magic", "Increases Evocation Spell Power by +25%.", "+25% Evocation Power");
+        add("eldritch_spell_mastery", "Eldritch Mastery", "Magic", "Increases Eldritch Spell Power by +25%.", "+25% Eldritch Power");
+
         // Key Drawbacks & Weaknesses
         add("hydrophobic", "Water Vulnerability", "Weakness", "Suffers continuous damage when touching water or exposed to rain.", "Damaged by Water");
+        add("hydrophobia", "Water Vulnerability", "Weakness", "Takes damage when coming into contact with water or rain.", "Damaged by Water");
         add("water_vulnerability", "Water Vulnerability", "Weakness", "Takes drowning damage when standing in water or rain.", "Damaged by Water");
         add("sunlight_burn", "Sunlight Burn", "Weakness", "Catches fire and burns when exposed to direct sunlight without a helmet.", "Burns in Sunlight");
+        add("photosensitivity", "Photosensitivity", "Weakness", "Burns and takes fire damage in direct sunlight.", "Burns in Sunlight");
+        add("sun_burn", "Sunlight Burn", "Weakness", "Catches fire and burns when exposed to direct sunlight without a helmet.", "Burns in Sunlight");
         add("fragile_bones", "Fragile Bones", "Weakness", "Takes 50% increased fall damage and suffers slowness when falling.", "+50% Fall Damage");
+        add("fragile_frame", "Fragile Frame", "Weakness", "Reduces maximum player health by -20%.", "-20% Max Health");
         add("carnivore_diet", "Strict Carnivore", "Diet", "Cannot digest plant foods, vegetables, or breads; only meat restores hunger.", "Meat Only");
         add("herbivore_diet", "Strict Herbivore", "Diet", "Cannot digest meat or poultry; only fruits, vegetables, and crops restore hunger.", "Plants Only");
         add("iron_allergy", "Iron Allergy", "Weakness", "Cannot wield iron weapons or wear iron armor; suffers poison if holding iron.", "No Iron Equipment");
@@ -146,6 +176,7 @@ public class PassiveAbilityDescriptions {
         add("desert_dehydration", "Desert Dehydration", "Weakness", "Loses food and water rapidly while sprinting in hot desert and badland biomes.", "Desert Hunger Drain");
         add("snow_hypothermia", "Snow Hypothermia", "Weakness", "Suffers intense slowness and freezes rapidly in snowy and icy biomes.", "Cold Vulnerability");
         add("no_heavy_armor", "No Heavy Armor", "Restriction", "Cannot equip Iron, Diamond, or Netherite armor pieces.", "Light Armor Only");
+        add("heavy_armor_restriction", "Heavy Armor Restriction", "Restriction", "Cannot equip heavy netherite or diamond armor.", "Light Armor Only");
         add("no_shield", "No Shield", "Restriction", "Cannot wield shields or block incoming attacks.", "No Shields");
         add("no_bow", "No Bow", "Restriction", "Cannot shoot bows or crossbows.", "No Ranged Bows");
         add("no_trident", "No Trident", "Restriction", "Cannot wield or throw tridents.", "No Tridents");

@@ -438,13 +438,23 @@ public class RaceSelectionScreen extends Screen {
         String cleanId = id.trim().toLowerCase();
         ddraig.net.customraces.data.PassiveAbilityDescriptions.AbilityInfo info = ddraig.net.customraces.data.PassiveAbilityDescriptions.get(cleanId);
         if (info != null) {
-            String title = "§6§l" + info.displayName();
-            String cat = " §7[" + info.category() + "]";
+            String cat = info.category().toLowerCase();
+            String prefix = "§a§l🛡️ ";
+            if ("active".equals(cat) || "active".equalsIgnoreCase(category)) prefix = "§c§l⚡ ";
+            else if ("weakness".equals(cat) || "restriction".equals(cat) || "diet".equals(cat) || "drawback".equalsIgnoreCase(category)) prefix = "§e§l⚠ ";
+            else if ("divine".equals(cat)) prefix = "§e§l✨ ";
+            else if ("magic".equals(cat) || "native_spell".equalsIgnoreCase(category)) prefix = "§d§l🔮 ";
+            else if ("aquatic".equals(cat)) prefix = "§b§l🌊 ";
+            else if ("thermal".equals(cat)) prefix = "§6§l🔥 ";
+            else if ("beast".equals(cat) || "draconic".equals(cat)) prefix = "§4§l🐾 ";
+
+            String title = prefix + info.displayName();
+            String catLabel = " §7[" + info.category() + "]";
             String stat = info.stats().isEmpty() ? "" : "\n§a" + info.stats();
             String desc = "\n§f" + info.description();
-            return Component.literal(title + cat + desc + stat);
+            return Component.literal(title + catLabel + desc + stat);
         }
-        return Component.literal("§6§l" + id.replace("_", " ") + "\n§7A racial trait or ability.");
+        return Component.literal("§a§l🛡️ " + id.replace("_", " ").toUpperCase() + "\n§7A racial trait or ability.");
     }
 
     @Override
