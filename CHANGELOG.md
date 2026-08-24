@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b195a] - 2026-08-24
+
+### 🔮 Iron's Spells Spellcasting & Server Sync Fix
+- **Iron's Spells Server Crash Fix**: Updated package resolution for Iron's Spells 'n Spellbooks (`io.redspace.ironsspellbooks`) across spell registry, cast sources, player magic data, and spell power attributes.
+- **Spell Data Synchronization**: Fixed an issue where spell casting states were missing valid spell IDs when completing spells on dedicated servers, preventing `SyncedSpellData` crashes with Epic Fight and server tick loops.
+
+---
+
 ## [1.0.0-b194a] - 2026-08-24
 
 ### 👾 CustomMobs Projectiles & Pehkui Camera Scaling (GitHub Issue #3)

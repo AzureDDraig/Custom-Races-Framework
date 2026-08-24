@@ -166,6 +166,9 @@ public class IronSpellsHandler {
         String pathOnly = loc.getPath();
 
         String[] registryClassNames = {
+            "io.redspace.ironsspellbooks.api.registry.SpellRegistry",
+            "io.redspace.ironsspellbooks.spells.SpellRegistry",
+            "io.redspace.ironsspellbooks.api.spells.AbstractSpell",
             "net.ironsspellbooks.api.registry.SpellRegistry",
             "net.ironsspellbooks.spells.SpellRegistry",
             "io.github.elytra.irons_spellbooks.api.registry.SpellRegistry",
@@ -465,6 +468,8 @@ public class IronSpellsHandler {
 
         if (magicData == null) {
             String[] classPaths = {
+                "io.redspace.ironsspellbooks.api.magic.MagicData",
+                "io.redspace.ironsspellbooks.capabilities.magic.MagicData",
                 "net.ironsspellbooks.api.magic.MagicData",
                 "io.github.elytra.irons_spellbooks.api.magic.MagicData",
                 "com.io.github.elytra.irons_spellbooks.api.magic.MagicData"
@@ -752,6 +757,8 @@ public class IronSpellsHandler {
 
     private static Class<?> getSpellRegistryClass() {
         String[] classPaths = {
+            "io.redspace.ironsspellbooks.api.registry.SpellRegistry",
+            "io.redspace.ironsspellbooks.spells.SpellRegistry",
             "net.ironsspellbooks.api.registry.SpellRegistry",
             "io.github.elytra.irons_spellbooks.api.registry.SpellRegistry",
             "com.io.github.elytra.irons_spellbooks.api.registry.SpellRegistry"
@@ -766,6 +773,8 @@ public class IronSpellsHandler {
 
     private static Class<?> CastSourceClass() throws ClassNotFoundException {
         String[] classPaths = {
+            "io.redspace.ironsspellbooks.api.spells.CastSource",
+            "io.redspace.ironsspellbooks.spells.CastSource",
             "net.ironsspellbooks.api.spells.CastSource",
             "io.github.elytra.irons_spellbooks.api.spells.CastSource",
             "com.io.github.elytra.irons_spellbooks.api.spells.CastSource"
@@ -795,6 +804,8 @@ public class IronSpellsHandler {
     private static Object getPlayerMagicData(Player player) {
         if (player == null) return null;
         String[] classPaths = {
+            "io.redspace.ironsspellbooks.api.magic.MagicData",
+            "io.redspace.ironsspellbooks.capabilities.magic.MagicData",
             "net.ironsspellbooks.api.magic.MagicData",
             "io.github.elytra.irons_spellbooks.api.magic.MagicData",
             "com.io.github.elytra.irons_spellbooks.api.magic.MagicData"
@@ -825,6 +836,7 @@ public class IronSpellsHandler {
         try {
             Class<?> attrClass = null;
             String[] classPaths = {
+                "io.redspace.ironsspellbooks.api.registry.AttributeRegistry",
                 "net.ironsspellbooks.api.registry.AttributeRegistry",
                 "io.github.elytra.irons_spellbooks.api.registry.AttributeRegistry"
             };
