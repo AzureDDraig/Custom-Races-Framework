@@ -137,6 +137,9 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
     }
 
     private void renderWereBeastParts(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, float headYaw, float headPitch) {
+        if (WereModelRenderer.isFirstPerson(player)) {
+            return;
+        }
         boolean isInvisible = player.isInvisible() || player.isSpectator();
         RenderType renderType = isInvisible ? RenderType.entityTranslucent(WHITE_TEXTURE) : RenderType.entityCutoutNoCull(WHITE_TEXTURE);
         VertexConsumer vc = buffer.getBuffer(renderType);
@@ -184,8 +187,10 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         VertexConsumer vc = buffer.getBuffer(renderType);
         float baseAlpha = isInvisible ? 0.15f : 1.0f;
 
-        // 1. Head Attachments (Ears, Horns, Halo)
-        if (!"none".equalsIgnoreCase(race.earType) || !"none".equalsIgnoreCase(race.hornType) || !"none".equalsIgnoreCase(race.haloType)) {
+        boolean isFirstPerson = WereModelRenderer.isFirstPerson(player);
+
+        // 1. Head Attachments (Ears, Horns, Halo) - Suppressed in first person to prevent camera clipping
+        if (!isFirstPerson && (!"none".equalsIgnoreCase(race.earType) || !"none".equalsIgnoreCase(race.hornType) || !"none".equalsIgnoreCase(race.haloType))) {
             poseStack.pushPose();
             try {
                 this.getParentModel().getHead().translateAndRotate(poseStack);

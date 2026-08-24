@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b190a] - 2026-08-24
+
+### ⚔️ Better Combat & First Person Camera Compatibility Fix (`PlayerRaceLayer.java`, `GeckoLibWereRenderer.java`)
+- **First Person Skull Clipping Fix**: Automatically suppresses 3D head geometry, ears, horns, snout, halos, and custom 3D model head bones when in First Person camera mode.
+- **Better Combat & First Person Model Compatibility**: Fixed 1st-person view blocking where players saw the inside/back of their own skull when attacking with Better Combat or using 3D first-person camera mods. First-person view is now 100% clear.
+
+---
+
 ## [1.0.0-b189a] - 2026-07-29
 
 ### 🛡️ Complete Dedicated Server Crash Prevention (`RaceRegistry.java`, `ModPackets.java`)

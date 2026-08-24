@@ -432,9 +432,12 @@ public class GeckoLibWereRenderer {
                     poseStack.translate(-pivX, -pivY, -pivZ);
                 }
 
-                Object cubesObj = ReflectionCache.getCubes != null ? ReflectionCache.getCubes.invoke(bone) : null;
-                for (Object cube : toIterable(cubesObj)) {
-                    renderCubeReflect(poseStack, vc, cube, packedLight, player, alpha, verticesDrawn);
+                boolean isFirstPersonView = WereModelRenderer.isFirstPerson(player);
+                if (!isFirstPersonView || !isHeadBone(boneName)) {
+                    Object cubesObj = ReflectionCache.getCubes != null ? ReflectionCache.getCubes.invoke(bone) : null;
+                    for (Object cube : toIterable(cubesObj)) {
+                        renderCubeReflect(poseStack, vc, cube, packedLight, player, alpha, verticesDrawn);
+                    }
                 }
 
                 Object childBonesObj = ReflectionCache.getChildBones != null ? ReflectionCache.getChildBones.invoke(bone) : null;

@@ -56,6 +56,12 @@ public class WereModelRenderer {
         } catch (Throwable ignored) {}
     }
 
+    public static boolean isFirstPerson(AbstractClientPlayer player) {
+        if (player == null) return false;
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        return mc != null && mc.player == player && mc.options != null && mc.options.getCameraType() != null && mc.options.getCameraType().isFirstPerson();
+    }
+
     public static boolean isTransformed(UUID uuid) {
         if (uuid == null) return false;
         return ClientWereState.isTransformed(uuid) || WereRaceTransformHandler.isTransformed(uuid);
