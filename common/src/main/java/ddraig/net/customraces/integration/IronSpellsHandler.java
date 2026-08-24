@@ -495,7 +495,10 @@ public class IronSpellsHandler {
                         m.setAccessible(true);
                         Class<?>[] pts = m.getParameterTypes();
                         if (pts.length == 3 && pts[0].isAssignableFrom(spellObj.getClass()) && (pts[1] == int.class || pts[1] == Integer.class)) {
-                            m.invoke(magicData, spellObj, spellLevel, finalCastSource);
+                            m.invoke(magicData, spellObj, spellLevel, resolveCastSourceForParam(pts[2], finalCastSource));
+                            return true;
+                        } else if (pts.length == 2 && pts[0].isAssignableFrom(spellObj.getClass()) && (pts[1] == int.class || pts[1] == Integer.class)) {
+                            m.invoke(magicData, spellObj, spellLevel);
                             return true;
                         }
                     } catch (Exception ignored) {}

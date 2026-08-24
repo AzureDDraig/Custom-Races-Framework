@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b196a] - 2026-08-24
+
+### 🪄 Enhanced Cast Source & Spell Casting Reliability
+- **Spell Casting Parameter Normalization**: Improved Cast Source resolution to dynamically map and convert cast parameters across all Iron's Spells versions, preventing potential null pointer issues on specialized server configurations.
+- **Server Tick Loop Stability**: Fully hardened active spell casting pipelines on multiplayer and dedicated servers.
+
+---
+
 ## [1.0.0-b195a] - 2026-08-24
 
 ### 🔮 Iron's Spells Spellcasting & Server Sync Fix
