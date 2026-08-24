@@ -73,15 +73,14 @@ public class PehkuiIntegration {
                 Method setScaleMethod = scaleDataClass.getMethod("setScale", float.class);
                 Method getScaleDataMethod = null;
 
-                // 1. BASE scale (scales overall entity model & hitbox)
+                // 1. BASE scale
                 try {
                     Object baseType = scaleTypesClass.getField("BASE").get(null);
                     getScaleDataMethod = baseType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
                     Object bData = getScaleDataMethod.invoke(baseType, player);
                     if (bData != null) {
-                        float avgScale = (hScale + wScale) / 2.0f;
-                        setTargetScaleMethod.invoke(bData, avgScale);
-                        setScaleMethod.invoke(bData, avgScale);
+                        setTargetScaleMethod.invoke(bData, baseScale);
+                        setScaleMethod.invoke(bData, baseScale);
                     }
                 } catch (Exception ignored) {}
 
@@ -91,8 +90,8 @@ public class PehkuiIntegration {
                     if (getScaleDataMethod == null) getScaleDataMethod = heightType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
                     Object hData = getScaleDataMethod.invoke(heightType, player);
                     if (hData != null) {
-                        setTargetScaleMethod.invoke(hData, hScale);
-                        setScaleMethod.invoke(hData, hScale);
+                        setTargetScaleMethod.invoke(hData, heightMult);
+                        setScaleMethod.invoke(hData, heightMult);
                     }
                 } catch (Exception ignored) {}
 
@@ -102,12 +101,33 @@ public class PehkuiIntegration {
                     if (getScaleDataMethod == null) getScaleDataMethod = widthType.getClass().getMethod("getScaleData", net.minecraft.world.entity.Entity.class);
                     Object wData = getScaleDataMethod.invoke(widthType, player);
                     if (wData != null) {
-                        setTargetScaleMethod.invoke(wData, wScale);
-                        setScaleMethod.invoke(wData, wScale);
+                        setTargetScaleMethod.invoke(wData, widthMult);
+                        setScaleMethod.invoke(wData, widthMult);
                     }
                 } catch (Exception ignored) {}
 
-                // 4. REACH scale
+                // 4. EYE_HEIGHT scale (prevents first-person camera distortion)
+                try {
+                    Object eyeHeightType = scaleTypesClass.getField("EYE_HEIGHT").get(null);
+                    Object eData = getScaleDataMethod.invoke(eyeHeightType, player);
+                    if (eData != null) {
+                        setTargetScaleMethod.invoke(eData, heightMult);
+                        setScaleMethod.invoke(eData, heightMult);
+                    }
+                } catch (Exception ignored) {}
+
+                // 5. THIRD_PERSON camera distance scale (prevents camera clipping into skull)
+                try {
+                    Object thirdPersonType = scaleTypesClass.getField("THIRD_PERSON").get(null);
+                    Object tpData = getScaleDataMethod.invoke(thirdPersonType, player);
+                    if (tpData != null) {
+                        float tpScale = (heightMult + widthMult) / 2.0f;
+                        setTargetScaleMethod.invoke(tpData, tpScale);
+                        setScaleMethod.invoke(tpData, tpScale);
+                    }
+                } catch (Exception ignored) {}
+
+                // 6. REACH scale
                 try {
                     Object reachType = scaleTypesClass.getField("REACH").get(null);
                     Object rData = getScaleDataMethod.invoke(reachType, player);
@@ -117,7 +137,7 @@ public class PehkuiIntegration {
                     }
                 } catch (Exception ignored) {}
 
-                // 5. STEP_HEIGHT scale
+                // 7. STEP_HEIGHT scale
                 try {
                     Object stepHeightType = scaleTypesClass.getField("STEP_HEIGHT").get(null);
                     Object sData = getScaleDataMethod.invoke(stepHeightType, player);

@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b194a] - 2026-08-24
+
+### 👾 CustomMobs Projectiles & Pehkui Camera Scaling (GitHub Issue #3)
+- **Pehkui Camera Scaling & Aspect Ratio Protection**: Fixed scale double-multiplication where players became unintentionally stretched or squashed. Synchronized first-person `EYE_HEIGHT` and third-person camera distance scales with body height, eliminating FOV and aspect ratio camera distortion when modifying player proportions.
+- **Custom Projectiles for Active Abilities**: Added support to launch custom projectiles (`custom_projectile`, `projectile_launch`, `fire_shard`, `arrow_shot`) defined in CustomMobs or modded registries directly from race active ability keybinds with trajectory calculation and sound effects.
+- **CustomMobs Minion Spawning & AI Fix**: Fixed summoned minions defaulting to pigs by resolving custom creature templates and applying follow/protect AI.
+- **Drawback Weapon Restrictions**: Fully verified `No Shield`, `No Bow`, and `No Trident` drawbacks preventing players from wielding restricted weaponry.
+
+---
+
 ## [1.0.0-b193a] - 2026-08-24
 
 ### ⚔️ Better Combat, Epic Fight & Custom Mobs / RPG Mounts Integrations

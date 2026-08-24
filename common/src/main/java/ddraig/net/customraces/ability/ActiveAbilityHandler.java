@@ -214,10 +214,21 @@ public class ActiveAbilityHandler {
 
             case "fireball_volley":
             case "fireball volley":
-                LargeFireball fireball = new LargeFireball(level, player, look.x, look.y, look.z, 1);
-                fireball.setPos(player.getX() + look.x * 1.5, player.getEyeY(), player.getZ() + look.z * 1.5);
-                level.addFreshEntity(fireball);
-                level.playSound(null, player.blockPosition(), SoundEvents.GHAST_SHOOT, SoundSource.PLAYERS, 1.0f, 1.0f);
+            case "fire_shard":
+                ddraig.net.customraces.integration.CustomMobsIntegration.launchCustomProjectile(level, player, "minecraft:small_fireball", 2.0f, 0.5f);
+                break;
+
+            case "custom_projectile":
+            case "custom projectile":
+            case "projectile_launch":
+            case "projectile launch":
+            case "magic_missile":
+                ddraig.net.customraces.integration.CustomMobsIntegration.launchCustomProjectile(level, player, race.minionMobType, 2.2f, 0.2f);
+                break;
+
+            case "arrow_shot":
+            case "arrow shot":
+                ddraig.net.customraces.integration.CustomMobsIntegration.launchCustomProjectile(level, player, "minecraft:arrow", 3.0f, 0.1f);
                 break;
 
             case "web_trap_throw":

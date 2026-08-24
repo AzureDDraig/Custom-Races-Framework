@@ -188,4 +188,58 @@ public class CustomMobsIntegration {
             }
         }
     }
+
+    /**
+     * Launches a custom projectile entity (CustomMobs or Vanilla) along the player's look vector.
+     */
+    public static Entity launchCustomProjectile(ServerLevel level, ServerPlayer player, String projectileId, float speed, float inaccuracy) {
+        if (level == null || player == null) return null;
+
+        String cleanId = (projectileId != null && !projectileId.trim().isEmpty()) ? projectileId.trim().toLowerCase() : "minecraft:small_fireball";
+        Vec3 look = player.getLookAngle();
+        double spawnX = player.getX() + look.x * 1.2;
+        double spawnY = player.getEyeY() + look.y * 0.5;
+        double spawnZ = player.getZ() + look.z * 1.2;
+
+        try {
+            if (cleanId.contains("fireball") || cleanId.contains("flame")) {
+                net.minecraft.world.entity.projectile.SmallFireball fireball = new net.minecraft.world.entity.projectile.SmallFireball(level, player, look.x, look.y, look.z);
+                fireball.setPos(spawnX, spawnY, spawnZ);
+                level.addFreshEntity(fireball);
+                level.playSound(null, player.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.0f, 1.2f);
+                return fireball;
+            } else if (cleanId.contains("arrow")) {
+                net.minecraft.world.entity.projectile.Arrow arrow = new net.minecraft.world.entity.projectile.Arrow(level, player);
+                arrow.setPos(spawnX, spawnY, spawnZ);
+                arrow.shoot(look.x, look.y, look.z, speed > 0 ? speed : 2.5f, inaccuracy);
+                level.addFreshEntity(arrow);
+                level.playSound(null, player.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0f, 1.0f);
+                return arrow;
+            } else if (cleanId.contains("wither") || cleanId.contains("skull")) {
+                net.minecraft.world.entity.projectile.WitherSkull skull = new net.minecraft.world.entity.projectile.WitherSkull(level, player, look.x, look.y, look.z);
+                skull.setPos(spawnX, spawnY, spawnZ);
+                level.addFreshEntity(skull);
+                level.playSound(null, player.blockPosition(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0f, 1.0f);
+                return skull;
+            } else if (cleanId.contains("trident")) {
+                net.minecraft.world.entity.projectile.ThrownTrident trident = new net.minecraft.world.entity.projectile.ThrownTrident(level, player, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TRIDENT));
+                trident.setPos(spawnX, spawnY, spawnZ);
+                trident.shoot(look.x, look.y, look.z, speed > 0 ? speed : 2.0f, inaccuracy);
+                level.addFreshEntity(trident);
+                level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 1.0f);
+                return trident;
+            } else {
+                net.minecraft.world.entity.projectile.Snowball snowball = new net.minecraft.world.entity.projectile.Snowball(level, player);
+                snowball.setPos(spawnX, spawnY, spawnZ);
+                snowball.shoot(look.x, look.y, look.z, speed > 0 ? speed : 1.8f, inaccuracy);
+                level.addFreshEntity(snowball);
+                level.sendParticles(ParticleTypes.CRIT, spawnX, spawnY, spawnZ, 8, 0.1, 0.1, 0.1, 0.05);
+                level.playSound(null, player.blockPosition(), SoundEvents.SNOWBALL_THROW, SoundSource.PLAYERS, 1.0f, 1.0f);
+                return snowball;
+            }
+        } catch (Throwable t) {
+            System.err.println("[CustomRaces] Failed to launch projectile: " + t.getMessage());
+            return null;
+        }
+    }
 }
