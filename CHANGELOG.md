@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b193a] - 2026-08-24
+
+### ⚔️ Better Combat, Epic Fight & Custom Mobs / RPG Mounts Integrations
+- **Better Combat Integration**: Dynamic weapon attack reach scaling based on player size/scale, combo bonuses (+20% damage for Dual Wield Mastery, Counter Attack triggers, critical particle bursts), and race weapon restriction enforcement during attack combos.
+- **Epic Fight Integration**: Synchronized Epic Fight attributes including Stamina, Stamina Regeneration, Weight, Impact, and Armor Negation. Wielding forbidden weaponry in battle mode disarms and notifies the player.
+- **Custom Mobs Minion Spawning & Follow AI**: The `Summon Minions` ability now spawns custom creatures defined in CustomMobs. Summoned minions (both custom and vanilla) actively follow, protect, and fight alongside their summoner with automatic teleportation and target synchronization.
+- **RPG Mounts Framework Integration**: Enforces mount inability drawbacks (`horse_mount_inability`, `strider_mount_inability`, `boat_inability`), applies racial mount speed and health bonuses (`pack_leader_buff`), and automatically calibrates rider seat offsets for scaled players.
+
+---
+
 ## [1.0.0-b192a] - 2026-08-24
 
 ### 🏹 Passives & Drawbacks Overhaul (GitHub Issue #2)

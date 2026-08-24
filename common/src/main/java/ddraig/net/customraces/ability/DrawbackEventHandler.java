@@ -148,13 +148,7 @@ public class DrawbackEventHandler {
 
         // 9. Mount Restrictions (111-120)
         if (player.isPassenger()) {
-            net.minecraft.world.entity.Entity vehicle = player.getVehicle();
-            if (vehicle != null) {
-                if (drawbacks.contains("boat_inability") && vehicle instanceof net.minecraft.world.entity.vehicle.Boat) player.stopRiding();
-                if (drawbacks.contains("minecart_inability") && vehicle instanceof net.minecraft.world.entity.vehicle.AbstractMinecart) player.stopRiding();
-                if (drawbacks.contains("horse_mount_inability") && (vehicle instanceof net.minecraft.world.entity.animal.horse.AbstractHorse)) player.stopRiding();
-                if (drawbacks.contains("strider_mount_inability") && vehicle instanceof net.minecraft.world.entity.monster.Strider) player.stopRiding();
-            }
+            ddraig.net.customraces.integration.RpgMountsIntegration.checkMountRestrictions(player, drawbacks);
         }
 
         // 10. Biome & Climate Vulnerabilities (61-70)

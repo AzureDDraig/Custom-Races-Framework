@@ -260,55 +260,14 @@ public class ActiveAbilityHandler {
             case "summon minion":
                 try {
                     int count = Math.max(1, Math.min(10, race.minionCount));
-                    net.minecraft.resources.ResourceLocation mobLoc = new net.minecraft.resources.ResourceLocation(race.minionMobType);
-                    EntityType<?> mobType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(mobLoc);
-                    if (mobType != null) {
-                        level.playSound(null, player.blockPosition(), SoundEvents.EVOKER_PREPARE_SUMMON, SoundSource.PLAYERS, 1.2f, 1.0f);
-                        for (int i = 0; i < count; i++) {
-                            double angle = (2 * Math.PI / count) * i;
-                            double spawnX = player.getX() + Math.cos(angle) * 2.5;
-                            double spawnZ = player.getZ() + Math.sin(angle) * 2.5;
-                            double spawnY = player.getY();
+                    level.playSound(null, player.blockPosition(), SoundEvents.EVOKER_PREPARE_SUMMON, SoundSource.PLAYERS, 1.2f, 1.0f);
+                    for (int i = 0; i < count; i++) {
+                        double angle = (2 * Math.PI / count) * i;
+                        double spawnX = player.getX() + Math.cos(angle) * 2.5;
+                        double spawnZ = player.getZ() + Math.sin(angle) * 2.5;
+                        double spawnY = player.getY();
 
-                            net.minecraft.world.entity.Entity minion = mobType.create(level);
-                            if (minion != null) {
-                                minion.setPos(spawnX, spawnY, spawnZ);
-                                level.sendParticles(ParticleTypes.WITCH, spawnX, spawnY + 0.5, spawnZ, 15, 0.3, 0.5, 0.3, 0.05);
-                                level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, spawnX, spawnY + 0.5, spawnZ, 10, 0.2, 0.4, 0.2, 0.03);
-
-                                // Pehkui scaling for minion
-                                if (race.minionScale != 1.0f) {
-                                    ddraig.net.customraces.integration.PehkuiIntegration.setScale(minion, race.minionScale);
-                                }
-
-                                if (minion instanceof net.minecraft.world.entity.TamableAnimal tamable) {
-                                    tamable.tame(player);
-                                }
-                                if (minion instanceof LivingEntity living) {
-                                    living.setHealth(living.getMaxHealth());
-                                }
-
-                                if (minion instanceof net.minecraft.world.entity.Mob mob) {
-                                    if (player.getLastHurtMob() != null && player.getLastHurtMob().isAlive()) {
-                                        mob.setTarget(player.getLastHurtMob());
-                                    } else if (player.getLastHurtByMob() != null && player.getLastHurtByMob().isAlive()) {
-                                        mob.setTarget(player.getLastHurtByMob());
-                                    } else {
-                                        AABB area = player.getBoundingBox().inflate(20.0);
-                                        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area)) {
-                                            if (target != player && target.isAlive() && !(target instanceof net.minecraft.world.entity.TamableAnimal animal && animal.isOwnedBy(player)) && !(target instanceof net.minecraft.world.entity.player.Player)) {
-                                                mob.setTarget(target);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                level.addFreshEntity(minion);
-                                level.sendParticles(ParticleTypes.POOF, spawnX, spawnY + 0.5, spawnZ, 15, 0.3, 0.3, 0.3, 0.05);
-                                level.sendParticles(ParticleTypes.WITCH, spawnX, spawnY + 1.0, spawnZ, 10, 0.3, 0.3, 0.3, 0.05);
-                            }
-                        }
+                        ddraig.net.customraces.integration.CustomMobsIntegration.spawnMinion(level, player, race, spawnX, spawnY, spawnZ);
                     }
                 } catch (Exception e) {
                     System.err.println("[CustomRaces] Failed to summon minions: " + e.getMessage());

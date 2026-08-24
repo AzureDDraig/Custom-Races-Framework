@@ -461,10 +461,21 @@ public class PassiveAbilityHandler {
         if (passives.contains("overclock_speed")) player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false, true));
         if (passives.contains("golem_density")) player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 0, false, false, true));
         if (passives.contains("magnetic_repulsion")) {
-            for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, player.getBoundingBox().inflate(7.0))) item.teleportTo(player.getX(), player.getY() + 0.5, player.getZ());
+            for (net.minecraft.world.entity.projectile.Projectile proj : player.level().getEntitiesOfClass(net.minecraft.world.entity.projectile.Projectile.class, player.getBoundingBox().inflate(4.0))) {
+                if (proj.isAlive() && proj.getOwner() != player) {
+                    net.minecraft.world.phys.Vec3 repulse = proj.position().subtract(player.position()).normalize().scale(0.4);
+                    proj.setDeltaMovement(proj.getDeltaMovement().add(repulse));
+                    proj.hasImpulse = true;
+                }
+            }
         }
         if (passives.contains("radiation_immunity")) player.clearFire();
         if (passives.contains("energy_core_boost")) player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 0, false, false, true));
 
+        // Integration Hooks: Epic Fight & RPG Mounts
+        if (player.tickCount % 20 == 0) {
+            ddraig.net.customraces.integration.EpicFightIntegration.applyEpicFightAttributes(player, race, passives, race.drawbacks);
+            ddraig.net.customraces.integration.RpgMountsIntegration.applyMountBuffs(player, passives);
+        }
     }
 }
