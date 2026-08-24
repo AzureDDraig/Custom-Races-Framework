@@ -110,20 +110,53 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             // Render Particle Auras in Real-Time (Scaled by player scale during transformed state, guarded by 20 Hz tick check)
             if (canEmitTickParticle && race.particleAuras != null && !race.particleAuras.isEmpty()) {
                 for (ParticleAuraData aura : race.particleAuras) {
+                    if (aura == null || !aura.matchesForm(isWereTransformed)) continue;
                     if (player.tickCount % 4 == 0) {
-                        net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(new ResourceLocation(aura.getValidParticleType()));
-                        if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
-                            int countToSpawn = aura.getScaledParticleCount(effectiveParticleCount);
-                            float auraSpread = aura.getSafeSpread() * wScale;
-                            float auraSpeed = aura.getSafeSpeed() * scaleFactor;
-                            for (int i = 0; i < countToSpawn; i++) {
-                                player.level().addParticle(
-                                        pOptions,
-                                        player.getRandomX(auraSpread),
-                                        player.getRandomY() + (0.5 * hScale),
-                                        player.getRandomZ(auraSpread),
-                                        0.0, auraSpeed, 0.0
-                                );
+                        ResourceLocation pLoc = ResourceLocation.tryParse(aura.getValidParticleType());
+                        if (pLoc != null) {
+                            net.minecraft.core.particles.ParticleType<?> pType = net.minecraft.core.registries.BuiltInRegistries.PARTICLE_TYPE.get(pLoc);
+                            if (pType instanceof net.minecraft.core.particles.ParticleOptions pOptions) {
+                                int countToSpawn = aura.getScaledParticleCount(effectiveParticleCount);
+                                float auraSpread = aura.getSafeSpread() * wScale;
+                                float auraSpeed = aura.getSafeSpeed() * scaleFactor;
+                                String placement = aura.getValidPlacement();
+
+                                double baseX = player.getX() + (aura.offsetX * wScale);
+                                double baseZ = player.getZ() + (aura.offsetZ * wScale);
+                                double baseY;
+
+                                switch (placement) {
+                                    case "head":
+                                        baseY = player.getY() + (player.getEyeHeight() * 0.95) + (aura.offsetY * hScale);
+                                        break;
+                                    case "eyes":
+                                        baseY = player.getY() + player.getEyeHeight() + (aura.offsetY * hScale);
+                                        break;
+                                    case "feet":
+                                        baseY = player.getY() + 0.1 + (aura.offsetY * hScale);
+                                        break;
+                                    case "hands":
+                                        baseY = player.getY() + (0.75 * hScale) + (aura.offsetY * hScale);
+                                        break;
+                                    case "ambient":
+                                        baseY = player.getY() + (player.level().random.nextDouble() * 2.0 * hScale) + (aura.offsetY * hScale);
+                                        break;
+                                    case "body":
+                                    default:
+                                        baseY = player.getY() + (0.5 * hScale) + (aura.offsetY * hScale);
+                                        break;
+                                }
+
+                                for (int i = 0; i < countToSpawn; i++) {
+                                    double px = baseX + (player.level().random.nextGaussian() * auraSpread * 0.5);
+                                    double pz = baseZ + (player.level().random.nextGaussian() * auraSpread * 0.5);
+                                    double py = baseY + (player.level().random.nextGaussian() * 0.1);
+                                    player.level().addParticle(
+                                            pOptions,
+                                            px, py, pz,
+                                            0.0, auraSpeed, 0.0
+                                    );
+                                }
                             }
                         }
                     }

@@ -81,10 +81,15 @@ public class RaceData {
     // Mob Alliances
     public List<MobAllianceData> alliances = new ArrayList<>();
 
-    // Abilities
+    // Abilities & Cooldowns
     public List<String> passiveAbilities = new ArrayList<>();
     public Map<Integer, String> activeAbilities = new HashMap<>(); // Keybind Slot (1 to 5) -> Ability ID
+    public Map<Integer, Integer> abilityCooldowns = new HashMap<>(); // Keybind Slot (1 to 5) -> Cooldown in seconds
     public List<String> drawbacks = new ArrayList<>();
+
+    // Restricted Items & Foods (Equipment & Diets)
+    public List<String> restrictedItems = new ArrayList<>(); // e.g. "minecraft:shield", "minecraft:bow"
+    public List<String> restrictedFoods = new ArrayList<>(); // e.g. "minecraft:cooked_beef", "minecraft:bread"
 
     // Flying & Swimming Custom Model Animations
     public boolean isFlyingRace = false;
@@ -121,6 +126,7 @@ public class RaceData {
     // Were-Form Specific Granted Abilities & Drawbacks
     public List<String> werePassiveAbilities = new ArrayList<>();
     public Map<Integer, String> wereActiveAbilities = new HashMap<>();
+    public Map<Integer, Integer> wereAbilityCooldowns = new HashMap<>(); // Keybind Slot (1 to 5) -> Cooldown in seconds
     public List<String> wereDrawbacks = new ArrayList<>();
 
     // Minion Summon Ability Settings
@@ -569,6 +575,79 @@ public class RaceData {
             }
         }
 
+        if (tag.contains("abilityCooldowns")) {
+            net.minecraft.nbt.CompoundTag cdTag = tag.getCompound("abilityCooldowns");
+            for (String key : cdTag.getAllKeys()) {
+                try {
+                    this.abilityCooldowns.put(Integer.parseInt(key), cdTag.getInt(key));
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (tag.contains("wereAbilityCooldowns")) {
+            net.minecraft.nbt.CompoundTag cdTag = tag.getCompound("wereAbilityCooldowns");
+            for (String key : cdTag.getAllKeys()) {
+                try {
+                    this.wereAbilityCooldowns.put(Integer.parseInt(key), cdTag.getInt(key));
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (tag.contains("restrictedItems")) {
+            net.minecraft.nbt.ListTag list = tag.getList("restrictedItems", 8);
+            this.restrictedItems.clear();
+            for (int i = 0; i < list.size(); i++) {
+                this.restrictedItems.add(list.getString(i));
+            }
+        }
+
+        if (tag.contains("restrictedFoods")) {
+            net.minecraft.nbt.ListTag list = tag.getList("restrictedFoods", 8);
+            this.restrictedFoods.clear();
+            for (int i = 0; i < list.size(); i++) {
+                this.restrictedFoods.add(list.getString(i));
+            }
+        }
+
         initDefaults();
+    }
+
+    public int getAbilityCooldown(int slot, boolean isWereForm) {
+        if (isWereForm && wereAbilityCooldowns != null && wereAbilityCooldowns.containsKey(slot)) {
+            Integer cd = wereAbilityCooldowns.get(slot);
+            if (cd != null && cd > 0) return cd;
+        }
+        if (abilityCooldowns != null && abilityCooldowns.containsKey(slot)) {
+            Integer cd = abilityCooldowns.get(slot);
+            if (cd != null && cd > 0) return cd;
+        }
+        return 10; // 10 seconds default
+    }
+
+    public boolean isItemRestricted(String itemId) {
+        if (itemId == null || itemId.isEmpty()) return false;
+        String clean = itemId.trim().toLowerCase();
+        if (restrictedItems != null) {
+            for (String r : restrictedItems) {
+                if (r != null && clean.equals(r.trim().toLowerCase())) return true;
+            }
+        }
+        if (itemBlacklist != null) {
+            for (String b : itemBlacklist) {
+                if (b != null && clean.equals(b.trim().toLowerCase())) return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isFoodRestricted(String foodId) {
+        if (foodId == null || foodId.isEmpty()) return false;
+        String clean = foodId.trim().toLowerCase();
+        if (restrictedFoods != null) {
+            for (String f : restrictedFoods) {
+                if (f != null && clean.equals(f.trim().toLowerCase())) return true;
+            }
+        }
+        return false;
     }
 }

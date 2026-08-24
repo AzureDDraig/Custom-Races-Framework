@@ -32,35 +32,45 @@ public class IronSpellsHandler {
         // Fire School
         "irons_spellbooks:firebolt", "irons_spellbooks:fireball", "irons_spellbooks:fire_breath",
         "irons_spellbooks:scorch", "irons_spellbooks:wall_of_fire", "irons_spellbooks:magma_bomb",
-        "irons_spellbooks:flame_strike", "irons_spellbooks:heat_surge",
+        "irons_spellbooks:flame_strike", "irons_spellbooks:heat_surge", "irons_spellbooks:flaming_strike",
         
         // Ice School
         "irons_spellbooks:ice_spike", "irons_spellbooks:icicle", "irons_spellbooks:ray_of_frost",
         "irons_spellbooks:frost_step", "irons_spellbooks:frostbite", "irons_spellbooks:ice_block",
+        "irons_spellbooks:cone_of_cold", "irons_spellbooks:summon_polar_bear",
 
         // Lightning School
         "irons_spellbooks:lightning_lance", "irons_spellbooks:chain_lightning", "irons_spellbooks:charge",
         "irons_spellbooks:electrocute", "irons_spellbooks:thunderstorm", "irons_spellbooks:lightning_strike",
+        "irons_spellbooks:shockwave", "irons_spellbooks:volt_strike",
 
         // Holy School
         "irons_spellbooks:heal", "irons_spellbooks:greater_heal", "irons_spellbooks:bless",
         "irons_spellbooks:haste", "irons_spellbooks:wisp", "irons_spellbooks:angel_wing",
+        "irons_spellbooks:divine_smite", "irons_spellbooks:fortify", "irons_spellbooks:sunbeam", "irons_spellbooks:guiding_bolt",
 
         // Ender School
         "irons_spellbooks:teleport", "irons_spellbooks:counterspell", "irons_spellbooks:slow",
         "irons_spellbooks:invisibility", "irons_spellbooks:black_hole", "irons_spellbooks:dragon_breath",
+        "irons_spellbooks:starfall", "irons_spellbooks:portal", "irons_spellbooks:recall",
 
         // Blood School
         "irons_spellbooks:blood_slash", "irons_spellbooks:blood_step", "irons_spellbooks:blood_needles",
         "irons_spellbooks:blood_siphon", "irons_spellbooks:devour", "irons_spellbooks:raise_dead",
+        "irons_spellbooks:ray_of_siphoning", "irons_spellbooks:sacrifice",
 
         // Evocation School
         "irons_spellbooks:evocation_fangs", "irons_spellbooks:summon_vex", "irons_spellbooks:summon_horse",
         "irons_spellbooks:spectral_hammer", "irons_spellbooks:gust", "irons_spellbooks:shield",
+        "irons_spellbooks:fang_strike", "irons_spellbooks:fang_ward",
+
+        // Nature School
+        "irons_spellbooks:poison_breath", "irons_spellbooks:poison_arrow", "irons_spellbooks:poison_splash",
+        "irons_spellbooks:root", "irons_spellbooks:spider_aspect", "irons_spellbooks:acid_orb", "irons_spellbooks:earthquake",
 
         // Eldritch / Celestial School
         "irons_spellbooks:abyssal_shroud", "irons_spellbooks:starfall", "irons_spellbooks:sonic_boom",
-        "irons_spellbooks:planar_sight", "irons_spellbooks:telekinesis",
+        "irons_spellbooks:planar_sight", "irons_spellbooks:telekinesis", "irons_spellbooks:sculk_tentacles", "irons_spellbooks:eldritch_blast",
 
         // T.O Tweaks Spells (if installed)
         "totweaks:time_stop", "totweaks:spatial_rend", "totweaks:gravity_well",
@@ -468,6 +478,49 @@ public class IronSpellsHandler {
             }
         }
 
+        final Object finalCastSource = castSource;
+        final Object finalMagicData = magicData;
+
+        // Step 0: Try initiateCast on MagicData or attemptInitiateCast on AbstractSpell
+        // This is necessary for continuous / charging / beam / trap spells in Iron's Spells!
+        if (magicData != null) {
+            for (Method m : magicData.getClass().getMethods()) {
+                if (m.getName().equalsIgnoreCase("initiateCast") || m.getName().equalsIgnoreCase("startCast")) {
+                    try {
+                        m.setAccessible(true);
+                        Class<?>[] pts = m.getParameterTypes();
+                        if (pts.length == 3 && pts[0].isAssignableFrom(spellObj.getClass()) && (pts[1] == int.class || pts[1] == Integer.class)) {
+                            m.invoke(magicData, spellObj, spellLevel, finalCastSource);
+                            return true;
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        for (Method m : spellObj.getClass().getMethods()) {
+            if (m.getName().equalsIgnoreCase("attemptInitiateCast") || m.getName().equalsIgnoreCase("initiateCast")) {
+                try {
+                    m.setAccessible(true);
+                    Class<?>[] pts = m.getParameterTypes();
+                    Object[] args = new Object[pts.length];
+                    for (int i = 0; i < pts.length; i++) {
+                        Class<?> p = pts[i];
+                        if (net.minecraft.world.item.ItemStack.class.isAssignableFrom(p)) args[i] = net.minecraft.world.item.ItemStack.EMPTY;
+                        else if (p == int.class || p == Integer.class) args[i] = spellLevel;
+                        else if (net.minecraft.world.level.Level.class.isAssignableFrom(p)) args[i] = player.level();
+                        else if (net.minecraft.world.entity.LivingEntity.class.isAssignableFrom(p) || net.minecraft.world.entity.player.Player.class.isAssignableFrom(p)) args[i] = player;
+                        else if (isCastSourceType(p, finalCastSource)) args[i] = resolveCastSourceForParam(p, finalCastSource);
+                        else if (p == boolean.class || p == Boolean.class) args[i] = false;
+                        else if (isMagicDataType(p, finalMagicData)) args[i] = finalMagicData;
+                        else if (p.isPrimitive()) args[i] = getPrimitiveDefault(p);
+                    }
+                    m.invoke(spellObj, args);
+                    return true;
+                } catch (Exception ignored) {}
+            }
+        }
+
         // Collect candidate methods matching exact names: onCast, castSpell, onCastSpell
         List<Method> candidates = new ArrayList<>();
         List<Method> allMethods = new ArrayList<>(Arrays.asList(spellObj.getClass().getMethods()));
@@ -488,9 +541,6 @@ public class IronSpellsHandler {
             System.err.println("[CustomRaces] No onCast / castSpell / onCastSpell method found on spell object: " + spellObj.getClass().getName());
             return false;
         }
-
-        final Object finalCastSource = castSource;
-        final Object finalMagicData = magicData;
 
         // Sort candidates:
         // Tier 1: Target 5-parameter (Level, int, LivingEntity/ServerPlayer/Player, CastSource, MagicData)

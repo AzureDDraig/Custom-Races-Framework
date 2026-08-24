@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b191a] - 2026-08-24
+
+### 🌟 GitHub Issue #1 Features & Improvements Release
+- **Body & Head Particle Customization**: Races now support custom particle placement on the head, eyes, feet, hands, body, or ambient air, with condition toggles for Base Form, Transformed Form, or Always. Modded particle IDs from magic/combat mods are fully supported.
+- **In-Game Ability Descriptions & Codex**: Hovering over any passive ability or drawback in the Codex or Selection menu now displays detailed info explaining exactly what the ability does and the stat bonuses it provides.
+- **Expanded Iron's Spells Support**: Full casting support for continuous, charging, ray, beam, and trap spells from Iron's Spells 'n Spellbooks. All spell types now cast smoothly through race keybinds.
+- **CustomMobs Integration in Alliances**: CustomMobs creature definitions are now scanned and appear with their custom names/IDs in the alliance search list and are properly recognized by race friendliness/neutrality AI.
+- **Configurable Ability Cooldowns**: Added per-ability cooldown durations (in seconds) for slots 1–5 in both Base and Transformed forms.
+- **Restricted Equipment & Diets**: Added support to restrict specific item, weapon, or food IDs per race, preventing races from equipping forbidden weapons or eating restricted foods.
+
+---
+
 ## [1.0.0-b190a] - 2026-08-24
 
 ### ⚔️ Better Combat & First Person Camera Compatibility Fix (`PlayerRaceLayer.java`, `GeckoLibWereRenderer.java`)

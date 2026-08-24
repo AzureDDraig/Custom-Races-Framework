@@ -10,10 +10,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * Intercepts mob AI targeting to enforce race mob alliances (Friendly/Neutral/Allied).
+ * Intercepts mob AI targeting to enforce race mob alliances (Friendly/Neutral/Allied),
+ * with multiplatform reflection support for CustomMobs custom entity IDs and NBT identifiers.
  */
 public class MobAllianceHandler {
 
@@ -32,8 +34,29 @@ public class MobAllianceHandler {
                     if (mobLoc == null) continue;
                     String mobId = mobLoc.toString();
 
+                    String customMobId = "";
+                    try {
+                        Method m = mob.getClass().getMethod("getPersistentData");
+                        Object data = m.invoke(mob);
+                        if (data instanceof net.minecraft.nbt.CompoundTag tag) {
+                            if (tag.contains("CustomMobId")) customMobId = tag.getString("CustomMobId");
+                            else if (tag.contains("custom_mob_id")) customMobId = tag.getString("custom_mob_id");
+                            else if (tag.contains("id")) customMobId = tag.getString("id");
+                        }
+                    } catch (Exception ignored) {}
+
+                    String customName = mob.hasCustomName() && mob.getCustomName() != null ? mob.getCustomName().getString() : "";
+
                     for (MobAllianceData alliance : race.alliances) {
-                        if (alliance != null && alliance.mobId != null && mobId.equalsIgnoreCase(alliance.mobId.trim())) {
+                        if (alliance == null || alliance.mobId == null) continue;
+                        String targetMob = alliance.mobId.trim();
+                        boolean match = mobId.equalsIgnoreCase(targetMob)
+                                || (!customMobId.isEmpty() && (customMobId.equalsIgnoreCase(targetMob) || ("custom_mobs:" + customMobId).equalsIgnoreCase(targetMob) || targetMob.equalsIgnoreCase("custom_mobs:" + customMobId)))
+                                || (!customName.isEmpty() && customName.equalsIgnoreCase(targetMob))
+                                || mob.getTags().contains(targetMob)
+                                || mob.getTags().contains("custom_mobs:" + targetMob);
+
+                        if (match) {
                             String stance = alliance.stance != null ? alliance.stance.toLowerCase() : "neutral";
                             if ("neutral".equals(stance) || "allied".equals(stance) || "friendly".equals(stance)) {
                                 if (mob.getTarget() == serverPlayer && mob.getLastHurtByMob() != serverPlayer) {

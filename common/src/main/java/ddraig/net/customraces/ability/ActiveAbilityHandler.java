@@ -52,11 +52,16 @@ public class ActiveAbilityHandler {
         String normId = abilityId.toLowerCase().replace(" ", "_");
         boolean isNativeSpell = normId.startsWith("native_spell");
 
-        // Form-Specific Cooldown Query
+        // Form-Specific Cooldown Query (Respects per-slot custom cooldown in seconds)
         long cooldownMs = DEFAULT_COOLDOWN_MS;
         if (isNativeSpell) {
             int ticks = isWere ? race.wereNativeSpellCooldown : race.nativeSpellCooldown;
             cooldownMs = ticks > 0 ? (ticks >= 1000 ? (long) ticks : ticks * 50L) : DEFAULT_COOLDOWN_MS;
+        } else {
+            int customSec = race.getAbilityCooldown(slot, isWere);
+            if (customSec > 0) {
+                cooldownMs = customSec * 1000L;
+            }
         }
 
         // Check Cooldown

@@ -186,25 +186,13 @@ public class RaceCreatorScreen extends Screen {
     }
 
     private String getPassiveDescription(String passive) {
-        switch (passive.toLowerCase()) {
-            case "night_vision": return "Grants clear vision in pitch black darkness.";
-            case "water_breathing": return "Allows underwater breathing indefinitely.";
-            case "fire_resistance": return "Provides complete immunity to fire and lava.";
-            case "flight": return "Unlocks creative-style flying capability.";
-            case "slow_falling": return "Prevents fall damage and grants gentle gliding.";
-            case "regeneration": return "Constantly restores player health over time.";
-            case "wither_immunity": return "Immunity to Wither decay and damage.";
-            case "fall_damage_immunity": return "Immunity to all impact and fall damage.";
-            case "lava_swimming": return "Allows rapid swimming through lava.";
-            case "climbing": return "Allows climbing vertical wall surfaces.";
-            case "native_spell": return "Casts native spell or Wild Magic. Requires Iron's Spells mod.";
-            default: return passive.replace("_", " ");
-        }
+        ddraig.net.customraces.data.PassiveAbilityDescriptions.AbilityInfo info = ddraig.net.customraces.data.PassiveAbilityDescriptions.get(passive);
+        return info != null ? info.description() + (info.stats().isEmpty() ? "" : " (" + info.stats() + ")") : passive.replace("_", " ");
     }
 
     private String getDrawbackDescription(String drawbackId) {
-        String name = drawbackId.replace("_", " ").toLowerCase();
-        return name + " weakness drawback penalty restriction curse vulnerability damage slowness debuff intolerance inability";
+        ddraig.net.customraces.data.PassiveAbilityDescriptions.AbilityInfo info = ddraig.net.customraces.data.PassiveAbilityDescriptions.get(drawbackId);
+        return info != null ? info.description() : drawbackId.replace("_", " ");
     }
 
     public static final List<String> ALL_PASSIVES = java.util.List.of(
@@ -1467,6 +1455,10 @@ public class RaceCreatorScreen extends Screen {
         copy.wereSpeedBonus = source.wereSpeedBonus;
         copy.werePassiveAbilities = new ArrayList<>(source.werePassiveAbilities);
         copy.wereActiveAbilities = new java.util.HashMap<>(source.wereActiveAbilities);
+        if (source.abilityCooldowns != null) copy.abilityCooldowns = new java.util.HashMap<>(source.abilityCooldowns);
+        if (source.wereAbilityCooldowns != null) copy.wereAbilityCooldowns = new java.util.HashMap<>(source.wereAbilityCooldowns);
+        if (source.restrictedItems != null) copy.restrictedItems = new ArrayList<>(source.restrictedItems);
+        if (source.restrictedFoods != null) copy.restrictedFoods = new ArrayList<>(source.restrictedFoods);
         copy.wereTransformSound = source.wereTransformSound;
         copy.wereHowlSound = source.wereHowlSound;
         copy.wereAmbientSound = source.wereAmbientSound;

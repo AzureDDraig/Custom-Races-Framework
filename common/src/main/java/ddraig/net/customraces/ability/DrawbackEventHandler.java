@@ -2,6 +2,9 @@ package ddraig.net.customraces.ability;
 
 import ddraig.net.customraces.data.RaceData;
 import ddraig.net.customraces.data.RaceRegistry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -11,14 +14,19 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterials;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
 /**
- * Event-driven and tick-based execution engine for all 60 race drawbacks and weaknesses.
+ * Event-driven and tick-based execution engine for all 60 race drawbacks and weaknesses,
+ * plus custom item/weapon/food restrictions defined in RaceData.
  */
 public class DrawbackEventHandler {
 
@@ -26,9 +34,18 @@ public class DrawbackEventHandler {
      * Executes armor restrictions, entity AI targeting, and food/diet checks on player tick.
      */
     public static void tickDrawbacks(Player player, List<String> drawbacks) {
-        if (player == null || drawbacks == null || drawbacks.isEmpty()) return;
+        if (player == null) return;
 
-        // 1. Armor Restrictions
+        RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
+
+        // 0. Custom Item & Equipment Restrictions defined in RaceData
+        if (race != null) {
+            checkCustomItemRestrictions(player, race);
+        }
+
+        if (drawbacks == null || drawbacks.isEmpty()) return;
+
+        // 1. Armor Slot Restrictions
         if (drawbacks.contains("no_helmet_slot")) {
             enforceSlotEmpty(player, EquipmentSlot.HEAD);
         }
@@ -42,7 +59,33 @@ public class DrawbackEventHandler {
             enforceNoHeavyArmor(player);
         }
 
-        // 2. Iron Golem Hostility
+        // 2. Specific Weapon Drawbacks
+        if (drawbacks.contains("no_shield")) {
+            if (player.getMainHandItem().getItem() instanceof ShieldItem) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
+            if (player.getOffhandItem().getItem() instanceof ShieldItem) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.OFF_HAND);
+            }
+        }
+        if (drawbacks.contains("no_bow")) {
+            if (player.getMainHandItem().getItem() instanceof BowItem || player.getMainHandItem().getItem() instanceof CrossbowItem) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
+            if (player.getOffhandItem().getItem() instanceof BowItem || player.getOffhandItem().getItem() instanceof CrossbowItem) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.OFF_HAND);
+            }
+        }
+        if (drawbacks.contains("no_trident")) {
+            if (player.getMainHandItem().getItem() instanceof TridentItem) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
+            if (player.getOffhandItem().getItem() instanceof TridentItem) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.OFF_HAND);
+            }
+        }
+
+        // 3. Iron Golem Hostility
         if (drawbacks.contains("iron_golem_hostility") && player.tickCount % 20 == 0) {
             AABB area = player.getBoundingBox().inflate(16.0);
             for (IronGolem golem : player.level().getEntitiesOfClass(IronGolem.class, area)) {
@@ -52,7 +95,7 @@ public class DrawbackEventHandler {
             }
         }
 
-        // 3. Villager Fear
+        // 4. Villager Fear
         if (drawbacks.contains("villager_fear") && player.tickCount % 20 == 0) {
             AABB area = player.getBoundingBox().inflate(12.0);
             for (Villager villager : player.level().getEntitiesOfClass(Villager.class, area)) {
@@ -60,7 +103,7 @@ public class DrawbackEventHandler {
             }
         }
 
-        // 4. Insomnia Curse (Spawns Phantoms at Night)
+        // 5. Insomnia Curse (Spawns Phantoms at Night)
         if (drawbacks.contains("insomnia_curse") && player.level().isNight() && player.tickCount % 1200 == 0) {
             if (player.level().canSeeSky(player.blockPosition())) {
                 net.minecraft.world.entity.monster.Phantom phantom = net.minecraft.world.entity.EntityType.PHANTOM.create(player.level());
@@ -71,7 +114,7 @@ public class DrawbackEventHandler {
             }
         }
 
-        // 5. Lightning Attraction
+        // 6. Lightning Attraction
         if (drawbacks.contains("lightning_attraction") && player.level().isThundering() && player.level().canSeeSky(player.blockPosition())) {
             if (player.level().random.nextInt(600) == 0) {
                 net.minecraft.world.entity.LightningBolt bolt = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(player.level());
@@ -82,12 +125,12 @@ public class DrawbackEventHandler {
             }
         }
 
-        // 6. Drowning in Shallow Water
+        // 7. Drowning in Shallow Water
         if (drawbacks.contains("drowning_in_shallow_water") && player.isInWater()) {
             player.setAirSupply(0);
         }
 
-        // 7. Equipment Restrictions (61-80)
+        // 8. Equipment Restrictions (61-80)
         if (drawbacks.contains("no_offhand_slot") && !player.getOffhandItem().isEmpty()) {
             ItemStack stack = player.getOffhandItem();
             player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ItemStack.EMPTY);
@@ -103,7 +146,7 @@ public class DrawbackEventHandler {
             enforceSlotEmpty(player, EquipmentSlot.CHEST);
         }
 
-        // 8. Mount Restrictions (111-120)
+        // 9. Mount Restrictions (111-120)
         if (player.isPassenger()) {
             net.minecraft.world.entity.Entity vehicle = player.getVehicle();
             if (vehicle != null) {
@@ -114,10 +157,12 @@ public class DrawbackEventHandler {
             }
         }
 
-        // 9. Biome & Climate Vulnerabilities (61-70)
+        // 10. Biome & Climate Vulnerabilities (61-70)
         String biomePath = player.level().getBiome(player.blockPosition()).unwrapKey().map(k -> k.location().getPath()).orElse("");
         if (drawbacks.contains("desert_dehydration") && (biomePath.contains("desert") || biomePath.contains("badlands"))) {
-            if (player.isSprinting() && player.tickCount % 10 == 0) player.causeFoodExhaustion(0.3f);
+            if (player.tickCount % 20 == 0) {
+                player.causeFoodExhaustion(player.isSprinting() ? 0.6f : 0.2f);
+            }
         }
         if (drawbacks.contains("snow_hypothermia") && (biomePath.contains("snow") || biomePath.contains("ice"))) {
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0, false, false, true));
@@ -138,7 +183,7 @@ public class DrawbackEventHandler {
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 40, 1, false, false, true));
         }
 
-        // 10. Sensory & Mental (121-130)
+        // 11. Sensory & Mental (121-130)
         if (drawbacks.contains("blind_in_darkness") && player.level().getMaxLocalRawBrightness(player.blockPosition()) < 3) {
             player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0, false, false, true));
         }
@@ -164,6 +209,50 @@ public class DrawbackEventHandler {
         }
     }
 
+    private static void checkCustomItemRestrictions(Player player, RaceData race) {
+        // Mainhand
+        ItemStack mainhand = player.getMainHandItem();
+        if (!mainhand.isEmpty()) {
+            ResourceLocation loc = BuiltInRegistries.ITEM.getKey(mainhand.getItem());
+            if (loc != null && race.isItemRestricted(loc.toString())) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+            }
+        }
+
+        // Offhand
+        ItemStack offhand = player.getOffhandItem();
+        if (!offhand.isEmpty()) {
+            ResourceLocation loc = BuiltInRegistries.ITEM.getKey(offhand.getItem());
+            if (loc != null && race.isItemRestricted(loc.toString())) {
+                enforceHandEmpty(player, net.minecraft.world.InteractionHand.OFF_HAND);
+            }
+        }
+
+        // Armor Slots
+        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+            ItemStack stack = player.getItemBySlot(slot);
+            if (!stack.isEmpty()) {
+                ResourceLocation loc = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                if (loc != null && race.isItemRestricted(loc.toString())) {
+                    enforceSlotEmpty(player, slot);
+                }
+            }
+        }
+    }
+
+    private static void enforceHandEmpty(Player player, net.minecraft.world.InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!stack.isEmpty()) {
+            player.setItemInHand(hand, ItemStack.EMPTY);
+            if (!player.getInventory().add(stack)) {
+                player.drop(stack, false);
+            }
+            if (player.tickCount % 40 == 0) {
+                player.displayClientMessage(Component.literal("§c[!] Your race cannot equip this item!"), true);
+            }
+        }
+    }
+
     private static void enforceSlotEmpty(Player player, EquipmentSlot slot) {
         ItemStack stack = player.getItemBySlot(slot);
         if (!stack.isEmpty()) {
@@ -172,7 +261,7 @@ public class DrawbackEventHandler {
                 player.drop(stack, false);
             }
             if (player.tickCount % 60 == 0) {
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c[!] Your race cannot equip this item!"), true);
+                player.displayClientMessage(Component.literal("§c[!] Your race cannot equip this item!"), true);
             }
         }
     }
@@ -252,10 +341,22 @@ public class DrawbackEventHandler {
 
     /**
      * Checks dietary restrictions when a player attempts to eat food.
-     * Returns true if food consumption is allowed, or false if blocked by a diet drawback.
+     * Returns true if food consumption is allowed, or false if blocked by a diet drawback or custom restricted food.
      */
     public static boolean checkFoodConsumption(Player player, ItemStack food, List<String> drawbacks) {
-        if (player == null || food == null || drawbacks == null || drawbacks.isEmpty()) return true;
+        if (player == null || food == null) return true;
+
+        RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
+        if (race != null) {
+            ResourceLocation foodLoc = BuiltInRegistries.ITEM.getKey(food.getItem());
+            if (foodLoc != null && race.isFoodRestricted(foodLoc.toString())) {
+                player.displayClientMessage(Component.literal("§c[!] Your race cannot digest this food!"), true);
+                player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0));
+                return false;
+            }
+        }
+
+        if (drawbacks == null || drawbacks.isEmpty()) return true;
 
         boolean isMeat = food.getItem().isEdible() && (food.getItem() == Items.COOKED_BEEF || food.getItem() == Items.BEEF || food.getItem() == Items.COOKED_PORKCHOP || food.getItem() == Items.PORKCHOP || food.getItem() == Items.COOKED_CHICKEN || food.getItem() == Items.CHICKEN || food.getItem() == Items.COOKED_MUTTON || food.getItem() == Items.MUTTON || food.getItem() == Items.ROTTEN_FLESH);
         boolean isGolden = food.getItem() == Items.GOLDEN_APPLE || food.getItem() == Items.ENCHANTED_GOLDEN_APPLE || food.getItem() == Items.GOLDEN_CARROT;

@@ -31,6 +31,9 @@ public class RaceRegistry {
     public static final List<String> CACHED_BIOMES = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_DIMENSIONS = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_PROJECTILES = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_MOBS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_PLACEMENTS = new java.util.concurrent.CopyOnWriteArrayList<>();
+    public static final List<String> CACHED_FORM_CONDITIONS = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_WERE_MODELS = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_WERE_TEXTURES = new java.util.concurrent.CopyOnWriteArrayList<>();
     public static final List<String> CACHED_WERE_ANIMS = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -197,6 +200,39 @@ public class RaceRegistry {
                 }
             }
             java.util.Collections.sort(CACHED_PROJECTILES);
+
+            // Scanned Mobs & CustomMobs
+            CACHED_MOBS.clear();
+            for (net.minecraft.resources.ResourceLocation entity : net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.keySet()) {
+                CACHED_MOBS.add(entity.toString());
+            }
+            File cmMobsDir = new File("config/custom_mobs/mobs");
+            if (!cmMobsDir.exists()) cmMobsDir = new File("config/custom_mobs");
+            if (cmMobsDir.exists() && cmMobsDir.isDirectory()) {
+                File[] files = cmMobsDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".json") && !f.getName().equalsIgnoreCase("config.json")) {
+                            String id = f.getName().replace(".json", "");
+                            String fullId = "custom_mobs:" + id;
+                            if (!CACHED_MOBS.contains(fullId)) {
+                                CACHED_MOBS.add(fullId);
+                            }
+                            if (!CACHED_MOBS.contains(id)) {
+                                CACHED_MOBS.add(id);
+                            }
+                        }
+                    }
+                }
+            }
+            java.util.Collections.sort(CACHED_MOBS);
+
+            // Placements & Form Conditions
+            CACHED_PLACEMENTS.clear();
+            CACHED_PLACEMENTS.addAll(java.util.List.of("body", "head", "feet", "hands", "eyes", "ambient"));
+
+            CACHED_FORM_CONDITIONS.clear();
+            CACHED_FORM_CONDITIONS.addAll(java.util.List.of("always", "normal_only", "were_only"));
 
             // Scan Were & Custom Models (recursively across config/custom_races/models)
             CACHED_WERE_MODELS.clear();

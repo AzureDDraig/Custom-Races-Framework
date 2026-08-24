@@ -436,54 +436,15 @@ public class RaceSelectionScreen extends Screen {
     private Component getAbilityTooltipComponent(String id, String category) {
         if (id == null || id.isEmpty() || "none".equalsIgnoreCase(id)) return null;
         String cleanId = id.trim().toLowerCase();
-        String formattedName = id.replace("_", " ");
-
-        String desc = switch (cleanId) {
-            case "gills", "aquatic", "water_breathing" -> "Allows breathing underwater and increases swim speed.";
-            case "flight", "wings", "elytra_wings" -> "Grants creative-style flight in survival mode.";
-            case "fireproof_scales", "fire_resistance", "magma_blood" -> "Grants complete immunity to fire and lava damage.";
-            case "night_vision" -> "Grants permanent vision in complete darkness.";
-            case "lava_walker", "lava_swimming" -> "Grants speed and fire resistance while submerged in lava.";
-            case "sunlight_regeneration" -> "Restores health automatically under direct sunlight.";
-            case "moonlight_regeneration" -> "Restores health automatically under the night sky.";
-            case "arcane_overflow" -> "Increases maximum mana capacity by +150.";
-            case "mana_fountain" -> "Increases mana regeneration rate by +40%.";
-            case "arcane_amplification" -> "Increases overall spell power by +25%.";
-            case "spell_ward" -> "Grants +25% resistance against all magic damage.";
-            case "fire_spell_mastery" -> "Increases Fire Spell Power by +25%.";
-            case "ice_spell_mastery" -> "Increases Ice Spell Power by +25%.";
-            case "lightning_spell_mastery" -> "Increases Lightning Spell Power by +25%.";
-            case "holy_spell_mastery" -> "Increases Holy Spell Power by +25%.";
-            case "ender_spell_mastery" -> "Increases Ender Spell Power by +25%.";
-            case "blood_spell_mastery" -> "Increases Blood Spell Power by +25%.";
-            case "evocation_spell_mastery" -> "Increases Evocation Spell Power by +25%.";
-            case "eldritch_spell_mastery" -> "Increases Eldritch Spell Power by +25%.";
-
-            case "flame_breath" -> "Emits a continuous cone of fiery particles dealing fire damage.";
-            case "fireball_volley" -> "Launches a rapid volley of explosive fireballs forward.";
-            case "web_trap_throw" -> "Launches sticky cobwebs that entangle nearby enemies.";
-            case "shadow_step", "dash_teleport" -> "Instantly teleports forward through blocks.";
-            case "were_howl" -> "Emits a 360-degree sonic boom pushing back enemies and inflicting weakness.";
-            case "wolf_pack_summon", "minion_summon" -> "Summons loyal spectral minions to fight by your side.";
-            case "healing_surge", "divine_heal" -> "Instantly restores 50% max health and cures negative effects.";
-
-            case "hydrophobia" -> "Takes damage when coming into contact with water or rain.";
-            case "photosensitivity", "sun_burn" -> "Burns and takes fire damage in direct sunlight.";
-            case "heavy_armor_restriction" -> "Cannot equip heavy netherite or diamond armor.";
-            case "fragile_frame" -> "Reduces maximum health by -20%.";
-
-            default -> "Racial " + category + " ability: " + formattedName;
-        };
-
-        String colorPrefix = switch (category) {
-            case "passive" -> "§a§l";
-            case "active" -> "§c§l";
-            case "drawback" -> "§e§l";
-            case "native_spell" -> "§d§l";
-            default -> "§b§l";
-        };
-
-        return Component.literal(colorPrefix + formattedName.toUpperCase() + "\n§7" + desc);
+        ddraig.net.customraces.data.PassiveAbilityDescriptions.AbilityInfo info = ddraig.net.customraces.data.PassiveAbilityDescriptions.get(cleanId);
+        if (info != null) {
+            String title = "§6§l" + info.displayName();
+            String cat = " §7[" + info.category() + "]";
+            String stat = info.stats().isEmpty() ? "" : "\n§a" + info.stats();
+            String desc = "\n§f" + info.description();
+            return Component.literal(title + cat + desc + stat);
+        }
+        return Component.literal("§6§l" + id.replace("_", " ") + "\n§7A racial trait or ability.");
     }
 
     @Override
