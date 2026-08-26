@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b198a] - 2026-08-26
+
+### 🚀 CI/CD & Automated CurseForge Publishing Release
+- **CurseForge Auto-Release Deployment**: Integrated automated dual-loader publishing for Forge and Fabric releases directly to CurseForge on build verification.
+- **Server Tick Loop & Synced Spell Stability**: Validated Iron's Spells spell casting network packet serialization and live entity magic data synchronization.
+
+---
+
 ## [1.0.0-b197a] - 2026-08-26
 
 ### 🛡️ Iron's Spells Synced Spell Data Null Safety & Automated CI
