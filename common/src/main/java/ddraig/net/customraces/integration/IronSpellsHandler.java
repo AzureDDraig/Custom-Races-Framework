@@ -461,10 +461,91 @@ public class IronSpellsHandler {
         return false;
     }
 
+    private static String getSpellIdFromObject(Object spellObj) {
+        if (spellObj == null) return "";
+        try {
+            for (Method m : spellObj.getClass().getMethods()) {
+                if (m.getParameterCount() == 0) {
+                    String name = m.getName();
+                    if (name.equalsIgnoreCase("getSpellId") || name.equalsIgnoreCase("getSpellName") || name.equalsIgnoreCase("getRegistryName") || name.equalsIgnoreCase("getSpellResource")) {
+                        m.setAccessible(true);
+                        Object res = m.invoke(spellObj);
+                        if (res != null) return res.toString();
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return "";
+    }
+
+    public static void sanitizePlayerMagicData(Player player) {
+        if (player == null) return;
+        Object magicData = getPlayerMagicData(player);
+        if (magicData != null) {
+            sanitizeMagicData(magicData, "");
+        }
+    }
+
+    public static void sanitizeMagicData(Object magicData, String defaultSpellId) {
+        if (magicData == null) return;
+        if (defaultSpellId == null) defaultSpellId = "";
+
+        // 1. Sanitize magicData String fields
+        sanitizeObjectStringFields(magicData, defaultSpellId);
+
+        // 2. Locate and sanitize SyncedSpellData
+        Object syncedData = null;
+        for (Method m : magicData.getClass().getMethods()) {
+            if (m.getParameterCount() == 0 && (m.getName().equalsIgnoreCase("getSyncedData") || m.getName().equalsIgnoreCase("getSyncedSpellData"))) {
+                try {
+                    m.setAccessible(true);
+                    syncedData = m.invoke(magicData);
+                    if (syncedData != null) break;
+                } catch (Exception ignored) {}
+            }
+        }
+        if (syncedData == null) {
+            for (Field f : magicData.getClass().getDeclaredFields()) {
+                if (f.getType().getName().contains("SyncedSpellData")) {
+                    try {
+                        f.setAccessible(true);
+                        syncedData = f.get(magicData);
+                        if (syncedData != null) break;
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        if (syncedData != null) {
+            sanitizeObjectStringFields(syncedData, defaultSpellId);
+        }
+    }
+
+    private static void sanitizeObjectStringFields(Object obj, String defaultVal) {
+        if (obj == null) return;
+        if (defaultVal == null) defaultVal = "";
+        Class<?> clazz = obj.getClass();
+        while (clazz != null && clazz != Object.class) {
+            for (Field f : clazz.getDeclaredFields()) {
+                if (f.getType() == String.class) {
+                    try {
+                        f.setAccessible(true);
+                        Object val = f.get(obj);
+                        if (val == null) {
+                            f.set(obj, defaultVal);
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+    }
+
     private static boolean invokeSpellCast(Player player, Object spellObj, int spellLevel) {
         if (spellObj == null || player == null) return false;
         Object castSource = getCastSourceEnum();
         Object magicData = getPlayerMagicData(player);
+        String spellIdStr = getSpellIdFromObject(spellObj);
 
         if (magicData == null) {
             String[] classPaths = {
@@ -483,6 +564,10 @@ public class IronSpellsHandler {
             }
         }
 
+        if (magicData != null) {
+            sanitizeMagicData(magicData, spellIdStr);
+        }
+
         final Object finalCastSource = castSource;
         final Object finalMagicData = magicData;
 
@@ -496,9 +581,11 @@ public class IronSpellsHandler {
                         Class<?>[] pts = m.getParameterTypes();
                         if (pts.length == 3 && pts[0].isAssignableFrom(spellObj.getClass()) && (pts[1] == int.class || pts[1] == Integer.class)) {
                             m.invoke(magicData, spellObj, spellLevel, resolveCastSourceForParam(pts[2], finalCastSource));
+                            sanitizeMagicData(magicData, "");
                             return true;
                         } else if (pts.length == 2 && pts[0].isAssignableFrom(spellObj.getClass()) && (pts[1] == int.class || pts[1] == Integer.class)) {
                             m.invoke(magicData, spellObj, spellLevel);
+                            sanitizeMagicData(magicData, "");
                             return true;
                         }
                     } catch (Exception ignored) {}
@@ -816,17 +903,19 @@ public class IronSpellsHandler {
         for (String cp : classPaths) {
             try {
                 Class<?> clazz = Class.forName(cp);
-                Method getMethod = clazz.getMethod("getPlayerMagicData", Player.class);
-                getMethod.setAccessible(true);
-                return getMethod.invoke(null, player);
-            } catch (Exception e1) {
-                try {
-                    Class<?> clazz = Class.forName(cp);
-                    Method getMethod = clazz.getMethod("get", Player.class);
-                    getMethod.setAccessible(true);
-                    return getMethod.invoke(null, player);
-                } catch (Exception ignored) {}
-            }
+                for (Method m : clazz.getMethods()) {
+                    if (Modifier.isStatic(m.getModifiers()) && (m.getName().equals("getPlayerMagicData") || m.getName().equals("get"))) {
+                        if (m.getParameterCount() == 1 && m.getParameterTypes()[0].isAssignableFrom(player.getClass())) {
+                            m.setAccessible(true);
+                            Object result = m.invoke(null, player);
+                            if (result != null) {
+                                sanitizeMagicData(result, "");
+                                return result;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
         }
         return null;
     }

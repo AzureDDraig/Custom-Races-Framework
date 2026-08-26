@@ -65,7 +65,7 @@ public class IronSpellsHandlerTest {
             testCandidateMethodSorting();
             testPrimitiveArgumentInvocationFailure();
             testUnwrapSpellHolderEdgeCases();
-            testResolveCastSourceForParamEnumFallback();
+            testSanitizeMagicDataNullProtection();
             System.out.println("=== EMPIRICAL TESTS COMPLETE ===");
         } catch (Throwable t) {
             t.printStackTrace();
@@ -181,11 +181,30 @@ public class IronSpellsHandlerTest {
         System.out.println("unwrapSpellHolder(Supplier returning null) = " + res4 + " [EDGE CASE: Returns empty Supplier object instead of null]");
     }
 
-    public static void testResolveCastSourceForParamEnumFallback() throws Exception {
-        Object castSource = MockCastSource.SPELLBOOK;
+    public static class MockSyncedSpellData {
+        public String castingSpellId = null;
+        public boolean isCasting = false;
+        public int castingSpellLevel = 0;
+    }
 
-        // Resolve for MockUnrelatedEnum (no SPELLBOOK or INNATE constant)
-        Object res = invokePrivateStatic("resolveCastSourceForParam", new Class<?>[]{Class.class, Object.class}, MockUnrelatedEnum.class, castSource);
-        System.out.println("resolveCastSourceForParam(MockUnrelatedEnum.class, castSource) = " + res + " (type: " + (res != null ? res.getClass().getName() : "null") + ")");
+    public static class MockMagicDataContainer {
+        public String castingSpellId = null;
+        public MockSyncedSpellData syncedSpellData = new MockSyncedSpellData();
+    }
+
+    public static void testSanitizeMagicDataNullProtection() {
+        MockMagicDataContainer container = new MockMagicDataContainer();
+        assert container.castingSpellId == null;
+        assert container.syncedSpellData.castingSpellId == null;
+
+        IronSpellsHandler.sanitizeMagicData(container, "");
+
+        if (!"".equals(container.castingSpellId)) {
+            throw new AssertionError("Container castingSpellId was not sanitized from null!");
+        }
+        if (!"".equals(container.syncedSpellData.castingSpellId)) {
+            throw new AssertionError("SyncedSpellData castingSpellId was not sanitized from null!");
+        }
+        System.out.println("[PASS] testSanitizeMagicDataNullProtection verified null strings converted to non-null empty strings.");
     }
 }

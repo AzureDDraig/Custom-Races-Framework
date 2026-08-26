@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b197a] - 2026-08-26
+
+### 🛡️ Iron's Spells Synced Spell Data Null Safety & Automated CI
+- **Server Tick Crash Fix**: Resolved a server tick crash when completing or resetting spell casts with Iron's Spells 'n Spellbooks where null spell ID strings caused network packet serialization failures (`SyncedSpellData.write`).
+- **Real-Time Magic Data Sanitization**: Added continuous server-side sanitization to guarantee all spell casting data and network sync packets always contain safe, non-null identifiers.
+- **LivingEntity Method Signature Support**: Enhanced player magic data lookups to support modern `LivingEntity` parameter reflection across Forge and Mohist servers.
+- **Automated GitHub Builds**: Configured GitHub Actions CI automation running on Java 21 to automatically verify, build, and package release jars on every push.
+
+---
+
 ## [1.0.0-b196a] - 2026-08-24
 
 ### 🪄 Enhanced Cast Source & Spell Casting Reliability

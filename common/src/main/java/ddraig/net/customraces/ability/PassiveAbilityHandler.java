@@ -24,6 +24,9 @@ public class PassiveAbilityHandler {
     public static void tickPlayer(Player player) {
         if (player == null || player.level().isClientSide) return;
 
+        // Ensure Iron's Spells magic data string fields are never null on server ticks
+        ddraig.net.customraces.integration.IronSpellsHandler.sanitizePlayerMagicData(player);
+
         RaceData race = RaceRegistry.getPlayerRace(player.getUUID());
         if (race == null) return;
 
