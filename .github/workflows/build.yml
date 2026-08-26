@@ -1,4 +1,4 @@
-name: Build and Test Mod
+name: Build, Test and Release Mod
 
 on:
   push:
@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "**" ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -37,6 +40,42 @@ jobs:
       - name: Build Mod Jars (Fabric & Forge)
         run: ./gradlew build -x test --stacktrace
 
+      - name: Prepare Release Artifacts & Extract Version
+        id: prep
+        run: |
+          mkdir -p release_jars
+          cp forge/build/libs/customraces-forge-*.jar release_jars/ 2>/dev/null || true
+          cp fabric/build/libs/customraces-fabric-*.jar release_jars/ 2>/dev/null || true
+          rm -f release_jars/*-dev-shadow.jar release_jars/*-sources.jar
+          
+          FORGE_JAR=$(find release_jars -maxdepth 1 -name "customraces-forge-1.20.1-*.jar" | head -n 1)
+          if [ -n "$FORGE_JAR" ]; then
+            JAR_NAME=$(basename "$FORGE_JAR" .jar)
+            VERSION_STR=$(echo "$JAR_NAME" | sed 's/customraces-forge-1.20.1-//')
+            TAG_NAME="v${VERSION_STR}"
+          else
+            TAG_NAME="v1.0.0-$(date +'%Y%m%d%H%M%S')"
+          fi
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "Release tag determined as: ${TAG_NAME}"
+          
+          python3 -c "
+import re
+try:
+    with open('CHANGELOG.md', 'r') as f:
+        content = f.read()
+    match = re.search(r'(## \[.*?\] - .*?)\n---', content, re.DOTALL)
+    if match:
+        with open('release_notes.txt', 'w') as out:
+            out.write(match.group(1).strip())
+    else:
+        with open('release_notes.txt', 'w') as out:
+            out.write('Automated release for ' + '${TAG_NAME}')
+except Exception as e:
+    with open('release_notes.txt', 'w') as out:
+        out.write('Automated release for ' + '${TAG_NAME}')
+"
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -46,3 +85,16 @@ jobs:
             forge/build/libs/*.jar
             common/build/libs/*.jar
           if-no-files-found: warn
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        with:
+          tag_name: ${{ steps.prep.outputs.tag_name }}
+          name: Custom Races Framework ${{ steps.prep.outputs.tag_name }}
+          body_path: release_notes.txt
+          draft: false
+          prerelease: false
+          files: release_jars/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
