@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b199a] - 2026-08-29
+
+### 🛡️ Iron's Spells Network Buffer Safety, Custom Mobs Alliances & Epic Fight GUI
+- **Network Packet Safety & Spell Crash Fix**: Added byte buffer string sanitization (`FriendlyByteBufMixin`) to completely prevent server tick crashes (`String.length() on null`) whenever Iron's Spells or any mod writes network packets.
+- **Custom Mob Alliances GUI Manager**: Completely revamped the Alliances tab in the Race Creator GUI with custom entity ID input, quick-add stance buttons (Neutral, Friendly, Hostile), popular mob chips, and an active alliance manager with removal buttons.
+- **Direct Epic Fight Stats & Configuration**: Added explicit, configurable Epic Fight attributes (Max Stamina, Stamina Regen, Armor Weight, Impact, and Armor Negation) in Race Data and exposed them directly in the Race Creator GUI.
+- **Configurable Custom Projectiles**: Added custom projectile settings (Projectile Entity ID, Speed, and Inaccuracy) for race active abilities with one-click quick bind buttons in the Active Skills tab.
+
+---
+
 ## [1.0.0-b198a] - 2026-08-26
 
 ### 🚀 CI/CD & Automated CurseForge Publishing Release

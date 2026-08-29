@@ -223,7 +223,11 @@ public class ActiveAbilityHandler {
             case "projectile_launch":
             case "projectile launch":
             case "magic_missile":
-                ddraig.net.customraces.integration.CustomMobsIntegration.launchCustomProjectile(level, player, race.minionMobType, 2.2f, 0.2f);
+                boolean isWereFormProj = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
+                String pId = isWereFormProj ? race.wereCustomProjectileId : race.customProjectileId;
+                float pSpd = isWereFormProj ? race.wereCustomProjectileSpeed : race.customProjectileSpeed;
+                float pInacc = isWereFormProj ? race.wereCustomProjectileInaccuracy : race.customProjectileInaccuracy;
+                ddraig.net.customraces.integration.CustomMobsIntegration.launchCustomProjectile(level, player, pId, pSpd > 0 ? pSpd : 2.5f, pInacc);
                 break;
 
             case "arrow_shot":
@@ -442,27 +446,15 @@ public class ActiveAbilityHandler {
                 break;
 
             default:
-                if (abilityId.startsWith("geckolib_projectile:") || abilityId.startsWith("projectile:") || abilityId.startsWith("custom_mobs:") || abilityId.startsWith("cmobs_projectile:")) {
-                    try {
-                        String entityId = abilityId.substring(abilityId.indexOf(":") + 1).trim();
-                        if (abilityId.startsWith("cmobs_projectile:")) {
+                if (abilityId.startsWith("geckolib_projectile:") || abilityId.startsWith("projectile:") || abilityId.startsWith("custom_projectile:") || abilityId.startsWith("custom_mobs:") || abilityId.startsWith("cmobs_projectile:")) {
+                    String entityId = abilityId.substring(abilityId.indexOf(":") + 1).trim();
+                    if (abilityId.startsWith("cmobs_projectile:") || abilityId.startsWith("custom_mobs:")) {
+                        if (!entityId.startsWith("custom_mobs:")) {
                             entityId = "custom_mobs:" + entityId;
                         }
-                        net.minecraft.resources.ResourceLocation res = new net.minecraft.resources.ResourceLocation(entityId);
-                        EntityType<?> type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(res);
-                        if (type != null) {
-                            net.minecraft.world.entity.Entity proj = type.create(level);
-                            if (proj != null) {
-                                proj.setPos(player.getX() + look.x * 1.2, player.getEyeY() - 0.1, player.getZ() + look.z * 1.2);
-                                proj.setDeltaMovement(look.scale(1.8));
-                                level.addFreshEntity(proj);
-                                level.playSound(null, player.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0f, 1.0f);
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        System.err.println("[CustomRaces] Failed to spawn custom projectile: " + e.getMessage());
                     }
+                    ddraig.net.customraces.integration.CustomMobsIntegration.launchCustomProjectile(level, player, entityId, 2.5f, 0.1f);
+                    break;
                 }
                 // Universal fallback active skill effect
                 player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100, 1));

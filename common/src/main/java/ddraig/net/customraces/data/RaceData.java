@@ -136,6 +136,26 @@ public class RaceData {
     public boolean minionIsRanged = false;
     public String minionProjectile = "minecraft:arrow";
 
+    // Custom Projectile Launch Ability Settings
+    public String customProjectileId = "minecraft:small_fireball";
+    public float customProjectileSpeed = 2.5f;
+    public float customProjectileInaccuracy = 0.1f;
+    public String wereCustomProjectileId = "minecraft:small_fireball";
+    public float wereCustomProjectileSpeed = 2.5f;
+    public float wereCustomProjectileInaccuracy = 0.1f;
+
+    // Epic Fight Direct Attributes Integration (Base & Were Form)
+    public double epicFightMaxStamina = 0.0;
+    public double epicFightStaminaRegen = 0.0;
+    public double epicFightWeight = 0.0;
+    public double epicFightImpact = 0.0;
+    public double epicFightArmorNegation = 0.0;
+    public double wereEpicFightMaxStamina = 0.0;
+    public double wereEpicFightStaminaRegen = 0.0;
+    public double wereEpicFightWeight = 0.0;
+    public double wereEpicFightImpact = 0.0;
+    public double wereEpicFightArmorNegation = 0.0;
+
     // Native Spell Integration (Iron's Spells 'n Spellbooks & T.O Tweaks)
     // Native Spell Integration (Iron's Spells 'n Spellbooks & T.O Tweaks) - Slots 1 to 5
     public boolean enableNativeSpells = false;
@@ -439,6 +459,24 @@ public class RaceData {
         tag.putInt("minionCount", minionCount);
         tag.putString("permissionLock", permissionLock != null ? permissionLock : "");
 
+        tag.putString("customProjectileId", customProjectileId != null ? customProjectileId : "minecraft:small_fireball");
+        tag.putFloat("customProjectileSpeed", customProjectileSpeed);
+        tag.putFloat("customProjectileInaccuracy", customProjectileInaccuracy);
+        tag.putString("wereCustomProjectileId", wereCustomProjectileId != null ? wereCustomProjectileId : "minecraft:small_fireball");
+        tag.putFloat("wereCustomProjectileSpeed", wereCustomProjectileSpeed);
+        tag.putFloat("wereCustomProjectileInaccuracy", wereCustomProjectileInaccuracy);
+
+        tag.putDouble("epicFightMaxStamina", epicFightMaxStamina);
+        tag.putDouble("epicFightStaminaRegen", epicFightStaminaRegen);
+        tag.putDouble("epicFightWeight", epicFightWeight);
+        tag.putDouble("epicFightImpact", epicFightImpact);
+        tag.putDouble("epicFightArmorNegation", epicFightArmorNegation);
+        tag.putDouble("wereEpicFightMaxStamina", wereEpicFightMaxStamina);
+        tag.putDouble("wereEpicFightStaminaRegen", wereEpicFightStaminaRegen);
+        tag.putDouble("wereEpicFightWeight", wereEpicFightWeight);
+        tag.putDouble("wereEpicFightImpact", wereEpicFightImpact);
+        tag.putDouble("wereEpicFightArmorNegation", wereEpicFightArmorNegation);
+
         tag.putString("earType", earType != null ? earType : "none");
         tag.putString("wingType", wingType != null ? wingType : "none");
         tag.putString("tailType", tailType != null ? tailType : "none");
@@ -541,6 +579,24 @@ public class RaceData {
         if (tag.contains("minionMobType")) this.minionMobType = tag.getString("minionMobType");
         if (tag.contains("minionCount")) this.minionCount = tag.getInt("minionCount");
         if (tag.contains("permissionLock")) this.permissionLock = tag.getString("permissionLock");
+
+        if (tag.contains("customProjectileId")) this.customProjectileId = tag.getString("customProjectileId");
+        if (tag.contains("customProjectileSpeed")) this.customProjectileSpeed = tag.getFloat("customProjectileSpeed");
+        if (tag.contains("customProjectileInaccuracy")) this.customProjectileInaccuracy = tag.getFloat("customProjectileInaccuracy");
+        if (tag.contains("wereCustomProjectileId")) this.wereCustomProjectileId = tag.getString("wereCustomProjectileId");
+        if (tag.contains("wereCustomProjectileSpeed")) this.wereCustomProjectileSpeed = tag.getFloat("wereCustomProjectileSpeed");
+        if (tag.contains("wereCustomProjectileInaccuracy")) this.wereCustomProjectileInaccuracy = tag.getFloat("wereCustomProjectileInaccuracy");
+
+        if (tag.contains("epicFightMaxStamina")) this.epicFightMaxStamina = tag.getDouble("epicFightMaxStamina");
+        if (tag.contains("epicFightStaminaRegen")) this.epicFightStaminaRegen = tag.getDouble("epicFightStaminaRegen");
+        if (tag.contains("epicFightWeight")) this.epicFightWeight = tag.getDouble("epicFightWeight");
+        if (tag.contains("epicFightImpact")) this.epicFightImpact = tag.getDouble("epicFightImpact");
+        if (tag.contains("epicFightArmorNegation")) this.epicFightArmorNegation = tag.getDouble("epicFightArmorNegation");
+        if (tag.contains("wereEpicFightMaxStamina")) this.wereEpicFightMaxStamina = tag.getDouble("wereEpicFightMaxStamina");
+        if (tag.contains("wereEpicFightStaminaRegen")) this.wereEpicFightStaminaRegen = tag.getDouble("wereEpicFightStaminaRegen");
+        if (tag.contains("wereEpicFightWeight")) this.wereEpicFightWeight = tag.getDouble("wereEpicFightWeight");
+        if (tag.contains("wereEpicFightImpact")) this.wereEpicFightImpact = tag.getDouble("wereEpicFightImpact");
+        if (tag.contains("wereEpicFightArmorNegation")) this.wereEpicFightArmorNegation = tag.getDouble("wereEpicFightArmorNegation");
 
         if (tag.contains("earType")) this.earType = tag.getString("earType");
         if (tag.contains("wingType")) this.wingType = tag.getString("wingType");

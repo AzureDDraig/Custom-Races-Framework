@@ -97,6 +97,21 @@ public class RaceCreatorScreen extends Screen {
     private String searchActivesQuery = "";
     private String searchDrawbacksQuery = "";
 
+    // Alliances Custom Mob Controls
+    private EditBox customAllianceMobBox;
+
+    // Custom Projectile Controls
+    private EditBox customProjectileIdBox;
+    private EditBox customProjectileSpeedBox;
+    private EditBox customProjectileInaccuracyBox;
+
+    // Epic Fight Direct Stat Controls
+    private EditBox epicFightMaxStaminaBox;
+    private EditBox epicFightStaminaRegenBox;
+    private EditBox epicFightWeightBox;
+    private EditBox epicFightImpactBox;
+    private EditBox epicFightArmorNegationBox;
+
     // Native Spell Controls
     private EditBox nativeSpellBox;
 
@@ -858,10 +873,10 @@ public class RaceCreatorScreen extends Screen {
                 final int currentSlot = slot;
                 String currentSkill = targetMap.getOrDefault(slot, "none");
 
-                EditBox slotBox = new EditBox(this.font, contentLeft + 60, py, 170, 18, Component.literal("Slot " + slot));
+                EditBox slotBox = new EditBox(this.font, contentLeft + 55, py, 140, 18, Component.literal("Slot " + slot));
                 slotBox.setMaxLength(2048);
                 slotBox.setValue(currentSkill);
-                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + ".\nUse 'native_spell_1' to '5' to cast Iron's Spells.")));
+                slotBox.setTooltip(Tooltip.create(Component.literal("Skill ID for Slot " + slot + ".\nUse 'native_spell_1' to '5' to cast Iron's Spells or 'custom_projectile' to fire projectiles.")));
                 slotBox.setResponder(val -> {
                     targetMap.put(currentSlot, val);
                     autoSaveWorkingRace();
@@ -869,40 +884,119 @@ public class RaceCreatorScreen extends Screen {
                 this.addRenderableWidget(slotBox);
 
                 // Quick Bind Native Spell Button
-                boolean isWere = editingWereForm && workingRace.enableWereRace;
-                Button bindSpellBtn = Button.builder(Component.literal("🔮 Spell " + currentSlot), b -> {
+                Button bindSpellBtn = Button.builder(Component.literal("🔮 " + currentSlot), b -> {
                     targetMap.put(currentSlot, "native_spell_" + currentSlot);
                     slotBox.setValue("native_spell_" + currentSlot);
                     autoSaveWorkingRace();
-                    this.init();
-                }).bounds(contentLeft + 235, py, 75, 18).build();
+                }).bounds(contentLeft + 200, py, 42, 18).build();
                 bindSpellBtn.setTooltip(Tooltip.create(Component.literal("Instantly bind Native Spell Slot " + currentSlot + " to Active Skill Slot " + currentSlot + ".")));
                 this.addRenderableWidget(bindSpellBtn);
+
+                // Quick Bind Custom Projectile Button
+                Button bindProjBtn = Button.builder(Component.literal("🏹 Proj"), b -> {
+                    targetMap.put(currentSlot, "custom_projectile");
+                    slotBox.setValue("custom_projectile");
+                    autoSaveWorkingRace();
+                }).bounds(contentLeft + 246, py, 54, 18).build();
+                bindProjBtn.setTooltip(Tooltip.create(Component.literal("Instantly bind Custom Projectile launch to Active Skill Slot " + currentSlot + ".")));
+                this.addRenderableWidget(bindProjBtn);
+
+                // Quick Bind Summon Minions Button
+                Button bindMinionBtn = Button.builder(Component.literal("🐺 Minion"), b -> {
+                    targetMap.put(currentSlot, "summon_minions");
+                    slotBox.setValue("summon_minions");
+                    autoSaveWorkingRace();
+                }).bounds(contentLeft + 304, py, 62, 18).build();
+                bindMinionBtn.setTooltip(Tooltip.create(Component.literal("Instantly bind Summon Minions to Active Skill Slot " + currentSlot + ".")));
+                this.addRenderableWidget(bindMinionBtn);
 
                 py += 24;
             }
 
         } else if (activeTab == 7) { // Alliances
-            int py = contentTop + 18;
-            String[] factions = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper", "minecraft:enderman", "minecraft:piglin"};
-            for (String mobId : factions) {
-                boolean isNeutral = workingRace.alliances.stream().anyMatch(a -> mobId.equalsIgnoreCase(a.mobId));
-                Checkbox aBox = new Checkbox(contentLeft, py, 180, 20, Component.literal(mobId.substring(mobId.indexOf(':') + 1).toUpperCase() + " Neutrality"), isNeutral) {
-                    @Override
-                    public void onPress() {
-                        super.onPress();
-                        if (this.selected()) {
-                            if (workingRace.alliances.stream().noneMatch(a -> mobId.equalsIgnoreCase(a.mobId))) {
-                                workingRace.alliances.add(new MobAllianceData(mobId, "neutral"));
-                            }
-                        } else {
-                            workingRace.alliances.removeIf(a -> mobId.equalsIgnoreCase(a.mobId));
-                        }
+            // Custom Mob ID input box
+            this.customAllianceMobBox = new EditBox(this.font, contentLeft, contentTop + 14, 160, 18, Component.literal("Mob Entity ID"));
+            this.customAllianceMobBox.setMaxLength(2048);
+            this.customAllianceMobBox.setHint(Component.literal("🔍 Entity ID (e.g. custom_mobs:goblin)..."));
+            this.addRenderableWidget(this.customAllianceMobBox);
+
+            // Add Stance Buttons
+            Button addNeutralBtn = Button.builder(Component.literal("§e+ Neutral"), b -> {
+                String val = this.customAllianceMobBox.getValue().trim().toLowerCase();
+                if (!val.isEmpty()) {
+                    workingRace.alliances.removeIf(a -> val.equalsIgnoreCase(a.mobId));
+                    workingRace.alliances.add(new MobAllianceData(val, "neutral"));
+                    autoSaveWorkingRace();
+                    this.init();
+                }
+            }).bounds(contentLeft + 165, contentTop + 14, 62, 18).build();
+            addNeutralBtn.setTooltip(Tooltip.create(Component.literal("Add entity as Neutral (won't attack unless provoked).")));
+            this.addRenderableWidget(addNeutralBtn);
+
+            Button addFriendlyBtn = Button.builder(Component.literal("§a+ Friendly"), b -> {
+                String val = this.customAllianceMobBox.getValue().trim().toLowerCase();
+                if (!val.isEmpty()) {
+                    workingRace.alliances.removeIf(a -> val.equalsIgnoreCase(a.mobId));
+                    workingRace.alliances.add(new MobAllianceData(val, "friendly"));
+                    autoSaveWorkingRace();
+                    this.init();
+                }
+            }).bounds(contentLeft + 231, contentTop + 14, 68, 18).build();
+            addFriendlyBtn.setTooltip(Tooltip.create(Component.literal("Add entity as Friendly (never attacks and assists in combat).")));
+            this.addRenderableWidget(addFriendlyBtn);
+
+            Button addHostileBtn = Button.builder(Component.literal("§c+ Hostile"), b -> {
+                String val = this.customAllianceMobBox.getValue().trim().toLowerCase();
+                if (!val.isEmpty()) {
+                    workingRace.alliances.removeIf(a -> val.equalsIgnoreCase(a.mobId));
+                    workingRace.alliances.add(new MobAllianceData(val, "hostile"));
+                    autoSaveWorkingRace();
+                    this.init();
+                }
+            }).bounds(contentLeft + 303, contentTop + 14, 62, 18).build();
+            addHostileBtn.setTooltip(Tooltip.create(Component.literal("Add entity as Hostile (always attacks on sight).")));
+            this.addRenderableWidget(addHostileBtn);
+
+            // Popular & Custom Mobs Quick Add Chips
+            String[] quickMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper", "minecraft:enderman", "minecraft:piglin", "minecraft:iron_golem", "minecraft:villager"};
+            int chipX = contentLeft;
+            int chipY = contentTop + 38;
+            for (String qMob : quickMobs) {
+                String shortName = qMob.substring(qMob.indexOf(':') + 1);
+                boolean exists = workingRace.alliances.stream().anyMatch(a -> qMob.equalsIgnoreCase(a.mobId));
+                Button chipBtn = Button.builder(Component.literal((exists ? "§a✔ " : "§7+ ") + shortName), b -> {
+                    if (exists) {
+                        workingRace.alliances.removeIf(a -> qMob.equalsIgnoreCase(a.mobId));
+                    } else {
+                        workingRace.alliances.add(new MobAllianceData(qMob, "neutral"));
                     }
-                };
-                aBox.setTooltip(Tooltip.create(Component.literal("Toggle neutrality stance for " + mobId)));
-                this.addRenderableWidget(aBox);
-                py += 22;
+                    autoSaveWorkingRace();
+                    this.init();
+                }).bounds(chipX, chipY, 88, 16).build();
+                chipBtn.setTooltip(Tooltip.create(Component.literal("Toggle alliance neutrality for " + qMob)));
+                this.addRenderableWidget(chipBtn);
+                chipX += 92;
+                if (chipX > contentLeft + 270) {
+                    chipX = contentLeft;
+                    chipY += 18;
+                }
+            }
+
+            // Scrollable List of Configured Alliances
+            int listY = chipY + 22;
+            for (int i = 0; i < workingRace.alliances.size() && listY < this.height - 40; i++) {
+                MobAllianceData alliance = workingRace.alliances.get(i);
+                final String targetMob = alliance.mobId;
+                String stanceColor = "neutral".equalsIgnoreCase(alliance.stance) ? "§e[NEUTRAL]" : ("friendly".equalsIgnoreCase(alliance.stance) ? "§a[FRIENDLY]" : "§c[HOSTILE]");
+
+                Button removeBtn = Button.builder(Component.literal("§c✖ " + stanceColor + " §f" + targetMob), b -> {
+                    workingRace.alliances.removeIf(a -> targetMob.equalsIgnoreCase(a.mobId));
+                    autoSaveWorkingRace();
+                    this.init();
+                }).bounds(contentLeft, listY, 365, 16).build();
+                removeBtn.setTooltip(Tooltip.create(Component.literal("Click to remove alliance with " + targetMob)));
+                this.addRenderableWidget(removeBtn);
+                listY += 18;
             }
 
         } else if (activeTab == 5) { // Sounds & FX
@@ -943,46 +1037,90 @@ public class RaceCreatorScreen extends Screen {
             this.addRenderableWidget(playDeathBtn);
 
         } else if (activeTab == 6) { // Advanced Features
-            this.spawnDimensionBox = new EditBox(this.font, contentLeft + 120, contentTop, 180, 18, Component.literal("Spawn Dimension"));
+            this.spawnDimensionBox = new EditBox(this.font, contentLeft + 110, contentTop, 160, 18, Component.literal("Spawn Dimension"));
             this.spawnDimensionBox.setMaxLength(2048);
             this.spawnDimensionBox.setValue(workingRace.spawnDimension);
             this.spawnDimensionBox.setTooltip(Tooltip.create(Component.literal("Dimension ID for custom race spawn point (e.g. minecraft:the_nether).")));
             this.addRenderableWidget(this.spawnDimensionBox);
 
-            this.spawnBiomeBox = new EditBox(this.font, contentLeft + 120, contentTop + 30, 180, 18, Component.literal("Spawn Biome"));
+            this.spawnBiomeBox = new EditBox(this.font, contentLeft + 110, contentTop + 22, 160, 18, Component.literal("Spawn Biome"));
             this.spawnBiomeBox.setMaxLength(2048);
             this.spawnBiomeBox.setValue(workingRace.spawnBiome);
             this.spawnBiomeBox.setTooltip(Tooltip.create(Component.literal("Biome ID for custom race spawn point (e.g. minecraft:ocean).")));
             this.addRenderableWidget(this.spawnBiomeBox);
 
-            this.enableAlliancesBox = new Checkbox(contentLeft, contentTop + 65, 180, 20, Component.literal("Enable Custom Alliances"), workingRace.enableAlliances);
+            this.enableAlliancesBox = new Checkbox(contentLeft + 275, contentTop, 100, 18, Component.literal("Alliances"), workingRace.enableAlliances);
             this.enableAlliancesBox.setTooltip(Tooltip.create(Component.literal("Enables the Alliances tab for setting mob neutrality stances.")));
             this.addRenderableWidget(this.enableAlliancesBox);
 
+            // Custom Projectile Launch Settings
+            this.customProjectileIdBox = new EditBox(this.font, contentLeft + 110, contentTop + 44, 150, 18, Component.literal("Custom Projectile ID"));
+            this.customProjectileIdBox.setMaxLength(2048);
+            this.customProjectileIdBox.setValue(editingWereForm ? workingRace.wereCustomProjectileId : workingRace.customProjectileId);
+            this.customProjectileIdBox.setTooltip(Tooltip.create(Component.literal("Projectile ID for active skills (e.g. minecraft:small_fireball, minecraft:arrow, custom_mobs:<id>).")));
+            this.addRenderableWidget(this.customProjectileIdBox);
+
+            this.customProjectileSpeedBox = new EditBox(this.font, contentLeft + 305, contentTop + 44, 60, 18, Component.literal("Speed"));
+            this.customProjectileSpeedBox.setMaxLength(2048);
+            this.customProjectileSpeedBox.setValue(String.valueOf(editingWereForm ? workingRace.wereCustomProjectileSpeed : workingRace.customProjectileSpeed));
+            this.customProjectileSpeedBox.setTooltip(Tooltip.create(Component.literal("Projectile flight launch speed multiplier (e.g. 2.5).")));
+            this.addRenderableWidget(this.customProjectileSpeedBox);
+
+            // Epic Fight Direct Attributes Settings
+            this.epicFightMaxStaminaBox = new EditBox(this.font, contentLeft + 85, contentTop + 68, 45, 18, Component.literal("Stamina"));
+            this.epicFightMaxStaminaBox.setMaxLength(2048);
+            this.epicFightMaxStaminaBox.setValue(String.valueOf(editingWereForm ? workingRace.wereEpicFightMaxStamina : workingRace.epicFightMaxStamina));
+            this.epicFightMaxStaminaBox.setTooltip(Tooltip.create(Component.literal("Epic Fight Max Stamina bonus (e.g. +15.0).")));
+            this.addRenderableWidget(this.epicFightMaxStaminaBox);
+
+            this.epicFightStaminaRegenBox = new EditBox(this.font, contentLeft + 195, contentTop + 68, 45, 18, Component.literal("Regen"));
+            this.epicFightStaminaRegenBox.setMaxLength(2048);
+            this.epicFightStaminaRegenBox.setValue(String.valueOf(editingWereForm ? workingRace.wereEpicFightStaminaRegen : workingRace.epicFightStaminaRegen));
+            this.epicFightStaminaRegenBox.setTooltip(Tooltip.create(Component.literal("Epic Fight Stamina Regeneration bonus (e.g. +1.5).")));
+            this.addRenderableWidget(this.epicFightStaminaRegenBox);
+
+            this.epicFightImpactBox = new EditBox(this.font, contentLeft + 305, contentTop + 68, 60, 18, Component.literal("Impact"));
+            this.epicFightImpactBox.setMaxLength(2048);
+            this.epicFightImpactBox.setValue(String.valueOf(editingWereForm ? workingRace.wereEpicFightImpact : workingRace.epicFightImpact));
+            this.epicFightImpactBox.setTooltip(Tooltip.create(Component.literal("Epic Fight Impact stagger bonus (e.g. +10.0).")));
+            this.addRenderableWidget(this.epicFightImpactBox);
+
+            this.epicFightWeightBox = new EditBox(this.font, contentLeft + 85, contentTop + 90, 45, 18, Component.literal("Weight"));
+            this.epicFightWeightBox.setMaxLength(2048);
+            this.epicFightWeightBox.setValue(String.valueOf(editingWereForm ? workingRace.wereEpicFightWeight : workingRace.epicFightWeight));
+            this.epicFightWeightBox.setTooltip(Tooltip.create(Component.literal("Epic Fight Armor Weight modifier (e.g. +20.0).")));
+            this.addRenderableWidget(this.epicFightWeightBox);
+
+            this.epicFightArmorNegationBox = new EditBox(this.font, contentLeft + 225, contentTop + 90, 45, 18, Component.literal("Armor Negation"));
+            this.epicFightArmorNegationBox.setMaxLength(2048);
+            this.epicFightArmorNegationBox.setValue(String.valueOf(editingWereForm ? workingRace.wereEpicFightArmorNegation : workingRace.epicFightArmorNegation));
+            this.epicFightArmorNegationBox.setTooltip(Tooltip.create(Component.literal("Epic Fight Armor Negation multiplier (0.0 to 1.0, e.g. 0.25 for 25%).")));
+            this.addRenderableWidget(this.epicFightArmorNegationBox);
+
             // Minion Ability Settings
-            this.minionMobTypeBox = new EditBox(this.font, contentLeft + 120, contentTop + 95, 200, 18, Component.literal("Minion Mob Type"));
+            this.minionMobTypeBox = new EditBox(this.font, contentLeft + 110, contentTop + 114, 150, 18, Component.literal("Minion Mob Type"));
             this.minionMobTypeBox.setMaxLength(2048);
             this.minionMobTypeBox.setValue(workingRace.minionMobType);
             this.minionMobTypeBox.setTooltip(Tooltip.create(Component.literal("Mob Entity ID to summon (e.g. minecraft:zombie or custom_mobs:<id>).")));
             this.addRenderableWidget(this.minionMobTypeBox);
 
-            this.minionCountBox = new EditBox(this.font, contentLeft + 120, contentTop + 118, 60, 18, Component.literal("Minion Count"));
+            this.minionCountBox = new EditBox(this.font, contentLeft + 305, contentTop + 114, 60, 18, Component.literal("Count"));
             this.minionCountBox.setMaxLength(2048);
             this.minionCountBox.setValue(String.valueOf(workingRace.minionCount));
             this.minionCountBox.setTooltip(Tooltip.create(Component.literal("Number of minions to summon (1 to 10).")));
             this.addRenderableWidget(this.minionCountBox);
 
-            this.minionScaleBox = new EditBox(this.font, contentLeft + 260, contentTop + 118, 60, 18, Component.literal("Minion Scale"));
+            this.minionScaleBox = new EditBox(this.font, contentLeft + 110, contentTop + 136, 50, 18, Component.literal("Minion Scale"));
             this.minionScaleBox.setMaxLength(2048);
             this.minionScaleBox.setValue(String.valueOf(workingRace.minionScale));
             this.minionScaleBox.setTooltip(Tooltip.create(Component.literal("Minion size scaling multiplier (0.5 to 5.0).")));
             this.addRenderableWidget(this.minionScaleBox);
 
-            this.minionIsRangedBox = new Checkbox(contentLeft, contentTop + 141, 120, 20, Component.literal("Minion Ranged"), workingRace.minionIsRanged);
+            this.minionIsRangedBox = new Checkbox(contentLeft + 165, contentTop + 136, 65, 18, Component.literal("Ranged"), workingRace.minionIsRanged);
             this.minionIsRangedBox.setTooltip(Tooltip.create(Component.literal("Check if minion shoots ranged projectiles instead of melee.")));
             this.addRenderableWidget(this.minionIsRangedBox);
 
-            this.minionProjectileBox = new EditBox(this.font, contentLeft + 250, contentTop + 142, 160, 18, Component.literal("Minion Projectile"));
+            this.minionProjectileBox = new EditBox(this.font, contentLeft + 270, contentTop + 136, 95, 18, Component.literal("Minion Projectile"));
             this.minionProjectileBox.setMaxLength(2048);
             this.minionProjectileBox.setValue(workingRace.minionProjectile);
             this.minionProjectileBox.setTooltip(Tooltip.create(Component.literal("Projectile Entity ID if minion is ranged (e.g. minecraft:arrow).")));
@@ -1337,6 +1475,62 @@ public class RaceCreatorScreen extends Screen {
         if (spawnDimensionBox != null) workingRace.spawnDimension = spawnDimensionBox.getValue();
         if (spawnBiomeBox != null) workingRace.spawnBiome = spawnBiomeBox.getValue();
         if (enableAlliancesBox != null) workingRace.enableAlliances = enableAlliancesBox.selected();
+
+        if (customProjectileIdBox != null) {
+            if (editingWereForm) workingRace.wereCustomProjectileId = customProjectileIdBox.getValue();
+            else workingRace.customProjectileId = customProjectileIdBox.getValue();
+        }
+        if (customProjectileSpeedBox != null) {
+            try {
+                float spd = Float.parseFloat(customProjectileSpeedBox.getValue());
+                if (editingWereForm) workingRace.wereCustomProjectileSpeed = spd;
+                else workingRace.customProjectileSpeed = spd;
+            } catch (Exception ignored) {}
+        }
+        if (customProjectileInaccuracyBox != null) {
+            try {
+                float inacc = Float.parseFloat(customProjectileInaccuracyBox.getValue());
+                if (editingWereForm) workingRace.wereCustomProjectileInaccuracy = inacc;
+                else workingRace.customProjectileInaccuracy = inacc;
+            } catch (Exception ignored) {}
+        }
+
+        if (epicFightMaxStaminaBox != null) {
+            try {
+                double val = Double.parseDouble(epicFightMaxStaminaBox.getValue());
+                if (editingWereForm) workingRace.wereEpicFightMaxStamina = val;
+                else workingRace.epicFightMaxStamina = val;
+            } catch (Exception ignored) {}
+        }
+        if (epicFightStaminaRegenBox != null) {
+            try {
+                double val = Double.parseDouble(epicFightStaminaRegenBox.getValue());
+                if (editingWereForm) workingRace.wereEpicFightStaminaRegen = val;
+                else workingRace.epicFightStaminaRegen = val;
+            } catch (Exception ignored) {}
+        }
+        if (epicFightWeightBox != null) {
+            try {
+                double val = Double.parseDouble(epicFightWeightBox.getValue());
+                if (editingWereForm) workingRace.wereEpicFightWeight = val;
+                else workingRace.epicFightWeight = val;
+            } catch (Exception ignored) {}
+        }
+        if (epicFightImpactBox != null) {
+            try {
+                double val = Double.parseDouble(epicFightImpactBox.getValue());
+                if (editingWereForm) workingRace.wereEpicFightImpact = val;
+                else workingRace.epicFightImpact = val;
+            } catch (Exception ignored) {}
+        }
+        if (epicFightArmorNegationBox != null) {
+            try {
+                double val = Double.parseDouble(epicFightArmorNegationBox.getValue());
+                if (editingWereForm) workingRace.wereEpicFightArmorNegation = val;
+                else workingRace.epicFightArmorNegation = val;
+            } catch (Exception ignored) {}
+        }
+
         if (minionMobTypeBox != null) workingRace.minionMobType = minionMobTypeBox.getValue();
         if (minionCountBox != null) {
             try { workingRace.minionCount = Integer.parseInt(minionCountBox.getValue()); } catch (Exception ignored) {}
@@ -1599,14 +1793,25 @@ public class RaceCreatorScreen extends Screen {
                 py += 24;
             }
         } else if (activeTab == 7) {
-            guiGraphics.drawString(this.font, "§b❖ Mob Faction Neutrality Stances:", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§b❖ Custom Mob Alliances & Neutrality Stances:", contentLeft, contentTop + 2, 0xFFFFFF);
         } else if (activeTab == 5) {
             guiGraphics.drawString(this.font, "§d❖ Ambient Sound:", contentLeft, contentTop + 4, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§d❖ Hurt Sound:", contentLeft, contentTop + 34, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§d❖ Death Sound:", contentLeft, contentTop + 64, 0xFFFFFF);
         } else if (activeTab == 6) {
-            guiGraphics.drawString(this.font, "§9❖ Spawn Dimension:", contentLeft, contentTop + 4, 0xFFFFFF);
-            guiGraphics.drawString(this.font, "§9❖ Spawn Biome:", contentLeft, contentTop + 34, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§9❖ Spawn Dim:", contentLeft, contentTop + 4, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§9❖ Spawn Biome:", contentLeft, contentTop + 26, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§6❖ Custom Proj:", contentLeft, contentTop + 48, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§6Spd:", contentLeft + 270, contentTop + 48, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§c❖ Epic Stam:", contentLeft, contentTop + 72, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§cRegen:", contentLeft + 140, contentTop + 72, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§cImp:", contentLeft + 250, contentTop + 72, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§c❖ Weight:", contentLeft, contentTop + 94, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§cArmor Neg:", contentLeft + 140, contentTop + 94, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§a❖ Minion Mob:", contentLeft, contentTop + 118, 0xFFFFFF);
+            guiGraphics.drawString(this.font, "§aCnt:", contentLeft + 270, contentTop + 118, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§aScale:", contentLeft, contentTop + 140, 0xCCCCCC);
+            guiGraphics.drawString(this.font, "§aProj:", contentLeft + 235, contentTop + 140, 0xCCCCCC);
         } else if (activeTab == 8) {
             guiGraphics.drawString(this.font, "§c❖ Trigger Condition:", contentLeft, contentTop + 28, 0xFFFFFF);
             guiGraphics.drawString(this.font, "§c❖ Were Geo Model:", contentLeft, contentTop + 50, 0xFFFFFF);
@@ -1792,7 +1997,7 @@ public class RaceCreatorScreen extends Screen {
                     source = RaceRegistry.CACHED_DIMENSIONS;
                 } else if (box == spawnBiomeBox) {
                     source = RaceRegistry.CACHED_BIOMES;
-                } else if (box == minionMobTypeBox || box == minionProjectileBox) {
+                } else if (box == minionMobTypeBox || box == minionProjectileBox || box == customProjectileIdBox || box == customAllianceMobBox) {
                     source = RaceRegistry.CACHED_PROJECTILES;
                 } else if (box == wereModelBox) {
                     source = RaceRegistry.CACHED_WERE_MODELS;

@@ -36,9 +36,13 @@ public class EpicFightIntegration {
 
         try {
             Class<?> attributesClass = Class.forName("yesman.epicfight.world.entity.ai.attribute.EpicFightAttributes");
+            boolean isWere = ddraig.net.customraces.event.WereRaceTransformHandler.isTransformed(player.getUUID());
 
             // 1. Max Stamina (epicfight:max_stamina)
             double staminaBonus = 0.0;
+            if (race != null) {
+                staminaBonus += isWere ? race.wereEpicFightMaxStamina : race.epicFightMaxStamina;
+            }
             if (passives != null) {
                 if (passives.contains("beast_instincts")) staminaBonus += 15.0;
                 if (passives.contains("unbreakable_will")) staminaBonus += 25.0;
@@ -49,6 +53,9 @@ public class EpicFightIntegration {
 
             // 2. Stamina Regen (epicfight:stamina_regen)
             double staminaRegenBonus = 0.0;
+            if (race != null) {
+                staminaRegenBonus += isWere ? race.wereEpicFightStaminaRegen : race.epicFightStaminaRegen;
+            }
             if (passives != null) {
                 if (passives.contains("speed_boost")) staminaRegenBonus += 1.0;
                 if (passives.contains("overclock_speed")) staminaRegenBonus += 2.0;
@@ -59,6 +66,10 @@ public class EpicFightIntegration {
             // 3. Weight & Impact (epicfight:weight, epicfight:impact)
             double weightBonus = 0.0;
             double impactBonus = 0.0;
+            if (race != null) {
+                weightBonus += isWere ? race.wereEpicFightWeight : race.epicFightWeight;
+                impactBonus += isWere ? race.wereEpicFightImpact : race.epicFightImpact;
+            }
             if (passives != null) {
                 if (passives.contains("golem_density")) {
                     weightBonus += 35.0;
@@ -74,6 +85,9 @@ public class EpicFightIntegration {
 
             // 4. Armor Negation (epicfight:armor_negation)
             double armorNegationBonus = 0.0;
+            if (race != null) {
+                armorNegationBonus += isWere ? race.wereEpicFightArmorNegation : race.epicFightArmorNegation;
+            }
             if (passives != null && (passives.contains("armor_piercing") || passives.contains("giant_slayer"))) {
                 armorNegationBonus += 0.25;
             }
