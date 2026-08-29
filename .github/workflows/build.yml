@@ -62,7 +62,8 @@ jobs:
             VERSION_STR=$(echo "$JAR_NAME" | sed 's/customraces-forge-1.20.1-//')
             TAG_NAME="v${VERSION_STR}"
           else
-            VERSION_STR="1.0.0-b199a"
+            BN=$(cat build_number.txt 2>/dev/null || echo "001")
+            VERSION_STR="1.0.0-b${BN}a"
             TAG_NAME="v${VERSION_STR}"
           fi
           
