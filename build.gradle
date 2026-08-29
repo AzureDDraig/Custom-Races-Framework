@@ -130,11 +130,3 @@ subprojects {
 tasks.register("deployToDev") {
     dependsOn subprojects.collect { it.tasks.matching { t -> t.name == "deployToDev" } }
 }
-
-allprojects {
-    tasks.configureEach { task ->
-        if (task.name == "deployToDev") {
-            task.finalizedBy(rootProject.tasks.named("incrementBuildNumber"))
-        }
-    }
-}

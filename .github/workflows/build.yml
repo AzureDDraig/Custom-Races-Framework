@@ -56,13 +56,18 @@ jobs:
             VERSION_STR=$(echo "$JAR_NAME" | sed 's/customraces-forge-1.20.1-//')
             TAG_NAME="v${VERSION_STR}"
           else
-            TAG_NAME="v1.0.0-$(date +'%Y%m%d%H%M%S')"
+            VERSION_STR="1.0.0-$(date +'%Y%m%d%H%M%S')"
+            TAG_NAME="v${VERSION_STR}"
           fi
           
+          echo "version_str=${VERSION_STR}" >> $GITHUB_OUTPUT
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "forge_jar=${FORGE_JAR}" >> $GITHUB_OUTPUT
           echo "fabric_jar=${FABRIC_JAR}" >> $GITHUB_OUTPUT
-          echo "Release tag determined as: ${TAG_NAME}"
+          
+          echo "=== RELEASE INFORMATION ==="
+          echo "Version String: ${VERSION_STR}"
+          echo "Release Tag: ${TAG_NAME}"
           echo "Forge JAR: ${FORGE_JAR}"
           echo "Fabric JAR: ${FABRIC_JAR}"
           
@@ -73,14 +78,17 @@ try:
         content = f.read()
     match = re.search(r'(## \[.*?\] - .*?)\n---', content, re.DOTALL)
     if match:
+        notes = match.group(1).strip()
         with open('release_notes.txt', 'w') as out:
-            out.write(match.group(1).strip())
+            out.write(notes)
+        print('Extracted release notes:')
+        print(notes)
     else:
         with open('release_notes.txt', 'w') as out:
-            out.write('Automated release for ' + '${TAG_NAME}')
+            out.write('Custom Races Framework release ' + '${VERSION_STR}')
 except Exception as e:
     with open('release_notes.txt', 'w') as out:
-        out.write('Automated release for ' + '${TAG_NAME}')
+        out.write('Custom Races Framework release ' + '${VERSION_STR}')
 "
 
       - name: Upload Build Artifacts
@@ -110,11 +118,11 @@ except Exception as e:
         uses: Kir-Antipov/mc-publish@v3.3
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         with:
-          curseforge-id: 1631130
+          curseforge-id: "1631130"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-          files: ${{ steps.prep.outputs.forge_jar }}
-          name: Custom Races Framework ${{ steps.prep.outputs.tag_name }} [Forge]
-          version: ${{ steps.prep.outputs.tag_name }}
+          curseforge-files: ${{ steps.prep.outputs.forge_jar }}
+          name: customraces-forge-1.20.1-${{ steps.prep.outputs.version_str }}.jar
+          version: ${{ steps.prep.outputs.version_str }}
           version-type: release
           changelog-file: release_notes.txt
           loaders: |
@@ -130,11 +138,11 @@ except Exception as e:
         uses: Kir-Antipov/mc-publish@v3.3
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         with:
-          curseforge-id: 1631130
+          curseforge-id: "1631130"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-          files: ${{ steps.prep.outputs.fabric_jar }}
-          name: Custom Races Framework ${{ steps.prep.outputs.tag_name }} [Fabric]
-          version: ${{ steps.prep.outputs.tag_name }}
+          curseforge-files: ${{ steps.prep.outputs.fabric_jar }}
+          name: customraces-fabric-1.20.1-${{ steps.prep.outputs.version_str }}.jar
+          version: ${{ steps.prep.outputs.version_str }}
           version-type: release
           changelog-file: release_notes.txt
           loaders: |
