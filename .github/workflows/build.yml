@@ -1,6 +1,6 @@
 name: Build and Release Mod
 
-on:
+"on":
   push:
     branches:
       - master
@@ -84,25 +84,25 @@ jobs:
           
           export VERSION_ENV="${VERSION_STR}"
           python3 -c "
-import os, re
-version = os.environ.get('VERSION_ENV', '1.0.0')
-try:
-    with open('CHANGELOG.md', 'r') as f:
-        content = f.read()
-    match = re.search(r'(## \[.*?\] - .*?)\n---', content, re.DOTALL)
-    if match:
-        notes = match.group(1).strip()
-        with open('release_notes.txt', 'w') as out:
-            out.write(notes)
-        print('Extracted release notes successfully:')
-        print(notes)
-    else:
-        with open('release_notes.txt', 'w') as out:
-            out.write('Custom Races Framework release ' + version)
-except Exception as e:
-    with open('release_notes.txt', 'w') as out:
-        out.write('Custom Races Framework release ' + version)
-"
+          import os, re
+          version = os.environ.get('VERSION_ENV', '1.0.0')
+          try:
+              with open('CHANGELOG.md', 'r') as f:
+                  content = f.read()
+              match = re.search(r'(## \[.*?\] - .*?)\n---', content, re.DOTALL)
+              if match:
+                  notes = match.group(1).strip()
+                  with open('release_notes.txt', 'w') as out:
+                      out.write(notes)
+                  print('Extracted release notes successfully:')
+                  print(notes)
+              else:
+                  with open('release_notes.txt', 'w') as out:
+                      out.write('Custom Races Framework release ' + version)
+          except Exception as e:
+              with open('release_notes.txt', 'w') as out:
+                  out.write('Custom Races Framework release ' + version)
+          "
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -123,7 +123,7 @@ except Exception as e:
           body_path: release_notes.txt
           draft: false
           prerelease: false
-          files: release_jars/*
+          files: "release_jars/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
