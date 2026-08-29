@@ -4,45 +4,43 @@ All notable changes, features, bug fixes, and build deployments for **Custom Rac
 
 ## [1.0.0-b199a] - 2026-08-29
 
-### 🛡️ Iron's Spells Network Buffer Safety, Custom Mobs Alliances & Epic Fight GUI
-- **Network Packet Safety & Spell Crash Fix**: Added byte buffer string sanitization (`FriendlyByteBufMixin`) to completely prevent server tick crashes (`String.length() on null`) whenever Iron's Spells or any mod writes network packets.
-- **Custom Mob Alliances GUI Manager**: Completely revamped the Alliances tab in the Race Creator GUI with custom entity ID input, quick-add stance buttons (Neutral, Friendly, Hostile), popular mob chips, and an active alliance manager with removal buttons.
-- **Direct Epic Fight Stats & Configuration**: Added explicit, configurable Epic Fight attributes (Max Stamina, Stamina Regen, Armor Weight, Impact, and Armor Negation) in Race Data and exposed them directly in the Race Creator GUI.
-- **Configurable Custom Projectiles**: Added custom projectile settings (Projectile Entity ID, Speed, and Inaccuracy) for race active abilities with one-click quick bind buttons in the Active Skills tab.
+### 🛡️ Crash Fixes, Custom Alliances & Combat Stats
+- **Fixed Spell Crashes**: Fixed a server crash when casting or finishing spells from Iron's Spells 'n Spellbooks. All spells now cast and finish smoothly on multiplayer servers.
+- **Custom Mob Alliances**: You can now add any custom mob or monster to your race's alliance list and set them to Neutral, Friendly, or Hostile.
+- **Epic Fight Stats in Race Creator**: Added direct settings to customize Epic Fight stats (Stamina, Stamina Regen, Armor Weight, Impact, and Armor Negation) for each race.
+- **Custom Projectiles**: Active abilities can now be set to shoot custom projectiles (like fireballs, magic missiles, or custom arrows) with adjustable speed.
 
 ---
 
 ## [1.0.0-b198a] - 2026-08-26
 
-### 🚀 CI/CD & Automated CurseForge Publishing Release
-- **CurseForge Auto-Release Deployment**: Integrated automated dual-loader publishing for Forge and Fabric releases directly to CurseForge on build verification.
-- **Server Tick Loop & Synced Spell Stability**: Validated Iron's Spells spell casting network packet serialization and live entity magic data synchronization.
+### 🚀 Auto-Publishing & Spell Stability
+- **CurseForge Auto-Updates**: Configured automatic releases so updates for both Forge and Fabric are published directly to CurseForge.
+- **Spell Casting Stability**: Improved multiplayer stability when players cast spells and use abilities during combat.
 
 ---
 
 ## [1.0.0-b197a] - 2026-08-26
 
-### 🛡️ Iron's Spells Synced Spell Data Null Safety & Automated CI
-- **Server Tick Crash Fix**: Resolved a server tick crash when completing or resetting spell casts with Iron's Spells 'n Spellbooks where null spell ID strings caused network packet serialization failures (`SyncedSpellData.write`).
-- **Real-Time Magic Data Sanitization**: Added continuous server-side sanitization to guarantee all spell casting data and network sync packets always contain safe, non-null identifiers.
-- **LivingEntity Method Signature Support**: Enhanced player magic data lookups to support modern `LivingEntity` parameter reflection across Forge and Mohist servers.
-- **Automated GitHub Builds**: Configured GitHub Actions CI automation running on Java 21 to automatically verify, build, and package release jars on every push.
+### 🔮 Magic & Server Stability
+- **Server Crash Fix for Spells**: Fixed a dedicated server crash that happened when players finished casting spells.
+- **Continuous Magic Data Cleanup**: Added safety checks to make sure player spell data never causes desyncs or crashes on servers.
 
 ---
 
 ## [1.0.0-b196a] - 2026-08-24
 
-### 🪄 Enhanced Cast Source & Spell Casting Reliability
-- **Spell Casting Parameter Normalization**: Improved Cast Source resolution to dynamically map and convert cast parameters across all Iron's Spells versions, preventing potential null pointer issues on specialized server configurations.
-- **Server Tick Loop Stability**: Fully hardened active spell casting pipelines on multiplayer and dedicated servers.
+### 🪄 Spell Casting Reliability
+- **Smooth Spell Casting**: Fixed compatibility issues with different versions of Iron's Spells so spells cast reliably on all server setups.
+- **Multiplayer Hardening**: Improved multiplayer server performance during active spellcasting.
 
 ---
 
 ## [1.0.0-b195a] - 2026-08-24
 
-### 🔮 Iron's Spells Spellcasting & Server Sync Fix
-- **Iron's Spells Server Crash Fix**: Updated package resolution for Iron's Spells 'n Spellbooks (`io.redspace.ironsspellbooks`) across spell registry, cast sources, player magic data, and spell power attributes.
-- **Spell Data Synchronization**: Fixed an issue where spell casting states were missing valid spell IDs when completing spells on dedicated servers, preventing `SyncedSpellData` crashes with Epic Fight and server tick loops.
+### 🔮 Iron's Spells Compatibility
+- **Updated Magic Mod Support**: Updated support for the newest versions of Iron's Spells 'n Spellbooks.
+- **Multiplayer Spell Sync**: Fixed an issue where spell states desynced on dedicated servers.
 
 ---
 
