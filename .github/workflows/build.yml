@@ -1,10 +1,16 @@
-name: Build, Test and Release Mod
+name: Build and Release Mod
 
 on:
   push:
-    branches: [ "**" ]
+    branches:
+      - master
+      - main
+      - '**'
   pull_request:
-    branches: [ "**" ]
+    branches:
+      - master
+      - main
+      - '**'
   workflow_dispatch:
 
 permissions:
@@ -56,7 +62,7 @@ jobs:
             VERSION_STR=$(echo "$JAR_NAME" | sed 's/customraces-forge-1.20.1-//')
             TAG_NAME="v${VERSION_STR}"
           else
-            VERSION_STR="1.0.0-$(date +'%Y%m%d%H%M%S')"
+            VERSION_STR="1.0.0-b199a"
             TAG_NAME="v${VERSION_STR}"
           fi
           
@@ -76,8 +82,10 @@ jobs:
           echo "Forge JAR: ${FORGE_JAR} -> Display Name: ${FORGE_FILENAME}"
           echo "Fabric JAR: ${FABRIC_JAR} -> Display Name: ${FABRIC_FILENAME}"
           
+          export VERSION_ENV="${VERSION_STR}"
           python3 -c "
-import re
+import os, re
+version = os.environ.get('VERSION_ENV', '1.0.0')
 try:
     with open('CHANGELOG.md', 'r') as f:
         content = f.read()
@@ -86,14 +94,14 @@ try:
         notes = match.group(1).strip()
         with open('release_notes.txt', 'w') as out:
             out.write(notes)
-        print('Extracted release notes:')
+        print('Extracted release notes successfully:')
         print(notes)
     else:
         with open('release_notes.txt', 'w') as out:
-            out.write('Custom Races Framework release ' + '${VERSION_STR}')
+            out.write('Custom Races Framework release ' + version)
 except Exception as e:
     with open('release_notes.txt', 'w') as out:
-        out.write('Custom Races Framework release ' + '${VERSION_STR}')
+        out.write('Custom Races Framework release ' + version)
 "
 
       - name: Upload Build Artifacts
@@ -122,14 +130,13 @@ except Exception as e:
       - name: Publish Forge to CurseForge
         uses: Kir-Antipov/mc-publish@v3.3
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        continue-on-error: true
         with:
-          curseforge-id: "1631130"
+          curseforge-id: 1631130
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           curseforge-files: ${{ steps.prep.outputs.forge_jar }}
           curseforge-display-name: ${{ steps.prep.outputs.forge_filename }}
-          curseforge-name: ${{ steps.prep.outputs.forge_filename }}
           name: ${{ steps.prep.outputs.forge_filename }}
-          display-name: ${{ steps.prep.outputs.forge_filename }}
           version: ${{ steps.prep.outputs.version_str }}
           version-type: release
           changelog-file: release_notes.txt
@@ -145,14 +152,13 @@ except Exception as e:
       - name: Publish Fabric to CurseForge
         uses: Kir-Antipov/mc-publish@v3.3
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        continue-on-error: true
         with:
-          curseforge-id: "1631130"
+          curseforge-id: 1631130
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           curseforge-files: ${{ steps.prep.outputs.fabric_jar }}
           curseforge-display-name: ${{ steps.prep.outputs.fabric_filename }}
-          curseforge-name: ${{ steps.prep.outputs.fabric_filename }}
           name: ${{ steps.prep.outputs.fabric_filename }}
-          display-name: ${{ steps.prep.outputs.fabric_filename }}
           version: ${{ steps.prep.outputs.version_str }}
           version-type: release
           changelog-file: release_notes.txt
