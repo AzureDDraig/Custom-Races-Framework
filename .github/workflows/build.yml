@@ -60,16 +60,21 @@ jobs:
             TAG_NAME="v${VERSION_STR}"
           fi
           
+          FORGE_FILENAME="customraces-forge-1.20.1-${VERSION_STR}.jar"
+          FABRIC_FILENAME="customraces-fabric-1.20.1-${VERSION_STR}.jar"
+          
           echo "version_str=${VERSION_STR}" >> $GITHUB_OUTPUT
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "forge_jar=${FORGE_JAR}" >> $GITHUB_OUTPUT
           echo "fabric_jar=${FABRIC_JAR}" >> $GITHUB_OUTPUT
+          echo "forge_filename=${FORGE_FILENAME}" >> $GITHUB_OUTPUT
+          echo "fabric_filename=${FABRIC_FILENAME}" >> $GITHUB_OUTPUT
           
           echo "=== RELEASE INFORMATION ==="
           echo "Version String: ${VERSION_STR}"
           echo "Release Tag: ${TAG_NAME}"
-          echo "Forge JAR: ${FORGE_JAR}"
-          echo "Fabric JAR: ${FABRIC_JAR}"
+          echo "Forge JAR: ${FORGE_JAR} -> Display Name: ${FORGE_FILENAME}"
+          echo "Fabric JAR: ${FABRIC_JAR} -> Display Name: ${FABRIC_FILENAME}"
           
           python3 -c "
 import re
@@ -121,7 +126,10 @@ except Exception as e:
           curseforge-id: "1631130"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           curseforge-files: ${{ steps.prep.outputs.forge_jar }}
-          name: customraces-forge-1.20.1-${{ steps.prep.outputs.version_str }}.jar
+          curseforge-display-name: ${{ steps.prep.outputs.forge_filename }}
+          curseforge-name: ${{ steps.prep.outputs.forge_filename }}
+          name: ${{ steps.prep.outputs.forge_filename }}
+          display-name: ${{ steps.prep.outputs.forge_filename }}
           version: ${{ steps.prep.outputs.version_str }}
           version-type: release
           changelog-file: release_notes.txt
@@ -141,7 +149,10 @@ except Exception as e:
           curseforge-id: "1631130"
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           curseforge-files: ${{ steps.prep.outputs.fabric_jar }}
-          name: customraces-fabric-1.20.1-${{ steps.prep.outputs.version_str }}.jar
+          curseforge-display-name: ${{ steps.prep.outputs.fabric_filename }}
+          curseforge-name: ${{ steps.prep.outputs.fabric_filename }}
+          name: ${{ steps.prep.outputs.fabric_filename }}
+          display-name: ${{ steps.prep.outputs.fabric_filename }}
           version: ${{ steps.prep.outputs.version_str }}
           version-type: release
           changelog-file: release_notes.txt
