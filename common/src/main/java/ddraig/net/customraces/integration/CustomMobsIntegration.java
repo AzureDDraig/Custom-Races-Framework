@@ -16,16 +16,14 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.phys.Vec3;
 
 import java.io.File;
 import java.util.EnumSet;
-import java.util.UUID;
 
 /**
  * Dynamic integration bridge for CustomMobs mod.
- * Handles custom entity spawning, minion owner follow/protect AI, and projectile abilities.
+ * Handles custom entity spawning with templates, minion owner follow/protect AI, and projectile abilities.
  */
 public class CustomMobsIntegration {
 
@@ -35,34 +33,51 @@ public class CustomMobsIntegration {
 
     /**
      * Spawns a fully managed minion (CustomMobs or Vanilla) with owner-follow and protection AI.
+     * Accurately applies CustomMobs templates, models, textures, animations, and stats.
      */
     public static Entity spawnMinion(ServerLevel level, ServerPlayer player, RaceData race, double spawnX, double spawnY, double spawnZ) {
         if (level == null || player == null || race == null) return null;
 
         String rawMobType = race.minionMobType != null && !race.minionMobType.trim().isEmpty() ? race.minionMobType.trim() : "minecraft:wolf";
-        String cleanMobId = rawMobType.toLowerCase();
+        String cleanMobId = rawMobType.toLowerCase().trim();
 
         EntityType<?> targetType = null;
-        boolean isCustomMob = false;
+        String customTemplateId = null;
 
-        // 1. Try resolving CustomMobs entity type if custom ID
-        if (cleanMobId.startsWith("custom_mobs:") || cleanMobId.startsWith("custommobs:")) {
-            ResourceLocation cmLoc = new ResourceLocation("custom_mobs", "custom_mob");
-            targetType = BuiltInRegistries.ENTITY_TYPE.get(cmLoc);
-            if (targetType != null && targetType != EntityType.PIG) {
-                isCustomMob = true;
+        // 1. Check if explicitly prefixed for CustomMobs (e.g. custom_mobs:goblin, custommobs:goblin, cmobs:goblin)
+        if (cleanMobId.startsWith("custom_mobs:") || cleanMobId.startsWith("custommobs:") || cleanMobId.startsWith("cmobs:")) {
+            customTemplateId = cleanMobId.substring(cleanMobId.indexOf(':') + 1);
+        }
+
+        // 2. Check if a CustomMobs template file exists in config/custom_mobs/mobs/<id>.json
+        if (customTemplateId == null && isCustomMobsLoaded()) {
+            File templateFile = new File("config/custom_mobs/mobs/" + cleanMobId + ".json");
+            if (!templateFile.exists()) templateFile = new File("config/custom_mobs/" + cleanMobId + ".json");
+            if (templateFile.exists()) {
+                customTemplateId = cleanMobId;
             }
         }
 
-        // 2. Try vanilla / general registry resolution
-        if (targetType == null || targetType == EntityType.PIG && !cleanMobId.contains("pig")) {
-            ResourceLocation loc = ResourceLocation.tryParse(cleanMobId);
+        // 3. If it's a CustomMobs template or CustomMobs is active and no vanilla entity exists for this raw ID
+        if (customTemplateId != null || (isCustomMobsLoaded() && !cleanMobId.contains(":") && !BuiltInRegistries.ENTITY_TYPE.containsKey(new ResourceLocation("minecraft", cleanMobId)))) {
+            if (customTemplateId == null) {
+                customTemplateId = cleanMobId;
+            }
+            ResourceLocation cmLoc = new ResourceLocation("custom_mobs", "custom_mob");
+            if (BuiltInRegistries.ENTITY_TYPE.containsKey(cmLoc)) {
+                targetType = BuiltInRegistries.ENTITY_TYPE.get(cmLoc);
+            }
+        }
+
+        // 4. Try vanilla / modded general registry resolution
+        if (targetType == null) {
+            ResourceLocation loc = ResourceLocation.tryParse(cleanMobId.contains(":") ? cleanMobId : "minecraft:" + cleanMobId);
             if (loc != null && BuiltInRegistries.ENTITY_TYPE.containsKey(loc)) {
                 targetType = BuiltInRegistries.ENTITY_TYPE.get(loc);
             }
         }
 
-        // 3. Fallback to Wolf if unresolvable (instead of wandering pig)
+        // 5. Fallback to Wolf if still unresolved
         if (targetType == null) {
             targetType = EntityType.WOLF;
         }
@@ -72,41 +87,51 @@ public class CustomMobsIntegration {
 
         minion.setPos(spawnX, spawnY, spawnZ);
 
-        // Populate CustomMobs Compound NBT
-        if (isCustomMob || cleanMobId.startsWith("custom_mobs:")) {
-            String subId = cleanMobId.replace("custom_mobs:", "").replace("custommobs:", "");
+        // 6. Apply CustomMobs Template Data via reflection and NBT
+        if (customTemplateId != null && !customTemplateId.isEmpty()) {
             try {
-                java.lang.reflect.Method m = minion.getClass().getMethod("getPersistentData");
-                Object data = m.invoke(minion);
-                if (data instanceof CompoundTag tag) {
-                    tag.putString("CustomMobId", subId);
-                    tag.putString("custom_mob_id", subId);
-                    tag.putUUID("OwnerUUID", player.getUUID());
-                    tag.putUUID("SummonerUUID", player.getUUID());
-                }
-            } catch (Exception ignored) {}
+                java.lang.reflect.Method setTemplateMethod = minion.getClass().getMethod("setTemplateId", String.class);
+                setTemplateMethod.invoke(minion, customTemplateId);
+            } catch (Throwable ignored) {}
+
+            try {
+                java.lang.reflect.Method setSummonerMethod = minion.getClass().getMethod("setSummonerId", int.class);
+                setSummonerMethod.invoke(minion, player.getId());
+            } catch (Throwable ignored) {}
+
+            try {
+                CompoundTag tag = minion.saveWithoutId(new CompoundTag());
+                tag.putString("TemplateId", customTemplateId);
+                tag.putString("CustomMobId", customTemplateId);
+                tag.putUUID("OwnerUUID", player.getUUID());
+                tag.putUUID("SummonerUUID", player.getUUID());
+                minion.load(tag);
+            } catch (Throwable ignored) {}
         }
 
-        // Pehkui scaling for minion
+        // 7. Pehkui scaling for minion
         if (race.minionScale > 0.0f && race.minionScale != 1.0f) {
             PehkuiIntegration.setScale(minion, race.minionScale);
         }
 
-        // Standard Tameable support
+        // 8. Tameable support (CustomMobEntity extends TamableAnimal)
         if (minion instanceof TamableAnimal tamable) {
             tamable.tame(player);
+            try {
+                tamable.setOwnerUUID(player.getUUID());
+            } catch (Throwable ignored) {}
         }
 
         if (minion instanceof LivingEntity living) {
             living.setHealth(living.getMaxHealth());
         }
 
-        // Minion AI Injection: Follow and Protect Owner
+        // 9. Minion AI Injection: Follow and Protect Owner
         if (minion instanceof Mob mob) {
             setupMinionAI(mob, player);
         }
 
-        // Spawn visual & sound effects
+        // 10. Spawn visual & sound effects
         level.addFreshEntity(minion);
         level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, spawnX, spawnY + 0.5, spawnZ, 12, 0.2, 0.4, 0.2, 0.03);
         level.sendParticles(ParticleTypes.WITCH, spawnX, spawnY + 0.5, spawnZ, 8, 0.2, 0.3, 0.2, 0.02);

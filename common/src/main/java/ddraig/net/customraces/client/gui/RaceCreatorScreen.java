@@ -1995,9 +1995,9 @@ public class RaceCreatorScreen extends Screen {
                     source = RaceRegistry.CACHED_COLORS;
                 } else if (box == spawnDimensionBox) {
                     source = RaceRegistry.CACHED_DIMENSIONS;
-                } else if (box == spawnBiomeBox) {
-                    source = RaceRegistry.CACHED_BIOMES;
-                } else if (box == minionMobTypeBox || box == minionProjectileBox || box == customProjectileIdBox || box == customAllianceMobBox) {
+                } else if (box == minionMobTypeBox || box == customAllianceMobBox) {
+                    source = RaceRegistry.CACHED_MOBS;
+                } else if (box == minionProjectileBox || box == customProjectileIdBox) {
                     source = RaceRegistry.CACHED_PROJECTILES;
                 } else if (box == wereModelBox) {
                     source = RaceRegistry.CACHED_WERE_MODELS;

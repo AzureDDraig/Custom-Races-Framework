@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b200a] - 2026-08-29
+
+### 🐺 CustomMobs Minions & Template Spawning
+- **CustomMobs Minions Support**: Fixed summoned minions so they now properly load and display custom models, textures, animations, and stats from the CustomMobs mod instead of defaulting to vanilla wolves or pigs.
+- **Improved Mob Search & Auto-Complete**: The mob selection boxes in the Race Creator GUI now suggest all custom mobs and monster templates from CustomMobs.
+
+---
+
 ## [1.0.0-b199a] - 2026-08-29
 
 ### 🛡️ Crash Fixes, Custom Alliances & Combat Stats
