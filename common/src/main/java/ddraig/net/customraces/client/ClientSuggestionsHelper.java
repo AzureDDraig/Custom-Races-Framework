@@ -6,8 +6,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 
 public class ClientSuggestionsHelper {
@@ -35,6 +37,40 @@ public class ClientSuggestionsHelper {
                     for (ResourceLocation biome : registry.get().keySet()) {
                         if (!biomes.contains(biome.toString())) {
                             biomes.add(biome.toString());
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    public static void addClientSounds(List<String> sounds) {
+        try {
+            if (Minecraft.getInstance() != null && Minecraft.getInstance().getSoundManager() != null) {
+                Collection<ResourceLocation> available = Minecraft.getInstance().getSoundManager().getAvailableSounds();
+                if (available != null) {
+                    for (ResourceLocation loc : available) {
+                        String str = loc.toString();
+                        if (!sounds.contains(str)) {
+                            sounds.add(str);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        try {
+            File soundsDir = new File("config/custom_races/sounds");
+            if (soundsDir.exists() && soundsDir.isDirectory()) {
+                File[] files = soundsDir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().endsWith(".ogg") || f.getName().endsWith(".wav")) {
+                            String name = f.getName().substring(0, f.getName().lastIndexOf('.'));
+                            String fullLoc = "customraces:sounds/" + name;
+                            if (!sounds.contains(fullLoc)) {
+                                sounds.add(fullLoc);
+                            }
                         }
                     }
                 }

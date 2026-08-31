@@ -571,8 +571,91 @@ public class IronSpellsHandler {
         final Object finalCastSource = castSource;
         final Object finalMagicData = magicData;
 
-        // Step 0: Try initiateCast on MagicData or attemptInitiateCast on AbstractSpell
-        // This is necessary for continuous / charging / beam / trap spells in Iron's Spells!
+        // Collect candidate methods matching exact names: onCast, castSpell, onCastSpell
+        List<Method> candidates = new ArrayList<>();
+        List<Method> allMethods = new ArrayList<>(Arrays.asList(spellObj.getClass().getMethods()));
+        for (Method m : spellObj.getClass().getDeclaredMethods()) {
+            if (!allMethods.contains(m)) {
+                allMethods.add(m);
+            }
+        }
+
+        for (Method m : allMethods) {
+            String mName = m.getName();
+            if (mName.equalsIgnoreCase("onCast") || mName.equalsIgnoreCase("castSpell") || mName.equalsIgnoreCase("onCastSpell")) {
+                candidates.add(m);
+            }
+        }
+
+        // Sort candidates:
+        // Tier 1: Target 5-parameter (Level, int, LivingEntity/ServerPlayer/Player, CastSource, MagicData)
+        // Tier 2: Target 4-parameter (Level, int, LivingEntity/ServerPlayer/Player, MagicData)
+        // Tier 3: Other strict parameter matches
+        // Tier 4: Non-strict matches (penalized unmapped generic parameter overloads)
+        candidates.sort((m1, m2) -> {
+            int tier1 = getTier(m1, finalCastSource, finalMagicData);
+            int tier2 = getTier(m2, finalCastSource, finalMagicData);
+            if (tier1 != tier2) return Integer.compare(tier1, tier2);
+
+            int nameScore1 = getNameScore(m1.getName());
+            int nameScore2 = getNameScore(m2.getName());
+            if (nameScore1 != nameScore2) return Integer.compare(nameScore1, nameScore2);
+
+            if (m1.getParameterCount() != m2.getParameterCount()) {
+                return Integer.compare(m2.getParameterCount(), m1.getParameterCount());
+            }
+
+            int unmapped1 = countUnmappedParameters(m1, finalCastSource, finalMagicData);
+            int unmapped2 = countUnmappedParameters(m2, finalCastSource, finalMagicData);
+            return Integer.compare(unmapped1, unmapped2);
+        });
+
+        // 1. Direct Payload Cast: execute onCast / castSpell directly.
+        // This fires the spell instantly and prevents movement/combat action from canceling or interrupting the racial spell!
+        for (Method m : candidates) {
+            Class<?>[] pTypes = m.getParameterTypes();
+            Object[] args = new Object[pTypes.length];
+
+            for (int i = 0; i < pTypes.length; i++) {
+                Class<?> p = pTypes[i];
+                if (net.minecraft.world.level.Level.class.isAssignableFrom(p)) {
+                    args[i] = player.level();
+                } else if (p == int.class || p == Integer.class) {
+                    args[i] = spellLevel;
+                } else if (net.minecraft.world.entity.player.Player.class.isAssignableFrom(p)
+                        || net.minecraft.server.level.ServerPlayer.class.isAssignableFrom(p)
+                        || net.minecraft.world.entity.LivingEntity.class.isAssignableFrom(p)
+                        || net.minecraft.world.entity.Entity.class.isAssignableFrom(p)) {
+                    args[i] = player;
+                } else if (isCastSourceType(p, finalCastSource)) {
+                    args[i] = resolveCastSourceForParam(p, finalCastSource);
+                } else if (isMagicDataType(p, finalMagicData)) {
+                    args[i] = finalMagicData;
+                } else {
+                    args[i] = null;
+                }
+
+                if (args[i] == null && p.isPrimitive()) {
+                    args[i] = getPrimitiveDefault(p);
+                }
+            }
+
+            try {
+                m.setAccessible(true);
+                m.invoke(spellObj, args);
+                sanitizeMagicData(finalMagicData, "");
+                return true;
+            } catch (InvocationTargetException e) {
+                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                System.err.println("[CustomRaces] InvocationTargetException executing " + m.getName() + " on spell " + spellObj.getClass().getName() + ": " + cause.getMessage());
+            } catch (IllegalAccessException e) {
+                System.err.println("[CustomRaces] IllegalAccessException executing " + m.getName() + " on spell " + spellObj.getClass().getName() + ": " + e.getMessage());
+            } catch (Exception e) {
+                System.err.println("[CustomRaces] Exception executing " + m.getName() + " on spell " + spellObj.getClass().getName() + ": " + e.getMessage());
+            }
+        }
+
+        // 2. Secondary Fallback: Try initiateCast on MagicData or attemptInitiateCast on AbstractSpell if onCast was not present
         if (magicData != null) {
             for (Method m : magicData.getClass().getMethods()) {
                 if (m.getName().equalsIgnoreCase("initiateCast") || m.getName().equalsIgnoreCase("startCast")) {
@@ -613,95 +696,6 @@ public class IronSpellsHandler {
                     m.invoke(spellObj, args);
                     return true;
                 } catch (Exception ignored) {}
-            }
-        }
-
-        // Collect candidate methods matching exact names: onCast, castSpell, onCastSpell
-        List<Method> candidates = new ArrayList<>();
-        List<Method> allMethods = new ArrayList<>(Arrays.asList(spellObj.getClass().getMethods()));
-        for (Method m : spellObj.getClass().getDeclaredMethods()) {
-            if (!allMethods.contains(m)) {
-                allMethods.add(m);
-            }
-        }
-
-        for (Method m : allMethods) {
-            String mName = m.getName();
-            if (mName.equalsIgnoreCase("onCast") || mName.equalsIgnoreCase("castSpell") || mName.equalsIgnoreCase("onCastSpell")) {
-                candidates.add(m);
-            }
-        }
-
-        if (candidates.isEmpty()) {
-            System.err.println("[CustomRaces] No onCast / castSpell / onCastSpell method found on spell object: " + spellObj.getClass().getName());
-            return false;
-        }
-
-        // Sort candidates:
-        // Tier 1: Target 5-parameter (Level, int, LivingEntity/ServerPlayer/Player, CastSource, MagicData)
-        // Tier 2: Target 4-parameter (Level, int, LivingEntity/ServerPlayer/Player, MagicData)
-        // Tier 3: Other strict parameter matches
-        // Tier 4: Non-strict matches (penalized unmapped generic parameter overloads)
-        candidates.sort((m1, m2) -> {
-            int tier1 = getTier(m1, finalCastSource, finalMagicData);
-            int tier2 = getTier(m2, finalCastSource, finalMagicData);
-            if (tier1 != tier2) return Integer.compare(tier1, tier2);
-
-            int nameScore1 = getNameScore(m1.getName());
-            int nameScore2 = getNameScore(m2.getName());
-            if (nameScore1 != nameScore2) return Integer.compare(nameScore1, nameScore2);
-
-            if (m1.getParameterCount() != m2.getParameterCount()) {
-                return Integer.compare(m2.getParameterCount(), m1.getParameterCount());
-            }
-
-            int unmapped1 = countUnmappedParameters(m1, finalCastSource, finalMagicData);
-            int unmapped2 = countUnmappedParameters(m2, finalCastSource, finalMagicData);
-            return Integer.compare(unmapped1, unmapped2);
-        });
-
-        for (Method m : candidates) {
-            Class<?>[] pTypes = m.getParameterTypes();
-            Object[] args = new Object[pTypes.length];
-
-            for (int i = 0; i < pTypes.length; i++) {
-                Class<?> p = pTypes[i];
-                if (net.minecraft.world.level.Level.class.isAssignableFrom(p)) {
-                    args[i] = player.level();
-                } else if (p == int.class || p == Integer.class) {
-                    args[i] = spellLevel;
-                } else if (net.minecraft.world.entity.player.Player.class.isAssignableFrom(p)
-                        || net.minecraft.server.level.ServerPlayer.class.isAssignableFrom(p)
-                        || net.minecraft.world.entity.LivingEntity.class.isAssignableFrom(p)
-                        || net.minecraft.world.entity.Entity.class.isAssignableFrom(p)) {
-                    args[i] = player;
-                } else if (isCastSourceType(p, finalCastSource)) {
-                    args[i] = resolveCastSourceForParam(p, finalCastSource);
-                } else if (isMagicDataType(p, finalMagicData)) {
-                    args[i] = finalMagicData;
-                } else {
-                    args[i] = null;
-                }
-
-                if (args[i] == null && p.isPrimitive()) {
-                    args[i] = getPrimitiveDefault(p);
-                }
-            }
-
-            try {
-                m.setAccessible(true);
-                m.invoke(spellObj, args);
-                return true;
-            } catch (InvocationTargetException e) {
-                Throwable cause = e.getCause() != null ? e.getCause() : e;
-                System.err.println("[CustomRaces] InvocationTargetException executing " + m.getName() + " on spell " + spellObj.getClass().getName() + ": " + cause.getMessage());
-                cause.printStackTrace();
-            } catch (IllegalAccessException e) {
-                System.err.println("[CustomRaces] IllegalAccessException executing " + m.getName() + " on spell " + spellObj.getClass().getName() + ": " + e.getMessage());
-                e.printStackTrace();
-            } catch (Exception e) {
-                System.err.println("[CustomRaces] Exception executing " + m.getName() + " on spell " + spellObj.getClass().getName() + ": " + e.getMessage());
-                e.printStackTrace();
             }
         }
 
@@ -950,6 +944,11 @@ public class IronSpellsHandler {
             passiveToField.put("blood_spell_mastery", "BLOOD_SPELL_POWER");
             passiveToField.put("evocation_spell_mastery", "EVOCATION_SPELL_POWER");
             passiveToField.put("eldritch_spell_mastery", "ELDRITCH_SPELL_POWER");
+            passiveToField.put("rapid_cast", "CAST_TIME_REDUCTION");
+            passiveToField.put("mobile_casting", "CAST_TIME_REDUCTION");
+            passiveToField.put("battle_mage", "CAST_TIME_REDUCTION");
+            passiveToField.put("arcane_haste", "COOLDOWN_REDUCTION");
+            passiveToField.put("cooldown_reduction", "COOLDOWN_REDUCTION");
 
             for (Map.Entry<String, String> entry : passiveToField.entrySet()) {
                 String passiveKey = entry.getKey();
@@ -974,7 +973,10 @@ public class IronSpellsHandler {
                             if (inst != null) {
                                 UUID modId = MODIFIER_UUIDS.computeIfAbsent(passiveKey, k -> UUID.nameUUIDFromBytes(k.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                                 if (inst.getModifier(modId) == null) {
-                                    double val = passiveKey.contains("overflow") ? 150.0 : (passiveKey.contains("fountain") ? 0.40 : 0.25);
+                                    double val = passiveKey.contains("overflow") ? 150.0 :
+                                            (passiveKey.contains("fountain") ? 0.40 :
+                                            (passiveKey.contains("rapid") || passiveKey.contains("mobile") || passiveKey.contains("battle_mage") ? 0.75 :
+                                            (passiveKey.contains("haste") || passiveKey.contains("cooldown") ? 0.30 : 0.25)));
                                     AttributeModifier.Operation op = passiveKey.contains("overflow") ? AttributeModifier.Operation.ADDITION : AttributeModifier.Operation.MULTIPLY_BASE;
                                     inst.addTransientModifier(new AttributeModifier(modId, "Custom Races " + passiveKey, val, op));
                                 }

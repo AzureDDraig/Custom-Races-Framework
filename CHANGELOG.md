@@ -2,6 +2,16 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b201a] - 2026-08-30
+
+### 🔊 Modpack Sound Search & Uninterruptible Magic Casting
+- **Full Modpack Sound Library**: Sound search now discovers and lists all audio and sound effects across all installed mods and sound packs, not just base Minecraft sounds.
+- **Improved Sound Search & Keywords**: Sound search now supports multiple keywords (e.g. searching "were howl" or "wolf hurt") with up to 500 suggestions displayed.
+- **Uninterruptible Racial Spells**: Fixed native racial spells so casting is no longer cancelled when moving, jumping, sprinting, or attacking during combat.
+- **New Mobile Casting Passives**: Added passives like Rapid Cast, Mobile Casting, and Battle Mage for faster casting and reduced cooldowns.
+
+---
+
 ## [1.0.0-b200a] - 2026-08-29
 
 ### 🐺 CustomMobs Minions & Template Spawning

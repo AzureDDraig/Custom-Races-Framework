@@ -1,5 +1,6 @@
 package ddraig.net.customraces.client.gui;
 
+import ddraig.net.customraces.client.ClientSuggestionsHelper;
 import ddraig.net.customraces.data.MobAllianceData;
 import ddraig.net.customraces.data.PartTransformData;
 import ddraig.net.customraces.data.ParticleAuraData;
@@ -229,6 +230,7 @@ public class RaceCreatorScreen extends Screen {
         // 51-60: Magic & Spectral
         "mana_regen_boost", "spell_power_boost", "cooldown_reduction", "arcane_shield", "astral_projection",
         "spectral_glowing", "invisibility_in_shadows", "telepathic_aura", "elemental_affinity", "native_spell",
+        "mobile_casting", "rapid_cast", "battle_mage", "arcane_haste",
         // 61-70: Vampiric & Nether
         "vampiric_bite_regen", "sunlight_evasion", "nether_affinity", "wither_touch", "shadow_healing",
         "soul_collector", "blood_essence_pool", "demon_flame_aura", "hellfire_immunity", "abyssal_resilience",
@@ -2024,13 +2026,28 @@ public class RaceCreatorScreen extends Screen {
                     if (activeField != box) {
                         activeField = box;
                         suggestionsScrollOffset = 0;
+                        if (box == ambientSoundBox || box == hurtSoundBox || box == deathSoundBox
+                                || box == wereTransformSoundBox || box == wereHowlSoundBox
+                                || box == wereAmbientSoundBox || box == wereHurtSoundBox
+                                || box == wereDeathSoundBox) {
+                            ClientSuggestionsHelper.addClientSounds(RaceRegistry.CACHED_SOUNDS);
+                        }
                     }
-                    final String query = val;
+                    final String query = val.toLowerCase().trim();
+                    String[] tokens = query.split("\\s+");
                     activeSuggestions = source.stream()
-                            .filter(s -> query.isEmpty()
-                                    || s.toLowerCase().contains(query)
-                                    || s.replaceAll(".*/", "").replaceAll(".*:", "").toLowerCase().contains(query))
-                            .limit(100)
+                            .filter(s -> {
+                                if (query.isEmpty()) return true;
+                                String sLower = s.toLowerCase();
+                                for (String token : tokens) {
+                                    if (token.isEmpty()) continue;
+                                    if (!sLower.contains(token) && !sLower.replaceAll(".*/", "").replaceAll(".*:", "").contains(token)) {
+                                        return false;
+                                    }
+                                }
+                                return true;
+                            })
+                            .limit(500)
                             .collect(Collectors.toList());
                     showSuggestions = !activeSuggestions.isEmpty();
                 }

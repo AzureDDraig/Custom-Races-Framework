@@ -147,6 +147,9 @@ public class RaceRegistry {
             for (net.minecraft.resources.ResourceLocation sound : net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.keySet()) {
                 CACHED_SOUNDS.add(sound.toString());
             }
+            if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
+                ddraig.net.customraces.client.ClientSuggestionsHelper.addClientSounds(CACHED_SOUNDS);
+            }
             java.util.Collections.sort(CACHED_SOUNDS);
 
             CACHED_ITEMS.clear();
