@@ -44,9 +44,9 @@ public class CustomRaceModelRenderer {
     public static void updateModelPartVisibility(PlayerModel<AbstractClientPlayer> parentModel, AbstractClientPlayer player, RaceData race) {
         if (parentModel == null) return;
         boolean inWereForm = isWereForm(player, race);
-        boolean hasCustomModel = inWereForm && WereModelRenderer.hasCustomModel(race);
+        boolean hasValidModel = inWereForm && WereModelRenderer.isModelAvailable(race);
 
-        if (hasCustomModel) {
+        if (hasValidModel) {
             WereModelRenderer.setBaseModelVisible(parentModel, false);
         } else {
             WereModelRenderer.setBaseModelVisible(parentModel, true);
@@ -56,7 +56,12 @@ public class CustomRaceModelRenderer {
     public static void renderCustomRaceModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, PlayerModel<AbstractClientPlayer> parentModel, RaceData race, float netHeadYaw, float headPitch) {
         updateModelPartVisibility(parentModel, player, race);
         if (isWereForm(player, race)) {
-            WereModelRenderer.renderWereForm(poseStack, buffer, packedLight, player, parentModel, race, netHeadYaw, headPitch);
+            boolean rendered = WereModelRenderer.renderWereForm(poseStack, buffer, packedLight, player, parentModel, race, netHeadYaw, headPitch);
+            if (!rendered) {
+                WereModelRenderer.setBaseModelVisible(parentModel, true);
+            }
+        } else {
+            WereModelRenderer.setBaseModelVisible(parentModel, true);
         }
     }
 }

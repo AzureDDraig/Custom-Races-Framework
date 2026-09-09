@@ -31,7 +31,10 @@ public class WereModelRenderer {
         GeckoAssetResolver.clearCaches();
         DYNAMIC_TEXTURE_CACHE.clear();
         LOGGED_WARNINGS.clear();
+        GeckoLibCacheInjector.clearInternalCaches();
         try {
+            GeckoLibCacheInjector.ensureModifiableModelMap();
+            GeckoLibCacheInjector.ensureModifiableAnimationMap();
             Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
             java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
             java.util.Map<?, ?> models = (java.util.Map<?, ?>) getModelsMethod.invoke(null);
@@ -81,6 +84,9 @@ public class WereModelRenderer {
     public static boolean isModelAvailable(RaceData race) {
         if (!hasCustomModel(race)) return false;
         ResourceLocation loc = getValidWereModelLocation(race);
+        if (loc != null && GeckoLibCacheInjector.isModelBaked(loc)) {
+            return true;
+        }
         return GeckoLibWereRenderer.isModelPresent(loc, race != null ? race.wereModelPath : null);
     }
 

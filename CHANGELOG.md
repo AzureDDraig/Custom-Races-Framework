@@ -2,6 +2,31 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b202a] - 2026-09-08
+
+### 🐺 Automatic Server Model Streaming & Custom Beast Transformations (Milestones M1–M4)
+
+- **Automatic 3D Model Streaming (Milestone M1)**:
+  - When joining a multiplayer server, custom 3D creature models, skins, and animations created on the server are automatically packaged and sent to your game.
+  - You no longer have to manually download or copy resource pack files into your game folder.
+
+- **Instant Download & Safe Memory Loading (Milestone M2)**:
+  - Your game automatically receives and loads the server's resource pack in memory without freezing your screen or kicking you from the server.
+  - Smart checksums ensure you only download the pack once; if the server hasn't changed its models, your game reuses the saved copy instantly.
+
+- **Fast 3D Model Registration with Zero Checkerboards (Milestone M3)**:
+  - Custom creature models and animations load directly into the 3D model system in under 5 milliseconds.
+  - Missing textures and broken models are prevented with safe fallbacks to player skins, eliminating purple-and-black checkerboards.
+
+- **Were-Form Transformations & 6 Body Part Attachments (Milestone M4)**:
+  - **Custom Beast Transformations**: Transforming into a were-race cleanly swaps your player model to the custom 3D creature model.
+  - **Never-Invisible Safety Net**: If a custom model is missing or broken, your character remains completely visible with procedural wolf ears, a snout, and glowing red eyes so you are never left invisible.
+  - **6 Custom Body Attachments**: Custom races can now have animated ears, horns, floating halos, flapping wings, swaying tails, and extra legs (such as spiders or centaurs).
+  - **Clean First-Person View**: When playing in first person, head and body attachments are smoothly hidden so they never block your eyes or screen.
+  - **Accurate Movement & Transforms**: All body attachments move, rotate, and scale smoothly with your character without glitches.
+
+---
+
 ## [1.0.0-b201a] - 2026-08-30
 
 ### 🔊 Modpack Sound Search & Uninterruptible Magic Casting

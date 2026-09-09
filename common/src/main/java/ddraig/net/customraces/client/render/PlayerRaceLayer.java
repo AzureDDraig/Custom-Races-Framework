@@ -199,8 +199,12 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
 
     private static final ResourceLocation WHITE_TEXTURE = new ResourceLocation("minecraft", "textures/misc/white.png");
 
-    private void applyPartTransforms(PoseStack poseStack, PartTransformData pt) {
-        if (pt == null) return;
+    public static boolean isAttachmentSuppressed(AbstractClientPlayer player) {
+        return WereModelRenderer.isFirstPerson(player);
+    }
+
+    public static void applyPartTransforms(PoseStack poseStack, PartTransformData pt) {
+        if (pt == null || poseStack == null) return;
         poseStack.translate(pt.posX, pt.posY, pt.posZ);
         if (pt.rotPitch != 0.0f) {
             poseStack.mulPose(com.mojang.math.Axis.XP.rotation((float) Math.toRadians(pt.rotPitch)));
@@ -271,13 +275,13 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
             }
         }
 
-        // 2. Body Attachments (Wings, Tail, Extra Legs, Custom Part)
+        // 2. Body Attachments (Wings, Tail, Extra Legs, Custom Part) - Suppressed in first person where appropriate
         boolean hasWings = !"none".equalsIgnoreCase(race.wingType);
         boolean hasTail = !"none".equalsIgnoreCase(race.tailType);
         boolean hasExtraLegs = !"human".equalsIgnoreCase(race.legType) && race.legCount > 2;
         boolean hasCustomPart = !"none".equalsIgnoreCase(race.customPartId);
 
-        if (hasWings || hasTail || hasExtraLegs || hasCustomPart) {
+        if (!isFirstPerson && (hasWings || hasTail || hasExtraLegs || hasCustomPart)) {
             poseStack.pushPose();
             try {
                 this.getParentModel().body.translateAndRotate(poseStack);
@@ -510,7 +514,7 @@ public class PlayerRaceLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         }
     }
 
-    private float[] parseRGB(String hex) {
+    public static float[] parseRGB(String hex) {
         float[] rgb = new float[]{1.0f, 1.0f, 1.0f};
         try {
             if (hex != null && hex.startsWith("#") && hex.length() == 7) {

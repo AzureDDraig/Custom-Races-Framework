@@ -117,12 +117,69 @@ task runIssue3FeaturesTests(type: JavaExec) {
     mainClass = 'ddraig.net.customraces.data.Issue3FeaturesVerificationTest'
 }
 
-test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests, runM4Challenger2ParticleAndSkinTests, runM2ChallengerVerificationTests, runM3SuppressionAndFallbackTests, runM3Challenger2InvisibilityAndReflectionTests, runM4AnimationAndCombatEffectsTests, runIssue1FeaturesTests, runIssue2FeaturesTests, runComprehensiveIntegrationsTests, runIssue3FeaturesTests
+task runServerPackManagerTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ServerPackManagerTest'
+}
 
+task runServerPackManagerChallengerTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ServerPackManagerChallengerTest'
+}
 
+task runServerPackHttpServerChallengerTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ServerPackHttpServerChallengerTest'
+}
 
+task runClientPackManagerTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ClientPackManagerTest'
+}
 
+task runClientPackManagerChallengerTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ClientPackManagerChallengerTest'
+}
 
+task runClientPackManagerStream2ChallengerTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ClientPackManagerStream2ChallengerTest'
+}
 
+task runClientPackManagerAdversarialStressTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.pack.ClientPackManagerAdversarialStressTest'
+}
 
+task runGeckoLibCacheInjectorTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.GeckoLibCacheInjectorTest'
+}
 
+task runGeckoLibCacheInjectorChallenger1Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.GeckoLibCacheInjectorChallenger1Test'
+}
+
+task runGeckoLibCacheInjectorChallenger2Tests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.GeckoLibCacheInjectorChallenger2Test'
+}
+
+task runM4WereRenderAndPresetTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M4WereRenderAndPresetVerificationTest'
+}
+
+task runM4Challenger1StressTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M4Challenger1StressTest'
+}
+
+task runM4Challenger2ConcurrencyTests(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ddraig.net.customraces.client.render.M4Challenger2ConcurrencyTest'
+}
+
+test.dependsOn runM3Tests, runM2Tests, runWereTextureEdgeCaseTests, runWereTextureAdversarialTests, runM3VIPAndConfigTests, runM3AdversarialR2R3Tests, runM3NetworkAndGUITests, runM4PresetAuditTests, runM4Challenger1Tests, runM4Challenger2Tests, runM4Challenger2ParticleAndSkinTests, runM2ChallengerVerificationTests, runM3SuppressionAndFallbackTests, runM3Challenger2InvisibilityAndReflectionTests, runM4AnimationAndCombatEffectsTests, runIssue1FeaturesTests, runIssue2FeaturesTests, runComprehensiveIntegrationsTests, runIssue3FeaturesTests, runServerPackManagerTests, runServerPackManagerChallengerTests, runServerPackHttpServerChallengerTests, runClientPackManagerTests, runClientPackManagerChallengerTests, runClientPackManagerStream2ChallengerTests, runClientPackManagerAdversarialStressTests, runGeckoLibCacheInjectorTests, runGeckoLibCacheInjectorChallenger1Tests, runGeckoLibCacheInjectorChallenger2Tests, runM4WereRenderAndPresetTests, runM4Challenger1StressTests, runM4Challenger2ConcurrencyTests

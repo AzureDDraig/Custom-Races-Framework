@@ -33,6 +33,7 @@ public class ModPackets {
     public static final ResourceLocation OPEN_CREATOR_ID = new ResourceLocation("customraces", "open_creator");
     public static final ResourceLocation SYNC_WERE_STATE_ID = new ResourceLocation("customraces", "sync_were_state");
     public static final ResourceLocation TOGGLE_WERE_FORM_ID = new ResourceLocation("customraces", "toggle_were_form");
+    public static final ResourceLocation SERVER_PACK_INFO_ID = ServerPackInfoPacket.ID;
 
     public static void register() {
         // Register Client-Bound (S2C)
@@ -176,6 +177,27 @@ public class ModPackets {
         if (server == null || playerUuid == null) return;
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             sendWereStateToPlayer(p, playerUuid, isTransformed);
+        }
+    }
+
+    public static void sendServerPackInfo(ServerPlayer player) {
+        if (player == null || player.connection == null) return;
+        if (!ddraig.net.customraces.pack.ServerPackManager.hasPack()) return;
+
+        String sha1 = ddraig.net.customraces.pack.ServerPackManager.getPackSha1();
+        long size = ddraig.net.customraces.pack.ServerPackManager.getPackSizeBytes();
+        String url = ddraig.net.customraces.pack.ServerPackHttpServer.getDownloadUrl();
+
+        ServerPackInfoPacket packet = new ServerPackInfoPacket(url, sha1, size, false);
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        packet.encode(buf);
+        NetworkManager.sendToPlayer(player, SERVER_PACK_INFO_ID, buf);
+    }
+
+    public static void syncServerPackInfoToAll(net.minecraft.server.MinecraftServer server) {
+        if (server == null || !ddraig.net.customraces.pack.ServerPackManager.hasPack()) return;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            sendServerPackInfo(p);
         }
     }
 }

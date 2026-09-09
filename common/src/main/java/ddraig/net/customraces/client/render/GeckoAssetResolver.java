@@ -67,6 +67,14 @@ public class GeckoAssetResolver {
     }
 
     /**
+     * Resolves texture ResourceLocation from raw path string and Player context.
+     * Satisfies the GeckoAssetResolver interface contract.
+     */
+    public static ResourceLocation resolveTexture(net.minecraft.world.entity.player.Player player, String rawPath) {
+        return resolveTextureLocation(player instanceof AbstractClientPlayer acp ? acp : null, rawPath);
+    }
+
+    /**
      * Resolves texture ResourceLocation from raw path string and optional player context.
      * Intercepts player skin keywords, checks resource manager and dynamic disk texture files.
      */

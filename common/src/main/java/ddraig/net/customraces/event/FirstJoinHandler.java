@@ -17,6 +17,12 @@ public class FirstJoinHandler {
             if (serverPlayer != null && serverPlayer.getServer() != null) {
                 ModPackets.syncRacesToAll(serverPlayer.getServer());
                 WereRaceTransformHandler.syncAllWereStatesTo(serverPlayer);
+
+                // Dispatch dynamic server pack info packet if pack is available
+                if (ddraig.net.customraces.pack.ServerPackManager.hasPack() &&
+                        (ddraig.net.customraces.pack.ServerPackHttpServer.isRunning() || serverPlayer.getServer().isSingleplayer())) {
+                    ModPackets.sendServerPackInfo(serverPlayer);
+                }
             }
 
             RaceData race = RaceRegistry.getPlayerRace(serverPlayer.getUUID());

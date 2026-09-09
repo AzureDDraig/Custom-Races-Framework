@@ -2,12 +2,15 @@ package ddraig.net.customraces.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import ddraig.net.customraces.data.RaceData;
 import ddraig.net.customraces.data.RaceRegistry;
 import ddraig.net.customraces.integration.PehkuiIntegration;
 import ddraig.net.customraces.network.ModPackets;
 import ddraig.net.customraces.pack.PackManager;
+import ddraig.net.customraces.pack.ServerPackManager;
 import dev.architectury.event.events.common.CommandRegistrationEvent;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -50,8 +53,13 @@ public class CustomRacesCommands {
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("custom_races")
-                // Player command: /custom_races select
+        dispatcher.register(buildRootCommand("custom_races"));
+        dispatcher.register(buildRootCommand("customraces"));
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> buildRootCommand(String rootLiteral) {
+        return Commands.literal(rootLiteral)
+                // Player command: /<root> select
                 .then(Commands.literal("select")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
@@ -59,7 +67,7 @@ public class CustomRacesCommands {
                             return 1;
                         })
                 )
-                // Player command: /custom_races transform
+                // Player command: /<root> transform
                 .then(Commands.literal("transform")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
@@ -67,7 +75,7 @@ public class CustomRacesCommands {
                             return 1;
                         })
                 )
-                // Player command: /custom_races codex
+                // Player command: /<root> codex
                 .then(Commands.literal("codex")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
@@ -76,7 +84,7 @@ public class CustomRacesCommands {
                             return 1;
                         })
                 )
-                // Query player race: /custom_races get [player]
+                // Query player race: /<root> get [player]
                 .then(Commands.literal("get")
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
@@ -95,11 +103,16 @@ public class CustomRacesCommands {
                                 })
                         )
                 )
-                // Admin Commands: /custom_races admin ...
+                // Root reload command: /<root> reload
+                .then(Commands.literal("reload")
+                        .requires(source -> source.hasPermission(2))
+                        .executes(CustomRacesCommands::executeReload)
+                )
+                // Admin Commands: /<root> admin ...
                 .then(Commands.literal("admin")
                         .requires(source -> source.hasPermission(2))
 
-                        // /custom_races admin editor / gui
+                        // /<root> admin editor / gui
                         .then(Commands.literal("editor")
                                 .executes(context -> {
                                     ServerPlayer player = context.getSource().getPlayerOrException();
@@ -117,7 +130,7 @@ public class CustomRacesCommands {
                                 })
                         )
 
-                        // /custom_races admin race-select <player> [race]
+                        // /<root> admin race-select <player> [race]
                         .then(Commands.literal("race-select")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(context -> {
@@ -149,7 +162,7 @@ public class CustomRacesCommands {
                                 )
                         )
 
-                        // /custom_races admin status
+                        // /<root> admin status
                         .then(Commands.literal("status")
                                 .executes(context -> {
                                     int count = RaceRegistry.loadedRaces.size();
@@ -159,16 +172,9 @@ public class CustomRacesCommands {
                                 })
                         )
 
-                        // /custom_races admin reload
+                        // /<root> admin reload
                         .then(Commands.literal("reload")
-                                .executes(context -> {
-                                    RaceRegistry.loadConfig();
-                                    RaceRegistry.loadRaces();
-                                    RaceRegistry.loadPlayerRaces();
-                                    ModPackets.syncRacesToAll(context.getSource().getServer());
-                                    context.getSource().sendSuccess(() -> Component.literal("Reloaded all race configurations!"), true);
-                                    return 1;
-                                })
+                                .executes(CustomRacesCommands::executeReload)
                         )
                 )
                 // Pack Export and Import Commands
@@ -206,7 +212,23 @@ public class CustomRacesCommands {
                                         })
                                 )
                         )
-                )
-        );
+                );
+    }
+
+    public static int executeReload(CommandContext<CommandSourceStack> context) {
+        try {
+            ServerPackManager.buildPack();
+        } catch (Exception e) {
+            System.err.println("[CustomRaces] Error building server pack on reload: " + e.getMessage());
+        }
+        RaceRegistry.loadConfig();
+        RaceRegistry.loadRaces();
+        RaceRegistry.loadPlayerRaces();
+        ModPackets.syncRacesToAll(context.getSource().getServer());
+        if (ServerPackManager.hasPack()) {
+            ModPackets.syncServerPackInfoToAll(context.getSource().getServer());
+        }
+        context.getSource().sendSuccess(() -> Component.literal("Reloaded all race configurations and rebuilt server resource pack (SHA-1: " + ServerPackManager.getPackSha1() + ")!"), true);
+        return 1;
     }
 }

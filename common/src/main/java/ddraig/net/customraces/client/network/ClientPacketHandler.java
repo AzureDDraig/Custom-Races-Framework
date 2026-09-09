@@ -83,5 +83,17 @@ public class ClientPacketHandler {
                 Minecraft.getInstance().setScreen(new RaceCreatorScreen(null));
             });
         });
+
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C, ModPackets.SERVER_PACK_INFO_ID, (buf, context) -> {
+            ddraig.net.customraces.network.ServerPackInfoPacket packet = ddraig.net.customraces.network.ServerPackInfoPacket.decode(buf);
+            context.queue(() -> {
+                ddraig.net.customraces.pack.ClientPackManager.handleServerPack(
+                        packet.getPackUrl(),
+                        packet.getSha1Hash(),
+                        packet.getSizeBytes(),
+                        packet.isRequired()
+                );
+            });
+        });
     }
 }

@@ -108,11 +108,23 @@ public class GeckoLibWereRenderer {
 
     public static boolean isModelPresent(ResourceLocation modelLoc, String rawPath) {
         if (modelLoc == null) return false;
+        if (GeckoLibCacheInjector.isModelBaked(modelLoc)) {
+            return true;
+        }
         try {
             Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
             Method getModelsMethod = cacheClass.getMethod("getBakedModels");
             Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
             Object bakedModel = bakedModels != null ? bakedModels.get(modelLoc) : null;
+            if (bakedModel == null && bakedModels != null) {
+                String path = modelLoc.getPath();
+                String ns = modelLoc.getNamespace();
+                if (!path.startsWith("geo/")) {
+                    bakedModel = bakedModels.get(new ResourceLocation(ns, "geo/" + path));
+                } else {
+                    bakedModel = bakedModels.get(new ResourceLocation(ns, path.substring(4)));
+                }
+            }
             if (bakedModel == null) {
                 bakedModel = bakeModelFromFile(modelLoc, rawPath);
             }
@@ -138,6 +150,15 @@ public class GeckoLibWereRenderer {
             Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
             
             Object bakedModel = bakedModels != null ? bakedModels.get(modelLoc) : null;
+            if (bakedModel == null && bakedModels != null) {
+                String path = modelLoc.getPath();
+                String ns = modelLoc.getNamespace();
+                if (!path.startsWith("geo/")) {
+                    bakedModel = bakedModels.get(new ResourceLocation(ns, "geo/" + path));
+                } else {
+                    bakedModel = bakedModels.get(new ResourceLocation(ns, path.substring(4)));
+                }
+            }
             if (bakedModel == null) {
                 bakedModel = bakeModelFromFile(modelLoc, race != null ? race.wereModelPath : null);
             }
@@ -556,19 +577,32 @@ public class GeckoLibWereRenderer {
                 return null;
             }
 
+            // GeckoLib 4.8.3: JsonUtil.GEO_GSON.fromJson(content, Model.class)
             Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-            Method parseJsonMethod = jsonUtilClass.getMethod("parse", String.class);
-            Object rawJsonObj = parseJsonMethod.invoke(null, content);
+            Field geoGsonField = jsonUtilClass.getField("GEO_GSON");
+            Object geoGson = geoGsonField.get(null);
 
+            Class<?> modelClass = Class.forName("software.bernie.geckolib.loading.json.raw.Model");
+            Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", String.class, Class.class);
+            Object rawModel = fromJsonMethod.invoke(geoGson, content, modelClass);
+            if (rawModel == null) return null;
+
+            // GeometryTree.fromModel(rawModel)
+            Class<?> geomTreeClass = Class.forName("software.bernie.geckolib.loading.object.GeometryTree");
+            Method fromModelMethod = geomTreeClass.getMethod("fromModel", modelClass);
+            Object tree = fromModelMethod.invoke(null, rawModel);
+            if (tree == null) return null;
+
+            // BakedModelFactory.getForNamespace(ns).constructGeoModel(tree)
             Class<?> modelFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
             Method getFactoryMethod = modelFactoryClass.getMethod("getForNamespace", String.class);
             Object factoryObj = getFactoryMethod.invoke(null, modelLoc.getNamespace());
 
-            Method constructGeoModelMethod = modelFactoryClass.getMethod("constructGeoModel", rawJsonObj.getClass());
-            Object bakedGeoModel = constructGeoModelMethod.invoke(factoryObj, rawJsonObj);
+            Method constructGeoModelMethod = modelFactoryClass.getMethod("constructGeoModel", geomTreeClass);
+            Object bakedGeoModel = constructGeoModelMethod.invoke(factoryObj, tree);
 
-            if (bakedGeoModel != null && bakedModels != null) {
-                bakedModels.put(modelLoc, bakedGeoModel);
+            if (bakedGeoModel != null) {
+                GeckoLibCacheInjector.injectModel(modelLoc, bakedGeoModel);
             }
             return bakedGeoModel;
         } catch (Throwable t) {
@@ -595,16 +629,20 @@ public class GeckoLibWereRenderer {
                 return null;
             }
 
+            // GeckoLib 4.8.3: JsonUtil.GEO_GSON.fromJson(animObj, BakedAnimations.class)
             Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-            Method parseJsonMethod = jsonUtilClass.getMethod("parse", String.class);
-            Object rawJsonObj = parseJsonMethod.invoke(null, content);
+            Field geoGsonField = jsonUtilClass.getField("GEO_GSON");
+            Object geoGson = geoGsonField.get(null);
 
-            Class<?> animLoaderClass = Class.forName("software.bernie.geckolib.loading.FileLoader");
-            Method loadAnimationsMethod = animLoaderClass.getMethod("loadAnimations", rawJsonObj.getClass());
-            Object bakedAnimObj = loadAnimationsMethod.invoke(null, rawJsonObj);
+            Class<?> bakedAnimsClass = Class.forName("software.bernie.geckolib.loading.object.BakedAnimations");
+            com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
+            com.google.gson.JsonObject animObj = root.has("animations") ? root.getAsJsonObject("animations") : root;
 
-            if (bakedAnimObj != null && bakedAnims != null) {
-                bakedAnims.put(animLoc, bakedAnimObj);
+            Method fromJsonElementMethod = geoGson.getClass().getMethod("fromJson", com.google.gson.JsonElement.class, Class.class);
+            Object bakedAnimObj = fromJsonElementMethod.invoke(geoGson, animObj, bakedAnimsClass);
+
+            if (bakedAnimObj != null) {
+                GeckoLibCacheInjector.injectAnimations(animLoc, bakedAnimObj);
             }
             return bakedAnimObj;
         } catch (Throwable t) {

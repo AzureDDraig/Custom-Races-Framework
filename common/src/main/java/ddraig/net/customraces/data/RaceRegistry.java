@@ -23,6 +23,8 @@ public class RaceRegistry {
     public static final Map<String, RaceData> loadedRaces = new ConcurrentHashMap<>();
     public static final Map<UUID, String> playerRaces = new ConcurrentHashMap<>();
     public static boolean autoOpenSelectionOnJoin = true;
+    public static int serverPackPort = 25585;
+    public static String serverPackHost = "localhost";
 
     // Suggestion Cache Arrays to prevent lag on visual creator screen
     public static final List<String> CACHED_SOUNDS = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -69,8 +71,16 @@ public class RaceRegistry {
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
                 com.google.gson.JsonObject json = GSON.fromJson(reader, com.google.gson.JsonObject.class);
-                if (json != null && json.has("autoOpenSelectionOnJoin")) {
-                    autoOpenSelectionOnJoin = json.get("autoOpenSelectionOnJoin").getAsBoolean();
+                if (json != null) {
+                    if (json.has("autoOpenSelectionOnJoin")) {
+                        autoOpenSelectionOnJoin = json.get("autoOpenSelectionOnJoin").getAsBoolean();
+                    }
+                    if (json.has("serverPackPort")) {
+                        serverPackPort = json.get("serverPackPort").getAsInt();
+                    }
+                    if (json.has("serverPackHost")) {
+                        serverPackHost = json.get("serverPackHost").getAsString();
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("[CustomRaces] Error loading config.json: " + e.getMessage());
@@ -85,10 +95,20 @@ public class RaceRegistry {
         try (FileWriter writer = new FileWriter(file)) {
             com.google.gson.JsonObject json = new com.google.gson.JsonObject();
             json.addProperty("autoOpenSelectionOnJoin", autoOpenSelectionOnJoin);
+            json.addProperty("serverPackPort", serverPackPort);
+            json.addProperty("serverPackHost", serverPackHost);
             GSON.toJson(json, writer);
         } catch (Exception e) {
             System.err.println("[CustomRaces] Error saving config.json: " + e.getMessage());
         }
+    }
+
+    public static int getServerPackPort() {
+        return serverPackPort > 0 ? serverPackPort : 25585;
+    }
+
+    public static String getServerPackHost() {
+        return (serverPackHost != null && !serverPackHost.trim().isEmpty()) ? serverPackHost.trim() : "localhost";
     }
 
     public static boolean canPlayerSelectRace(Player player, RaceData race) {
