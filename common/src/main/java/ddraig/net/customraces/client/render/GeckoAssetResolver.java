@@ -252,6 +252,20 @@ public class GeckoAssetResolver {
                 }
             }
         }
+
+        File sharedFile = ddraig.net.azureframelib.resource.AzureResourceManager.findTextureFile(cleanName);
+        if (sharedFile != null && sharedFile.exists() && sharedFile.isFile()) {
+            try (InputStream is = new FileInputStream(sharedFile)) {
+                NativeImage nativeImage = NativeImage.read(is);
+                DynamicTexture dynamicTexture = new DynamicTexture(nativeImage);
+                ResourceLocation loc = new ResourceLocation(DEFAULT_NAMESPACE, "dynamic_were_texture/" + cleanName.toLowerCase().replaceAll("[^a-z0-9_.-]", "_"));
+                Minecraft.getInstance().getTextureManager().register(loc, dynamicTexture);
+                DYNAMIC_TEXTURE_CACHE.put(cleanName, loc);
+                return loc;
+            } catch (Throwable t) {
+                System.err.println("[CustomRaces] Failed to load dynamic shared disk texture: " + sharedFile.getAbsolutePath() + " -> " + t.getMessage());
+            }
+        }
         return null;
     }
 
@@ -446,6 +460,8 @@ public class GeckoAssetResolver {
         for (File f : getModelDiskCandidates(parsed)) {
             if (f != null && f.exists() && f.isFile()) return f;
         }
+        File shared = ddraig.net.azureframelib.resource.AzureResourceManager.findModelFile(parsed.cleanFilename);
+        if (shared != null && shared.exists() && shared.isFile()) return shared;
         return null;
     }
 
@@ -455,6 +471,8 @@ public class GeckoAssetResolver {
         for (File f : getAnimationDiskCandidates(parsed)) {
             if (f != null && f.exists() && f.isFile()) return f;
         }
+        File shared = ddraig.net.azureframelib.resource.AzureResourceManager.findAnimationFile(parsed.cleanFilename);
+        if (shared != null && shared.exists() && shared.isFile()) return shared;
         return null;
     }
 }

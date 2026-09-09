@@ -43,6 +43,9 @@ dependencies {
     // GeckoLib
     modImplementation "software.bernie.geckolib:geckolib-forge-1.20.1:${rootProject.geckolib_version}"
 
+    // AzureFrameLib Shared Framework
+    modImplementation files("${rootProject.projectDir}/libs/azureframelib-forge-1.20.1.jar")
+
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionForge')
 }

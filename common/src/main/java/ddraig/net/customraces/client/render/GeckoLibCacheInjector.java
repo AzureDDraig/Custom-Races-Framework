@@ -34,10 +34,6 @@ public class GeckoLibCacheInjector {
     private static int lastInjectedModelCount = 0;
     private static int lastInjectedAnimationCount = 0;
 
-    // Fallback thread-safe maps for testing or headless runtime when GeckoLib is not on classpath
-    private static final ConcurrentMap<ResourceLocation, Object> FALLBACK_MODELS = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<ResourceLocation, Object> FALLBACK_ANIMATIONS = new ConcurrentHashMap<>();
-
     /**
      * Primary entry point called when a pack zip is mounted.
      * Clears previous caches, tracks mount count and path, and hot-injects models & animations.
@@ -165,289 +161,41 @@ public class GeckoLibCacheInjector {
     }
 
     /**
-     * Bakes a GeckoLib model from a JSON string using verified GeckoLib 4.8.3 APIs.
-     * Falls back to JSON syntax verification if GeckoLib is not on classpath.
+     * Bakes a GeckoLib model from a JSON string using verified AzureFrameLib GeckoLibModelLoader.
      */
     public static Object bakeModelFromJson(ResourceLocation modelLocation, String jsonString) {
-        if (jsonString == null || jsonString.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            // First check if already baked in GeckoLibCache
-            try {
-                Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-                Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-                Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
-                if (bakedModels != null && modelLocation != null && bakedModels.containsKey(modelLocation)) {
-                    return bakedModels.get(modelLocation);
-                }
-            } catch (Throwable ignored) {}
-
-            // Validate JSON syntax first
-            JsonElement parsed = JsonParser.parseString(jsonString);
-            if (!parsed.isJsonObject()) return null;
-
-            // Use GeckoLib 4.8.3 reflection: JsonUtil.GEO_GSON.fromJson(jsonString, Model.class)
-            Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-            Field geoGsonField = jsonUtilClass.getField("GEO_GSON");
-            Object geoGson = geoGsonField.get(null);
-
-            Class<?> modelClass = Class.forName("software.bernie.geckolib.loading.json.raw.Model");
-            Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", String.class, Class.class);
-            Object rawModel = fromJsonMethod.invoke(geoGson, jsonString, modelClass);
-            if (rawModel == null) return null;
-
-            // GeometryTree.fromModel(rawModel)
-            Class<?> geomTreeClass = Class.forName("software.bernie.geckolib.loading.object.GeometryTree");
-            Method fromModelMethod = geomTreeClass.getMethod("fromModel", modelClass);
-            Object tree = fromModelMethod.invoke(null, rawModel);
-            if (tree == null) return null;
-
-            // BakedModelFactory.getForNamespace(ns).constructGeoModel(tree)
-            Class<?> modelFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
-            Method getFactoryMethod = modelFactoryClass.getMethod("getForNamespace", String.class);
-            String ns = (modelLocation != null) ? modelLocation.getNamespace() : "customraces";
-            Object factoryObj = getFactoryMethod.invoke(null, ns);
-
-            Method constructGeoModelMethod = modelFactoryClass.getMethod("constructGeoModel", geomTreeClass);
-            Object bakedGeoModel = constructGeoModelMethod.invoke(factoryObj, tree);
-
-            if (bakedGeoModel != null && modelLocation != null) {
-                injectModel(modelLocation, bakedGeoModel);
-            }
-            return bakedGeoModel;
-        } catch (ClassNotFoundException cnfe) {
-            // Offline / headless test fallback where GeckoLib runtime jar is absent
-            try {
-                JsonElement parsed = JsonParser.parseString(jsonString);
-                if (parsed != null && parsed.isJsonObject() && modelLocation != null) {
-                    FALLBACK_MODELS.put(modelLocation, parsed);
-                }
-                return parsed;
-            } catch (Throwable t) {
-                return null;
-            }
-        } catch (Throwable t) {
-            System.err.println("[CustomRaces] Failed to bake GeckoLib model " + modelLocation + ": " + t.getMessage());
-            return null;
-        }
+        return ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeModelFromJson(modelLocation, jsonString);
     }
 
     /**
-     * Bakes GeckoLib animations from a JSON string using verified GeckoLib 4.8.3 APIs.
-     * Falls back to JSON syntax verification if GeckoLib is not on classpath.
+     * Bakes GeckoLib animations from a JSON string using verified AzureFrameLib GeckoLibModelLoader.
      */
     public static Object bakeAnimationsFromJson(ResourceLocation animLocation, String jsonString) {
-        if (jsonString == null || jsonString.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            // First check if already baked in GeckoLibCache
-            try {
-                Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-                Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
-                Map<?, ?> bakedAnims = (Map<?, ?>) getAnimsMethod.invoke(null);
-                if (bakedAnims != null && animLocation != null && bakedAnims.containsKey(animLocation)) {
-                    return bakedAnims.get(animLocation);
-                }
-            } catch (Throwable ignored) {}
-
-            JsonElement parsed = JsonParser.parseString(jsonString);
-            if (!parsed.isJsonObject()) return null;
-            JsonObject root = parsed.getAsJsonObject();
-            JsonObject animObj = root.has("animations") ? root.getAsJsonObject("animations") : root;
-
-            Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-            Field geoGsonField = jsonUtilClass.getField("GEO_GSON");
-            Object geoGson = geoGsonField.get(null);
-
-            Class<?> bakedAnimsClass = Class.forName("software.bernie.geckolib.loading.object.BakedAnimations");
-            Method fromJsonElementMethod = geoGson.getClass().getMethod("fromJson", JsonElement.class, Class.class);
-            Object bakedAnimObj = fromJsonElementMethod.invoke(geoGson, animObj, bakedAnimsClass);
-
-            if (bakedAnimObj != null && animLocation != null) {
-                injectAnimations(animLocation, bakedAnimObj);
-            }
-            return bakedAnimObj;
-        } catch (ClassNotFoundException cnfe) {
-            // Headless unit test fallback
-            try {
-                JsonElement parsed = JsonParser.parseString(jsonString);
-                if (!parsed.isJsonObject()) return null;
-                JsonObject root = parsed.getAsJsonObject();
-                JsonObject animObj = root.has("animations") ? root.getAsJsonObject("animations") : root;
-                if (animLocation != null) {
-                    FALLBACK_ANIMATIONS.put(animLocation, animObj);
-                }
-                return animObj;
-            } catch (Throwable t) {
-                return null;
-            }
-        } catch (Throwable t) {
-            System.err.println("[CustomRaces] Failed to bake GeckoLib animations " + animLocation + ": " + t.getMessage());
-            return null;
-        }
+        return ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeAnimationsFromJson(animLocation, jsonString);
     }
 
-    /**
-     * Ensures GeckoLibCache.MODELS is a thread-safe modifiable Map.
-     * Swaps out Collections.emptyMap() or non-concurrent maps via reflection.
-     */
     public static Map<ResourceLocation, Object> ensureModifiableModelMap() {
-        return ensureModifiableMap("MODELS");
+        return ddraig.net.azureframelib.client.GeckoLibModelLoader.ensureModifiableModelMap();
     }
 
-    /**
-     * Ensures GeckoLibCache.ANIMATIONS is a thread-safe modifiable Map.
-     * Swaps out Collections.emptyMap() or non-concurrent maps via reflection.
-     */
     public static Map<ResourceLocation, Object> ensureModifiableAnimationMap() {
-        return ensureModifiableMap("ANIMATIONS");
+        return ddraig.net.azureframelib.client.GeckoLibModelLoader.ensureModifiableAnimationMap();
     }
 
-    @SuppressWarnings("unchecked")
-    public static Map<ResourceLocation, Object> ensureModifiableMap(String fieldName) {
-        try {
-            Class<?> geckoLibClass = Class.forName("software.bernie.geckolib.GeckoLib");
-            try {
-                Field initField = geckoLibClass.getField("hasInitialized");
-                if (!initField.getBoolean(null)) {
-                    initField.setBoolean(null, true);
-                }
-            } catch (Throwable ignored) {}
-
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Field field = cacheClass.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            Map<?, ?> map = (Map<?, ?>) field.get(null);
-
-            boolean needsSwap = (map == null)
-                    || map.getClass().getName().contains("EmptyMap")
-                    || map.getClass().getName().contains("Unmodifiable")
-                    || !(map instanceof ConcurrentMap);
-
-            if (needsSwap) {
-                Map<ResourceLocation, Object> mutableMap = new ConcurrentHashMap<>();
-                if (map != null) {
-                    for (Map.Entry<?, ?> entry : map.entrySet()) {
-                        if (entry.getKey() instanceof ResourceLocation loc) {
-                            mutableMap.put(loc, entry.getValue());
-                        }
-                    }
-                }
-                field.set(null, mutableMap);
-                return mutableMap;
-            }
-            return (Map<ResourceLocation, Object>) map;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    /**
-     * Safely injects a baked model into GeckoLibCache and fallback tracking.
-     */
     public static void injectModel(ResourceLocation location, Object bakedModel) {
-        if (location == null || bakedModel == null) return;
-        Map<ResourceLocation, Object> models = ensureModifiableModelMap();
-        if (models != null) {
-            try {
-                models.put(location, bakedModel);
-            } catch (UnsupportedOperationException uoe) {
-                // Re-swap and retry
-                Map<ResourceLocation, Object> swapped = ensureModifiableModelMap();
-                if (swapped != null) swapped.put(location, bakedModel);
-            }
-        }
-        FALLBACK_MODELS.put(location, bakedModel);
+        ddraig.net.azureframelib.client.GeckoLibModelLoader.injectModel(location, bakedModel);
     }
 
-    /**
-     * Safely injects baked animations into GeckoLibCache and fallback tracking.
-     */
     public static void injectAnimations(ResourceLocation location, Object bakedAnimations) {
-        if (location == null || bakedAnimations == null) return;
-        Map<ResourceLocation, Object> anims = ensureModifiableAnimationMap();
-        if (anims != null) {
-            try {
-                anims.put(location, bakedAnimations);
-            } catch (UnsupportedOperationException uoe) {
-                // Re-swap and retry
-                Map<ResourceLocation, Object> swapped = ensureModifiableAnimationMap();
-                if (swapped != null) swapped.put(location, bakedAnimations);
-            }
-        }
-        FALLBACK_ANIMATIONS.put(location, bakedAnimations);
+        ddraig.net.azureframelib.client.GeckoLibModelLoader.injectAnimations(location, bakedAnimations);
     }
 
-    /**
-     * Checks if a model for the given ResourceLocation is baked and ready.
-     * Supports checking both canonical ("geo/...") and shorthand paths.
-     */
     public static boolean isModelBaked(ResourceLocation modelLocation) {
-        if (modelLocation == null) return false;
-        try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-            Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
-            if (bakedModels != null) {
-                if (bakedModels.containsKey(modelLocation)) return true;
-                String path = modelLocation.getPath();
-                String ns = modelLocation.getNamespace();
-                if (!path.startsWith("geo/") && bakedModels.containsKey(new ResourceLocation(ns, "geo/" + path))) {
-                    return true;
-                }
-                if (path.startsWith("geo/") && bakedModels.containsKey(new ResourceLocation(ns, path.substring(4)))) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {}
-
-        if (FALLBACK_MODELS.containsKey(modelLocation)) return true;
-        String path = modelLocation.getPath();
-        String ns = modelLocation.getNamespace();
-        if (!path.startsWith("geo/") && FALLBACK_MODELS.containsKey(new ResourceLocation(ns, "geo/" + path))) {
-            return true;
-        }
-        if (path.startsWith("geo/") && FALLBACK_MODELS.containsKey(new ResourceLocation(ns, path.substring(4)))) {
-            return true;
-        }
-        return false;
+        return ddraig.net.azureframelib.client.GeckoLibModelLoader.isModelBaked(modelLocation);
     }
 
-    /**
-     * Checks if an animation for the given ResourceLocation is baked and ready.
-     * Supports checking both canonical ("animations/...") and shorthand paths.
-     */
     public static boolean isAnimationBaked(ResourceLocation animationLocation) {
-        if (animationLocation == null) return false;
-        try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
-            Map<?, ?> bakedAnims = (Map<?, ?>) getAnimsMethod.invoke(null);
-            if (bakedAnims != null) {
-                if (bakedAnims.containsKey(animationLocation)) return true;
-                String path = animationLocation.getPath();
-                String ns = animationLocation.getNamespace();
-                if (!path.startsWith("animations/") && bakedAnims.containsKey(new ResourceLocation(ns, "animations/" + path))) {
-                    return true;
-                }
-                if (path.startsWith("animations/") && bakedAnims.containsKey(new ResourceLocation(ns, path.substring(11)))) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {}
-
-        if (FALLBACK_ANIMATIONS.containsKey(animationLocation)) return true;
-        String path = animationLocation.getPath();
-        String ns = animationLocation.getNamespace();
-        if (!path.startsWith("animations/") && FALLBACK_ANIMATIONS.containsKey(new ResourceLocation(ns, "animations/" + path))) {
-            return true;
-        }
-        if (path.startsWith("animations/") && FALLBACK_ANIMATIONS.containsKey(new ResourceLocation(ns, path.substring(11)))) {
-            return true;
-        }
-        return false;
+        return ddraig.net.azureframelib.client.GeckoLibModelLoader.isAnimationBaked(animationLocation);
     }
 
     public static Path getLastMountedPackPath() {
@@ -470,8 +218,7 @@ public class GeckoLibCacheInjector {
      * Clears internal fallback tracking caches.
      */
     public static synchronized void clearInternalCaches() {
-        FALLBACK_MODELS.clear();
-        FALLBACK_ANIMATIONS.clear();
+        ddraig.net.azureframelib.client.GeckoLibModelLoader.clearCaches();
     }
 
     /**

@@ -61,7 +61,7 @@ public class CustomSpawnHandler {
                     } catch (Exception ignored) {}
                 }
 
-                player.teleportTo(targetLevel, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, player.getYRot(), player.getXRot());
+                ddraig.net.azureframelib.util.TeleportHelper.teleportDirect(player, spawnPos.getX() + 0.5, spawnPos.getY() + 1.0, spawnPos.getZ() + 0.5, race.spawnDimension.trim());
             }
         } catch (Exception e) {
             System.err.println("[CustomRaces] Failed to teleport to race spawn dimension: " + e.getMessage());

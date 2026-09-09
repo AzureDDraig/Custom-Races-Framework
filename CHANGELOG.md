@@ -2,6 +2,18 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b203a] - 2026-09-09
+
+### ⚡ Shared Framework Integration & Performance Upgrades
+
+- **Shared Core Library**: Custom Races Framework now links into AzureFrameLib, sharing central systems across all companion mods.
+- **Unified 3D Model Loading**: Swapped out separate model baking code with the shared 3D model engine, speeding up creature model loading and saving memory.
+- **Shared Resource Finding**: Models, sound files, and textures can now be found across common shared mod folders automatically.
+- **Smoother Teleportation**: Teleportation abilities and custom race spawn points now use safe teleport checks that protect you from getting stuck in blocks or walls.
+- **Cleaner Search & Suggestions**: Text boxes for sound effects and animations now share the central autocomplete helper, providing quick suggestions as you type.
+
+---
+
 ## [1.0.0-b202a] - 2026-09-08
 
 ### 🐺 Automatic Server Model Streaming & Custom Beast Transformations (Milestones M1–M4)

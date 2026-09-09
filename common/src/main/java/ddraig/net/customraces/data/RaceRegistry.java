@@ -68,39 +68,35 @@ public class RaceRegistry {
 
     public static void loadConfig() {
         File file = getConfigFile();
-        if (file.exists()) {
-            try (FileReader reader = new FileReader(file)) {
-                com.google.gson.JsonObject json = GSON.fromJson(reader, com.google.gson.JsonObject.class);
-                if (json != null) {
-                    if (json.has("autoOpenSelectionOnJoin")) {
-                        autoOpenSelectionOnJoin = json.get("autoOpenSelectionOnJoin").getAsBoolean();
-                    }
-                    if (json.has("serverPackPort")) {
-                        serverPackPort = json.get("serverPackPort").getAsInt();
-                    }
-                    if (json.has("serverPackHost")) {
-                        serverPackHost = json.get("serverPackHost").getAsString();
-                    }
+        com.google.gson.JsonObject json = ddraig.net.azureframelib.util.ConfigHelper.loadConfig(file, com.google.gson.JsonObject.class, () -> {
+            com.google.gson.JsonObject def = new com.google.gson.JsonObject();
+            def.addProperty("autoOpenSelectionOnJoin", autoOpenSelectionOnJoin);
+            def.addProperty("serverPackPort", serverPackPort);
+            def.addProperty("serverPackHost", serverPackHost);
+            return def;
+        });
+        if (json != null) {
+            try {
+                if (json.has("autoOpenSelectionOnJoin") && json.get("autoOpenSelectionOnJoin").isJsonPrimitive()) {
+                    autoOpenSelectionOnJoin = json.get("autoOpenSelectionOnJoin").getAsBoolean();
                 }
-            } catch (Exception e) {
-                System.err.println("[CustomRaces] Error loading config.json: " + e.getMessage());
-            }
-        } else {
-            saveConfig();
+                if (json.has("serverPackPort") && json.get("serverPackPort").isJsonPrimitive()) {
+                    serverPackPort = json.get("serverPackPort").getAsInt();
+                }
+                if (json.has("serverPackHost") && json.get("serverPackHost").isJsonPrimitive()) {
+                    serverPackHost = json.get("serverPackHost").getAsString();
+                }
+            } catch (Exception ignored) {}
         }
     }
 
     public static void saveConfig() {
         File file = getConfigFile();
-        try (FileWriter writer = new FileWriter(file)) {
-            com.google.gson.JsonObject json = new com.google.gson.JsonObject();
-            json.addProperty("autoOpenSelectionOnJoin", autoOpenSelectionOnJoin);
-            json.addProperty("serverPackPort", serverPackPort);
-            json.addProperty("serverPackHost", serverPackHost);
-            GSON.toJson(json, writer);
-        } catch (Exception e) {
-            System.err.println("[CustomRaces] Error saving config.json: " + e.getMessage());
-        }
+        com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+        json.addProperty("autoOpenSelectionOnJoin", autoOpenSelectionOnJoin);
+        json.addProperty("serverPackPort", serverPackPort);
+        json.addProperty("serverPackHost", serverPackHost);
+        ddraig.net.azureframelib.util.ConfigHelper.saveConfig(file, json);
     }
 
     public static int getServerPackPort() {
@@ -168,7 +164,7 @@ public class RaceRegistry {
                 CACHED_SOUNDS.add(sound.toString());
             }
             if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
-                ddraig.net.customraces.client.ClientSuggestionsHelper.addClientSounds(CACHED_SOUNDS);
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientSounds(CACHED_SOUNDS);
             }
             java.util.Collections.sort(CACHED_SOUNDS);
 
@@ -187,7 +183,7 @@ public class RaceRegistry {
             CACHED_DIMENSIONS.clear();
             CACHED_DIMENSIONS.addAll(java.util.List.of("minecraft:overworld", "minecraft:the_nether", "minecraft:the_end"));
             if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
-                ddraig.net.customraces.client.ClientSuggestionsHelper.addClientDimensions(CACHED_DIMENSIONS);
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientDimensions(CACHED_DIMENSIONS);
             }
             java.util.Collections.sort(CACHED_DIMENSIONS);
 
@@ -198,7 +194,7 @@ public class RaceRegistry {
                 "minecraft:crimson_forest", "minecraft:warped_forest", "minecraft:the_end", "minecraft:lush_caves"
             ));
             if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
-                ddraig.net.customraces.client.ClientSuggestionsHelper.addClientBiomes(CACHED_BIOMES);
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientBiomes(CACHED_BIOMES);
             }
             java.util.Collections.sort(CACHED_BIOMES);
 
@@ -367,7 +363,7 @@ public class RaceRegistry {
 
         // 2. Try reading from Minecraft Client Resource Manager if on client
         if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
-            ddraig.net.customraces.client.ClientSuggestionsHelper.addClientAnimationSuggestions(cleanPath, results, GSON);
+            ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientAnimationSuggestions(cleanPath, results, GSON);
         }
 
         java.util.Collections.sort(results);

@@ -31,32 +31,7 @@ public class WereModelRenderer {
         GeckoAssetResolver.clearCaches();
         DYNAMIC_TEXTURE_CACHE.clear();
         LOGGED_WARNINGS.clear();
-        GeckoLibCacheInjector.clearInternalCaches();
-        try {
-            GeckoLibCacheInjector.ensureModifiableModelMap();
-            GeckoLibCacheInjector.ensureModifiableAnimationMap();
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            java.lang.reflect.Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-            java.util.Map<?, ?> models = (java.util.Map<?, ?>) getModelsMethod.invoke(null);
-            if (models != null) {
-                models.keySet().removeIf(key -> {
-                    if (key instanceof ResourceLocation loc) {
-                        return loc.getNamespace().equals("customraces");
-                    }
-                    return key.toString().startsWith("customraces:");
-                });
-            }
-            java.lang.reflect.Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
-            java.util.Map<?, ?> anims = (java.util.Map<?, ?>) getAnimsMethod.invoke(null);
-            if (anims != null) {
-                anims.keySet().removeIf(key -> {
-                    if (key instanceof ResourceLocation loc) {
-                        return loc.getNamespace().equals("customraces");
-                    }
-                    return key.toString().startsWith("customraces:");
-                });
-            }
-        } catch (Throwable ignored) {}
+        ddraig.net.azureframelib.client.GeckoLibModelLoader.clearCaches();
     }
 
     public static boolean isFirstPerson(AbstractClientPlayer player) {

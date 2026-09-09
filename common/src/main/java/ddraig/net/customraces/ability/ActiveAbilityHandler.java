@@ -128,9 +128,7 @@ public class ActiveAbilityHandler {
             case "teleport_dash":
             case "teleport dash":
                 Vec3 safeTp = getSafeTeleportTarget(level, player, 12.0);
-                player.teleportTo(safeTp.x, safeTp.y, safeTp.z);
-                level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0f, 1.0f);
-                level.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
+                ddraig.net.azureframelib.util.TeleportHelper.teleportDirect((ServerPlayer) player, safeTp.x, safeTp.y, safeTp.z, null);
                 break;
 
             case "lightning_strike":

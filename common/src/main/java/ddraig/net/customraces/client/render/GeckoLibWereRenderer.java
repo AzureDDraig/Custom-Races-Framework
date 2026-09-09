@@ -108,28 +108,15 @@ public class GeckoLibWereRenderer {
 
     public static boolean isModelPresent(ResourceLocation modelLoc, String rawPath) {
         if (modelLoc == null) return false;
-        if (GeckoLibCacheInjector.isModelBaked(modelLoc)) {
+        if (ddraig.net.azureframelib.client.GeckoLibModelLoader.isModelBaked(modelLoc)) {
             return true;
         }
+        Object bakedModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedModel(modelLoc);
+        if (bakedModel == null) {
+            bakedModel = bakeModelFromFile(modelLoc, rawPath);
+        }
+        if (bakedModel == null) return false;
         try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-            Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
-            Object bakedModel = bakedModels != null ? bakedModels.get(modelLoc) : null;
-            if (bakedModel == null && bakedModels != null) {
-                String path = modelLoc.getPath();
-                String ns = modelLoc.getNamespace();
-                if (!path.startsWith("geo/")) {
-                    bakedModel = bakedModels.get(new ResourceLocation(ns, "geo/" + path));
-                } else {
-                    bakedModel = bakedModels.get(new ResourceLocation(ns, path.substring(4)));
-                }
-            }
-            if (bakedModel == null) {
-                bakedModel = bakeModelFromFile(modelLoc, rawPath);
-            }
-            if (bakedModel == null) return false;
-
             Method topLevelBonesMethod = bakedModel.getClass().getMethod("topLevelBones");
             List<?> topBones = (List<?>) topLevelBonesMethod.invoke(bakedModel);
             return topBones != null && !topBones.isEmpty();
@@ -145,20 +132,7 @@ public class GeckoLibWereRenderer {
     public static boolean renderGeckoModel(PoseStack poseStack, MultiBufferSource buffer, int packedLight, AbstractClientPlayer player, RaceData race, ResourceLocation modelLoc, ResourceLocation textureLoc, ResourceLocation animLoc, float netHeadYaw, float headPitch) {
         if (modelLoc == null) return false;
         try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-            Map<?, ?> bakedModels = (Map<?, ?>) getModelsMethod.invoke(null);
-            
-            Object bakedModel = bakedModels != null ? bakedModels.get(modelLoc) : null;
-            if (bakedModel == null && bakedModels != null) {
-                String path = modelLoc.getPath();
-                String ns = modelLoc.getNamespace();
-                if (!path.startsWith("geo/")) {
-                    bakedModel = bakedModels.get(new ResourceLocation(ns, "geo/" + path));
-                } else {
-                    bakedModel = bakedModels.get(new ResourceLocation(ns, path.substring(4)));
-                }
-            }
+            Object bakedModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedModel(modelLoc);
             if (bakedModel == null) {
                 bakedModel = bakeModelFromFile(modelLoc, race != null ? race.wereModelPath : null);
             }
@@ -169,7 +143,10 @@ public class GeckoLibWereRenderer {
             if (topBones == null || topBones.isEmpty()) return false;
 
             if (animLoc != null) {
-                bakeAnimationsFromFile(animLoc, race != null ? race.wereAnimationPath : null);
+                Object bakedAnim = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedAnimations(animLoc);
+                if (bakedAnim == null) {
+                    bakeAnimationsFromFile(animLoc, race != null ? race.wereAnimationPath : null);
+                }
             }
 
             boolean isInvisible = player != null && (player.isInvisible() || player.isSpectator());
@@ -564,50 +541,19 @@ public class GeckoLibWereRenderer {
 
     public static Object bakeModelFromFile(ResourceLocation modelLoc, String rawPath) {
         if (modelLoc == null) return null;
-        try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getModelsMethod = cacheClass.getMethod("getBakedModels");
-            Map<ResourceLocation, Object> bakedModels = (Map<ResourceLocation, Object>) getModelsMethod.invoke(null);
-            if (bakedModels != null && bakedModels.containsKey(modelLoc)) {
-                return bakedModels.get(modelLoc);
-            }
+        Object cached = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedModel(modelLoc);
+        if (cached != null) return cached;
 
-            String content = GeckoAssetResolver.getModelContent(modelLoc, rawPath);
-            if (content == null || content.trim().isEmpty()) {
-                return null;
-            }
-
-            // GeckoLib 4.8.3: JsonUtil.GEO_GSON.fromJson(content, Model.class)
-            Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-            Field geoGsonField = jsonUtilClass.getField("GEO_GSON");
-            Object geoGson = geoGsonField.get(null);
-
-            Class<?> modelClass = Class.forName("software.bernie.geckolib.loading.json.raw.Model");
-            Method fromJsonMethod = geoGson.getClass().getMethod("fromJson", String.class, Class.class);
-            Object rawModel = fromJsonMethod.invoke(geoGson, content, modelClass);
-            if (rawModel == null) return null;
-
-            // GeometryTree.fromModel(rawModel)
-            Class<?> geomTreeClass = Class.forName("software.bernie.geckolib.loading.object.GeometryTree");
-            Method fromModelMethod = geomTreeClass.getMethod("fromModel", modelClass);
-            Object tree = fromModelMethod.invoke(null, rawModel);
-            if (tree == null) return null;
-
-            // BakedModelFactory.getForNamespace(ns).constructGeoModel(tree)
-            Class<?> modelFactoryClass = Class.forName("software.bernie.geckolib.loading.object.BakedModelFactory");
-            Method getFactoryMethod = modelFactoryClass.getMethod("getForNamespace", String.class);
-            Object factoryObj = getFactoryMethod.invoke(null, modelLoc.getNamespace());
-
-            Method constructGeoModelMethod = modelFactoryClass.getMethod("constructGeoModel", geomTreeClass);
-            Object bakedGeoModel = constructGeoModelMethod.invoke(factoryObj, tree);
-
-            if (bakedGeoModel != null) {
-                GeckoLibCacheInjector.injectModel(modelLoc, bakedGeoModel);
-            }
-            return bakedGeoModel;
-        } catch (Throwable t) {
+        String content = GeckoAssetResolver.getModelContent(modelLoc, rawPath);
+        if (content == null || content.trim().isEmpty()) {
             return null;
         }
+
+        Object bakedGeoModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeModelFromJson(modelLoc, content);
+        if (bakedGeoModel != null) {
+            ddraig.net.azureframelib.client.GeckoLibModelLoader.injectModel(modelLoc, bakedGeoModel);
+        }
+        return bakedGeoModel;
     }
 
     public static Object bakeModelFromFile(ResourceLocation modelLoc) {
@@ -616,38 +562,19 @@ public class GeckoLibWereRenderer {
 
     public static Object bakeAnimationsFromFile(ResourceLocation animLoc, String rawPath) {
         if (animLoc == null) return null;
-        try {
-            Class<?> cacheClass = Class.forName("software.bernie.geckolib.cache.GeckoLibCache");
-            Method getAnimsMethod = cacheClass.getMethod("getBakedAnimations");
-            Map<ResourceLocation, Object> bakedAnims = (Map<ResourceLocation, Object>) getAnimsMethod.invoke(null);
-            if (bakedAnims != null && bakedAnims.containsKey(animLoc)) {
-                return bakedAnims.get(animLoc);
-            }
+        Object cached = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedAnimations(animLoc);
+        if (cached != null) return cached;
 
-            String content = GeckoAssetResolver.getAnimationContent(animLoc, rawPath);
-            if (content == null || content.trim().isEmpty()) {
-                return null;
-            }
-
-            // GeckoLib 4.8.3: JsonUtil.GEO_GSON.fromJson(animObj, BakedAnimations.class)
-            Class<?> jsonUtilClass = Class.forName("software.bernie.geckolib.util.JsonUtil");
-            Field geoGsonField = jsonUtilClass.getField("GEO_GSON");
-            Object geoGson = geoGsonField.get(null);
-
-            Class<?> bakedAnimsClass = Class.forName("software.bernie.geckolib.loading.object.BakedAnimations");
-            com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(content).getAsJsonObject();
-            com.google.gson.JsonObject animObj = root.has("animations") ? root.getAsJsonObject("animations") : root;
-
-            Method fromJsonElementMethod = geoGson.getClass().getMethod("fromJson", com.google.gson.JsonElement.class, Class.class);
-            Object bakedAnimObj = fromJsonElementMethod.invoke(geoGson, animObj, bakedAnimsClass);
-
-            if (bakedAnimObj != null) {
-                GeckoLibCacheInjector.injectAnimations(animLoc, bakedAnimObj);
-            }
-            return bakedAnimObj;
-        } catch (Throwable t) {
+        String content = GeckoAssetResolver.getAnimationContent(animLoc, rawPath);
+        if (content == null || content.trim().isEmpty()) {
             return null;
         }
+
+        Object bakedAnimObj = ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeAnimationsFromJson(animLoc, content);
+        if (bakedAnimObj != null) {
+            ddraig.net.azureframelib.client.GeckoLibModelLoader.injectAnimations(animLoc, bakedAnimObj);
+        }
+        return bakedAnimObj;
     }
 
     public static Object bakeAnimationsFromFile(ResourceLocation animLoc) {

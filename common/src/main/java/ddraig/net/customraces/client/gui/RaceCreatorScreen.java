@@ -1,6 +1,6 @@
 package ddraig.net.customraces.client.gui;
 
-import ddraig.net.customraces.client.ClientSuggestionsHelper;
+import ddraig.net.azureframelib.client.ClientSuggestionsHelper;
 import ddraig.net.customraces.data.MobAllianceData;
 import ddraig.net.customraces.data.PartTransformData;
 import ddraig.net.customraces.data.ParticleAuraData;

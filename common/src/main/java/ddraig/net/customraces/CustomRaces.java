@@ -23,6 +23,7 @@ public class CustomRaces {
 
     public static void init() {
         ITEMS.register();
+        ddraig.net.azureframelib.resource.AzureResourceManager.init();
         RaceRegistry.init();
         ModPackets.register();
         CustomRacesCommands.init();
@@ -53,9 +54,12 @@ public class CustomRaces {
             }
         });
 
-        // Passive ability player tick loop
+        // Passive ability and teleport warmup player tick loop
         TickEvent.PLAYER_POST.register(player -> {
             ddraig.net.customraces.ability.PassiveAbilityHandler.tickPlayer(player);
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                ddraig.net.azureframelib.util.TeleportHelper.tickPlayer(sp);
+            }
         });
     }
 }
