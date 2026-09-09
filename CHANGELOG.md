@@ -2,6 +2,14 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b204a] - 2026-09-09
+
+### 🔧 Fix Mod Launch & Library Compatibility
+
+- **Relaxed Version Check**: Fixed an issue where the game refused to launch because it was looking for a strict version of AzureFrameLib. The mod now happily accepts any version of AzureFrameLib (including build numbers like 1.0.0-b002a and above).
+
+---
+
 ## [1.0.0-b203a] - 2026-09-09
 
 ### ⚡ Shared Framework Integration & Performance Upgrades
