@@ -107,13 +107,22 @@ public class GeckoLibWereRenderer {
     }
 
     public static boolean isModelPresent(ResourceLocation modelLoc, String rawPath) {
-        if (modelLoc == null) return false;
-        if (ddraig.net.azureframelib.client.GeckoLibModelLoader.isModelBaked(modelLoc)) {
+        if (modelLoc == null && (rawPath == null || rawPath.trim().isEmpty())) return false;
+        if (modelLoc != null && ddraig.net.azureframelib.client.GeckoLibModelLoader.isModelBaked(modelLoc)) {
             return true;
         }
-        Object bakedModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedModel(modelLoc);
+        Object bakedModel = null;
+        if (modelLoc != null) {
+            bakedModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedModel(modelLoc);
+        }
         if (bakedModel == null) {
             bakedModel = bakeModelFromFile(modelLoc, rawPath);
+        }
+        if (bakedModel == null && rawPath != null) {
+            File diskFile = GeckoAssetResolver.resolveModelDiskFile(rawPath);
+            if (diskFile != null && diskFile.exists()) {
+                bakedModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeModelFromFile(modelLoc, diskFile);
+            }
         }
         if (bakedModel == null) return false;
         try {
@@ -136,6 +145,12 @@ public class GeckoLibWereRenderer {
             if (bakedModel == null) {
                 bakedModel = bakeModelFromFile(modelLoc, race != null ? race.wereModelPath : null);
             }
+            if (bakedModel == null && race != null && race.wereModelPath != null) {
+                File diskFile = GeckoAssetResolver.resolveModelDiskFile(race.wereModelPath);
+                if (diskFile != null && diskFile.exists()) {
+                    bakedModel = ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeModelFromFile(modelLoc, diskFile);
+                }
+            }
             if (bakedModel == null) return false;
 
             Method topLevelBonesMethod = bakedModel.getClass().getMethod("topLevelBones");
@@ -146,6 +161,12 @@ public class GeckoLibWereRenderer {
                 Object bakedAnim = ddraig.net.azureframelib.client.GeckoLibModelLoader.getOrLoadBakedAnimations(animLoc);
                 if (bakedAnim == null) {
                     bakeAnimationsFromFile(animLoc, race != null ? race.wereAnimationPath : null);
+                }
+                if (bakedAnim == null && race != null && race.wereAnimationPath != null) {
+                    File diskFile = GeckoAssetResolver.resolveAnimationDiskFile(race.wereAnimationPath);
+                    if (diskFile != null && diskFile.exists()) {
+                        ddraig.net.azureframelib.client.GeckoLibModelLoader.bakeAnimationsFromFile(animLoc, diskFile);
+                    }
                 }
             }
 

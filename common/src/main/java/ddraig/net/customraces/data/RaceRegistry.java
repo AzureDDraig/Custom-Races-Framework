@@ -257,17 +257,26 @@ public class RaceRegistry {
             CACHED_WERE_MODELS.clear();
             scanFilesRecursively(new File("config/custom_races/models"), "customraces:models/", ".json", CACHED_WERE_MODELS);
             scanFilesRecursively(new File("config/custom_races"), "customraces:", ".json", CACHED_WERE_MODELS);
+            try {
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientModels(CACHED_WERE_MODELS);
+            } catch (Throwable ignored) {}
             java.util.Collections.sort(CACHED_WERE_MODELS);
 
             // Scan Were & Custom Textures
             CACHED_WERE_TEXTURES.clear();
             scanFilesRecursively(new File("config/custom_races/textures"), "customraces:textures/", ".png", CACHED_WERE_TEXTURES);
             scanFilesRecursively(new File("config/custom_races"), "customraces:", ".png", CACHED_WERE_TEXTURES);
+            try {
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientTextures(CACHED_WERE_TEXTURES);
+            } catch (Throwable ignored) {}
             java.util.Collections.sort(CACHED_WERE_TEXTURES);
 
             // Scan Were & Custom Animations
             CACHED_WERE_ANIMS.clear();
             scanFilesRecursively(new File("config/custom_races/animations"), "customraces:animations/", ".json", CACHED_WERE_ANIMS);
+            try {
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientAnimations(CACHED_WERE_ANIMS);
+            } catch (Throwable ignored) {}
             java.util.Collections.sort(CACHED_WERE_ANIMS);
 
             // Race Names
@@ -322,6 +331,9 @@ public class RaceRegistry {
                     }
                 }
             }
+            try {
+                ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientTextures(CACHED_TEXTURES);
+            } catch (Throwable ignored) {}
             java.util.Collections.sort(CACHED_TEXTURES);
         } catch (Exception ignored) {}
     }
@@ -361,10 +373,38 @@ public class RaceRegistry {
             } catch (Exception ignored) {}
         }
 
-        // 2. Try reading from Minecraft Client Resource Manager if on client
+        // 2. Try reading from AzureResourceManager discovered animation files
+        try {
+            File diskAnim = ddraig.net.azureframelib.resource.AzureResourceManager.findAnimationFile(cleanPath);
+            if (diskAnim != null && diskAnim.exists() && diskAnim.isFile() && !diskAnim.equals(file)) {
+                try (FileReader reader = new FileReader(diskAnim)) {
+                    com.google.gson.JsonObject json = GSON.fromJson(reader, com.google.gson.JsonObject.class);
+                    if (json != null && json.has("animations") && json.get("animations").isJsonObject()) {
+                        com.google.gson.JsonObject animsObj = json.getAsJsonObject("animations");
+                        for (String key : animsObj.keySet()) {
+                            if (!results.contains(key)) {
+                                results.add(key);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Throwable ignored) {}
+
+        // 3. Try reading from Minecraft Client Resource Manager if on client
         if (dev.architectury.platform.Platform.getEnv() == net.fabricmc.api.EnvType.CLIENT) {
             ddraig.net.azureframelib.client.ClientSuggestionsHelper.addClientAnimationSuggestions(cleanPath, results, GSON);
         }
+
+        // 4. Query discovered animation names registered for model/animation path
+        try {
+            List<String> discovered = ddraig.net.azureframelib.resource.AzureResourceManager.getAnimationNamesForModel(cleanPath);
+            for (String key : discovered) {
+                if (!results.contains(key)) {
+                    results.add(key);
+                }
+            }
+        } catch (Throwable ignored) {}
 
         java.util.Collections.sort(results);
         return results;

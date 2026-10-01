@@ -59,7 +59,7 @@ public class WereModelRenderer {
     public static boolean isModelAvailable(RaceData race) {
         if (!hasCustomModel(race)) return false;
         ResourceLocation loc = getValidWereModelLocation(race);
-        if (loc != null && GeckoLibCacheInjector.isModelBaked(loc)) {
+        if (loc != null && (GeckoLibCacheInjector.isModelBaked(loc) || ddraig.net.azureframelib.client.GeckoLibModelLoader.isModelBaked(loc))) {
             return true;
         }
         return GeckoLibWereRenderer.isModelPresent(loc, race != null ? race.wereModelPath : null);

@@ -41,6 +41,30 @@ public class CustomPartScanner {
                 }
             }
         }
+        try {
+            for (String modelId : ddraig.net.azureframelib.resource.AzureResourceManager.getDiscoveredModels()) {
+                if (modelId == null) continue;
+                String clean = modelId;
+                if (clean.contains(":")) {
+                    clean = clean.substring(clean.indexOf(':') + 1);
+                }
+                if (clean.startsWith("models/")) {
+                    clean = clean.substring("models/".length());
+                } else if (clean.startsWith("geo/")) {
+                    clean = clean.substring("geo/".length());
+                }
+                if (clean.startsWith("parts/")) {
+                    String partName = clean.substring("parts/".length());
+                    int dot = partName.indexOf('.');
+                    if (dot > 0) {
+                        partName = partName.substring(0, dot);
+                    }
+                    if (!partName.isEmpty() && !discoveredCustomParts.contains(partName)) {
+                        discoveredCustomParts.add(partName);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
         Collections.sort(discoveredCustomParts);
     }
 

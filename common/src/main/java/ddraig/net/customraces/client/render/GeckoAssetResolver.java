@@ -57,8 +57,12 @@ public class GeckoAssetResolver {
         }
 
         // 2. Check candidate disk files
-        for (File diskFile : getModelDiskCandidates(parsed)) {
-            if (diskFile.exists() && diskFile.isFile()) {
+        File diskFile = resolveModelDiskFile(path);
+        if (diskFile != null && diskFile.exists() && diskFile.isFile()) {
+            return parsed.primaryLocation;
+        }
+        for (File candidateFile : getModelDiskCandidates(parsed)) {
+            if (candidateFile.exists() && candidateFile.isFile()) {
                 return parsed.primaryLocation;
             }
         }
@@ -142,6 +146,13 @@ public class GeckoAssetResolver {
      * Reads content string for a model from disk file candidates or resource manager.
      */
     public static String getModelContent(ResourceLocation modelLoc, String rawPath) {
+        File diskFile = resolveModelDiskFile(rawPath != null && !rawPath.isEmpty() ? rawPath : (modelLoc != null ? modelLoc.toString() : null));
+        if (diskFile != null && diskFile.exists() && diskFile.isFile()) {
+            try {
+                return Files.readString(diskFile.toPath());
+            } catch (Throwable ignored) {}
+        }
+
         ParsedPath parsed = parsePath(rawPath != null ? rawPath : (modelLoc != null ? modelLoc.toString() : ""), "geo/", ".geo.json");
         if (modelLoc != null && !parsed.candidateResourceLocations.contains(modelLoc)) {
             parsed.candidateResourceLocations.add(0, modelLoc);
@@ -177,6 +188,13 @@ public class GeckoAssetResolver {
      * Reads content string for an animation from disk file candidates or resource manager.
      */
     public static String getAnimationContent(ResourceLocation animLoc, String rawPath) {
+        File diskFile = resolveAnimationDiskFile(rawPath != null && !rawPath.isEmpty() ? rawPath : (animLoc != null ? animLoc.toString() : null));
+        if (diskFile != null && diskFile.exists() && diskFile.isFile()) {
+            try {
+                return Files.readString(diskFile.toPath());
+            } catch (Throwable ignored) {}
+        }
+
         ParsedPath parsed = parsePath(rawPath != null ? rawPath : (animLoc != null ? animLoc.toString() : ""), "animations/", ".animation.json");
         if (animLoc != null && !parsed.candidateResourceLocations.contains(animLoc)) {
             parsed.candidateResourceLocations.add(0, animLoc);
@@ -253,7 +271,13 @@ public class GeckoAssetResolver {
             }
         }
 
-        File sharedFile = ddraig.net.azureframelib.resource.AzureResourceManager.findTextureFile(cleanName);
+        File sharedFile = ddraig.net.azureframelib.resource.AzureResourceManager.findTextureFile(rawPath);
+        if (sharedFile == null || !sharedFile.exists()) {
+            sharedFile = ddraig.net.azureframelib.resource.AzureResourceManager.findTextureFile(cleanName);
+        }
+        if (sharedFile == null || !sharedFile.exists()) {
+            sharedFile = ddraig.net.azureframelib.resource.AzureResourceManager.findTextureFile(parsed.relativePath);
+        }
         if (sharedFile != null && sharedFile.exists() && sharedFile.isFile()) {
             try (InputStream is = new FileInputStream(sharedFile)) {
                 NativeImage nativeImage = NativeImage.read(is);
@@ -455,23 +479,33 @@ public class GeckoAssetResolver {
     }
 
     public static File resolveModelDiskFile(String rawPath) {
-        if (rawPath == null || rawPath.trim().isEmpty()) return null;
-        ParsedPath parsed = parsePath(rawPath.trim(), "geo/", ".geo.json");
+        if (rawPath == null || rawPath.trim().isEmpty() || "none".equalsIgnoreCase(rawPath.trim())) return null;
+        String path = rawPath.trim();
+        ParsedPath parsed = parsePath(path, "geo/", ".geo.json");
         for (File f : getModelDiskCandidates(parsed)) {
             if (f != null && f.exists() && f.isFile()) return f;
         }
-        File shared = ddraig.net.azureframelib.resource.AzureResourceManager.findModelFile(parsed.cleanFilename);
+        File shared = ddraig.net.azureframelib.resource.AzureResourceManager.findModelFile(path);
+        if (shared != null && shared.exists() && shared.isFile()) return shared;
+        shared = ddraig.net.azureframelib.resource.AzureResourceManager.findModelFile(parsed.cleanFilename);
+        if (shared != null && shared.exists() && shared.isFile()) return shared;
+        shared = ddraig.net.azureframelib.resource.AzureResourceManager.findModelFile(parsed.relativePath);
         if (shared != null && shared.exists() && shared.isFile()) return shared;
         return null;
     }
 
     public static File resolveAnimationDiskFile(String rawPath) {
-        if (rawPath == null || rawPath.trim().isEmpty()) return null;
-        ParsedPath parsed = parsePath(rawPath.trim(), "animations/", ".animation.json");
+        if (rawPath == null || rawPath.trim().isEmpty() || "none".equalsIgnoreCase(rawPath.trim())) return null;
+        String path = rawPath.trim();
+        ParsedPath parsed = parsePath(path, "animations/", ".animation.json");
         for (File f : getAnimationDiskCandidates(parsed)) {
             if (f != null && f.exists() && f.isFile()) return f;
         }
-        File shared = ddraig.net.azureframelib.resource.AzureResourceManager.findAnimationFile(parsed.cleanFilename);
+        File shared = ddraig.net.azureframelib.resource.AzureResourceManager.findAnimationFile(path);
+        if (shared != null && shared.exists() && shared.isFile()) return shared;
+        shared = ddraig.net.azureframelib.resource.AzureResourceManager.findAnimationFile(parsed.cleanFilename);
+        if (shared != null && shared.exists() && shared.isFile()) return shared;
+        shared = ddraig.net.azureframelib.resource.AzureResourceManager.findAnimationFile(parsed.relativePath);
         if (shared != null && shared.exists() && shared.isFile()) return shared;
         return null;
     }

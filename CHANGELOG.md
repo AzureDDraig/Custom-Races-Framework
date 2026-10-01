@@ -2,6 +2,17 @@
 
 All notable changes, features, bug fixes, and build deployments for **Custom Races Framework** are documented here.
 
+## [1.0.0-b205a] - 2026-10-01
+
+### 🐺 Shared Model Detection & Race Creator Improvements
+
+- **Automatic Model Detection**: Fixed an issue where custom creature models and were-forms weren't being detected from the mod's folders or shared library folders. Custom 3D models and skins now show up and load seamlessly.
+- **Cross-Mod Model Sharing**: You can now use 3D models, skins, and animations saved across companion mod folders (like Custom Mobs and RPG Mounts) directly inside Custom Races.
+- **Enhanced Creator Suggestions**: When editing or creating a race in-game, the dropdown menus and suggestion boxes now list all discovered models, textures, animations, and custom body parts automatically.
+- **Direct Model Recovery**: Transformed beasts and custom races will now directly find and load their 3D models from disk without falling back to human player models.
+
+---
+
 ## [1.0.0-b204a] - 2026-09-09
 
 ### 🔧 Fix Mod Launch & Library Compatibility
